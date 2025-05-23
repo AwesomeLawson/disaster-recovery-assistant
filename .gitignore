@@ -1,0 +1,8 @@
+# Node modules in root directory
+/node_modules
+
+# Node modules in api folder
+/api/node_modules
+
+# Node modules in faith-responders-ui folder
+/faith-responders-ui/node_modules
