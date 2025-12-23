@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm init:*)",
+      "Bash(npx tsc:*)",
+      "Bash(dir C:projectsfaith-responders)",
+      "Bash(npm create:*)",
+      "Bash(dir /B C:projectsfaith-respondersclientsrc)",
+      "Bash(for:*)",
+      "Bash(do echo \"=== $file.tsx ===\")",
+      "Bash(grep:*)",
+      "Bash(done)",
+      "Bash(npm run test:*)",
+      "Bash(firebase emulators:start:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(firebase login:*)",
+      "Bash(firebase logout:*)",
+      "Bash(firebase projects:create:*)",
+      "Bash(firebase:*)",
+      "Bash(do sed -i 's/(data: any, context: any)/(request: any)/g' $file)",
+      "Bash(gcloud functions logs read:*)",
+      "Bash(do sed -i \"s|import \\* as functions from ''firebase-functions'';|import * as functions from ''firebase-functions/v2'';|g\" $file)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

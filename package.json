@@ -2,7 +2,8 @@
   "dependencies": {
     "@azure/data-tables": "^13.3.0",
     "@azure/functions": "^1.2.3",
-    "dotenv": "^16.5.0"
+    "dotenv": "^16.5.0",
+    "firebase": "^12.3.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.21",

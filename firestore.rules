@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles.hasAny(['administrator']);
+    }
+
+    function isAssessor() {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles.hasAny(['assessor']);
+    }
+
+    function isWorkGroupLead() {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles.hasAny(['workGroupLead']);
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /groups/{groupId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /centers/{centerId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /assessments/{assessmentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAssessor();
+      allow update: if isAssessor() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /workgroups/{workgroupId} {
+      allow read: if isAuthenticated();
+      allow create: if isWorkGroupLead() || isAdmin();
+      allow update: if isWorkGroupLead() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /escalations/{escalationId} {
+      allow read: if isAuthenticated();
+      allow create: if isWorkGroupLead() || isAssessor();
+      allow update: if isAdmin() || isWorkGroupLead();
+      allow delete: if isAdmin();
+    }
+
+    match /messages/{messageId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    match /legalReleases/{releaseId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}

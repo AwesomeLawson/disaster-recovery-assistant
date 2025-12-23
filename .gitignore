@@ -1,8 +1,49 @@
-# Node modules in root directory
-/node_modules
+# Dependencies - all folders
+node_modules/
 
-# Node modules in api folder
-/api/node_modules
+# Build outputs
+dist/
+lib/
+build/
+*.local
 
-# Node modules in faith-responders-ui folder
-/faith-responders-ui/node_modules
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Firebase
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+ui-debug.log
+.firebase/
+
+# Test coverage
+coverage/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+Thumbs.db
+
+# TypeScript cache
+*.tsbuildinfo
+
+# OS files
+.DS_Store
+Desktop.ini

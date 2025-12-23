@@ -1,0 +1,64 @@
+1. User Management and Authentication
+•	User Registration:
+o	Users can register with an email (with confirmation) and phone number and choose a communications preference (email or cell phone).
+o	Role requests are submitted during registration and approved by an administrator.
+o	User roles:
+	Administrator: Can manage all aspects of the system, including users, groups, centers, and work assignments.
+	Assessor: Can submit assessments on disaster sites, including information about damages, people, and needs, and can attach pictures.
+	Work Group Lead: Can create and manage workgroups, oversee tasks, and update the status of assignments with notes and pictures.
+	Worker: Assigned to workgroups, able to view and update their assignments.
+o	Third-Party Users: Can be registered and assigned to high-level groups or specific geographic centers (e.g., relief agencies, contractors).
+•	Authentication and Legal Releases:
+o	Secure login with email and password.
+o	Agreement to legal terms as part of the registration process. While digital agreement can be collected, the app will also need to capture physical or digital signatures (using PDFs or image uploads) for legal releases from users and assessed locations.
+2. Role Management and Approvals
+•	Role Approval Workflow:
+o	User role requests (e.g., Assessor, Work Group Lead) are reviewed and approved by administrators.
+•	Multiple Roles: Users can hold more than one role (e.g., an Assessor can also be a Worker).
+3. Group and Center Management
+•	Create a Group:
+o	Admins can set up a group for a specific event (e.g., storm, flood, denominational conference) and assign users and churches within the group.
+o	Assign roles that apply to all associated churches or camps within the group.
+•	Create a Center:
+o	Create and manage disaster relief centers at churches, camps, or other locations with address, location, or coordinates.
+4. Assessment Management
+•	Assessment Creation:
+o	Assessors can create assessments of places.
+o	Assessments collect detailed information about damages, needs, and affected people, and can include attachments (e.g., photos) for documentation.
+•	Need Reassessment:
+o	If a need becomes worse than initially assessed, assessors can update the need, flagging it for review, and escalate it to an administrator or third-party support.
+5. Workgroup and Task Management
+•	Work Group Creation:
+o	Center Leads can create workgroups for specific centers (e.g., churches or camps) and name them. Each group is assigned a leader.
+o	Workgroups are assigned tasks based on the needs reported in the assessments.
+•	Task Assignments:
+o	Needs from assessments are converted into assignments for workgroups, which can be updated with progress, notes, and pictures.
+•	Tracking Partial Completion:
+o	Work groups can indicate when a need is partially addressed, and the system will track remaining work and escalate as necessary.
+6. Handling Escalations
+•	Escalation of Needs:
+o	If a workgroup discovers that a need is larger than initially assessed, they can flag the need for escalation to their Center Lead who will have 3 options:
+1.	Assessor: They will return for reassessment of the place.
+2.	Administrative Support: Request additional internal resources or approvals.
+3.	Third-Party Support: Automatically reach out to registered third parties (e.g., contractors, relief organizations) for help.
+•	Reach Out to Third Parties:
+o	Third-party organizations can be registered with contacts as users and assigned to high-level groups or specific geographic regions.
+o	Center leads can request aid directly from approved third-party contacts or through administrators.
+8. Communication and Collaboration Tools
+•	Real-Time Communication:
+o	Enable real-time messaging between administrators, workgroups, and assessors. Include a feature to create SMS group chats for coordination between:
+	center leads and workgroup leads
+	workgroups
+•	Email and SMS Alerts:
+o	Send out important notifications to all user groups (volunteers, donors, third parties) about new tasks, updates, or critical incidents using their communication preferences.
+9. Volunteer and Workgroup Management
+•	Volunteer Scheduling:
+o	Volunteers can sign up for workgroup shifts or specific assignments based on their availability.
+•	Work Group Updates:
+o	Work group leads and members can update their assignments with progress notes and pictures and indicate when tasks are completed or require additional help.
+10. Legal Compliance
+•	Legal Releases:
+o	The app will capture one or more legal releases (such as volunteer waivers or property access forms) from users and for each assessed location. These can be uploaded as scanned documents or filled electronically.
+11. Mobile Responsiveness
+•	Device Compatibility:
+o	The app will be fully responsive, ensuring smooth functionality on phones, tablets, and laptops.
