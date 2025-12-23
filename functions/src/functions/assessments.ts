@@ -4,6 +4,10 @@ import { Assessment, User } from '../types';
 
 const db = admin.firestore();
 
+const callableOptions = {
+  cors: [/localhost/, /127\.0\.0\.1/],
+};
+
 const requireAssessor = async (uid: string): Promise<void> => {
   const userDoc = await db.collection('users').doc(uid).get();
   const user = userDoc.data() as User;
@@ -13,7 +17,7 @@ const requireAssessor = async (uid: string): Promise<void> => {
   }
 };
 
-export const createAssessment = onCall(async (request: any) => {
+export const createAssessment = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -56,7 +60,7 @@ export const createAssessment = onCall(async (request: any) => {
   return { success: true, assessmentId: assessmentRef.id, assessment };
 });
 
-export const updateAssessment = onCall(async (request: any) => {
+export const updateAssessment = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -100,7 +104,7 @@ export const updateAssessment = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const reassessment = onCall(async (request: any) => {
+export const reassessment = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -136,7 +140,7 @@ export const reassessment = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const getAssessment = onCall(async (request: any) => {
+export const getAssessment = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -156,7 +160,7 @@ export const getAssessment = onCall(async (request: any) => {
   return { assessment: assessmentDoc.data() };
 });
 
-export const listAssessments = onCall(async (request: any) => {
+export const listAssessments = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }

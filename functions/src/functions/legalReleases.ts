@@ -4,7 +4,11 @@ import { LegalRelease } from '../types';
 
 const db = admin.firestore();
 
-export const createLegalRelease = onCall(async (request: any) => {
+const callableOptions = {
+  cors: [/localhost/, /127\.0\.0\.1/],
+};
+
+export const createLegalRelease = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -52,7 +56,7 @@ export const createLegalRelease = onCall(async (request: any) => {
   return { success: true, releaseId: releaseRef.id, release };
 });
 
-export const signLegalRelease = onCall(async (request: any) => {
+export const signLegalRelease = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -95,7 +99,7 @@ export const signLegalRelease = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const getLegalRelease = onCall(async (request: any) => {
+export const getLegalRelease = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }

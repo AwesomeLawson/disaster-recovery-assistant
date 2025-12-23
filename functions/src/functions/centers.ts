@@ -4,6 +4,10 @@ import { Center, User } from '../types';
 
 const db = admin.firestore();
 
+const callableOptions = {
+  cors: [/localhost/, /127\.0\.0\.1/],
+};
+
 const requireAdmin = async (uid: string): Promise<void> => {
   const userDoc = await db.collection('users').doc(uid).get();
   const user = userDoc.data() as User;
@@ -13,7 +17,7 @@ const requireAdmin = async (uid: string): Promise<void> => {
   }
 };
 
-export const createCenter = onCall(async (request: any) => {
+export const createCenter = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -64,7 +68,7 @@ export const createCenter = onCall(async (request: any) => {
   return { success: true, centerId: centerRef.id, center };
 });
 
-export const updateCenter = onCall(async (request: any) => {
+export const updateCenter = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -96,7 +100,7 @@ export const updateCenter = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const getCenter = onCall(async (request: any) => {
+export const getCenter = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -116,7 +120,7 @@ export const getCenter = onCall(async (request: any) => {
   return { center: centerDoc.data() };
 });
 
-export const listCenters = onCall(async (request: any) => {
+export const listCenters = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }

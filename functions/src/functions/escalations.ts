@@ -4,7 +4,11 @@ import { Escalation, User } from '../types';
 
 const db = admin.firestore();
 
-export const createEscalation = onCall(async (request: any) => {
+const callableOptions = {
+  cors: [/localhost/, /127\.0\.0\.1/],
+};
+
+export const createEscalation = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -52,7 +56,7 @@ export const createEscalation = onCall(async (request: any) => {
   return { success: true, escalationId: escalationRef.id, escalation };
 });
 
-export const updateEscalationStatus = onCall(async (request: any) => {
+export const updateEscalationStatus = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -92,7 +96,7 @@ export const updateEscalationStatus = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const resolveEscalation = onCall(async (request: any) => {
+export const resolveEscalation = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -128,7 +132,7 @@ export const resolveEscalation = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const getEscalation = onCall(async (request: any) => {
+export const getEscalation = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -148,7 +152,7 @@ export const getEscalation = onCall(async (request: any) => {
   return { escalation: escalationDoc.data() };
 });
 
-export const listEscalations = onCall(async (request: any) => {
+export const listEscalations = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }

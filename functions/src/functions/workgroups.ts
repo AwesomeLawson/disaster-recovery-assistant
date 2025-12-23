@@ -4,6 +4,10 @@ import { Workgroup, User } from '../types';
 
 const db = admin.firestore();
 
+const callableOptions = {
+  cors: [/localhost/, /127\.0\.0\.1/],
+};
+
 const requireWorkGroupLeadOrAdmin = async (uid: string): Promise<void> => {
   const userDoc = await db.collection('users').doc(uid).get();
   const user = userDoc.data() as User;
@@ -13,7 +17,7 @@ const requireWorkGroupLeadOrAdmin = async (uid: string): Promise<void> => {
   }
 };
 
-export const createWorkgroup = onCall(async (request: any) => {
+export const createWorkgroup = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -52,7 +56,7 @@ export const createWorkgroup = onCall(async (request: any) => {
   return { success: true, workgroupId: workgroupRef.id, workgroup };
 });
 
-export const updateWorkgroup = onCall(async (request: any) => {
+export const updateWorkgroup = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -96,7 +100,7 @@ export const updateWorkgroup = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const updateWorkgroupStatus = onCall(async (request: any) => {
+export const updateWorkgroupStatus = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -150,7 +154,7 @@ export const updateWorkgroupStatus = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const addWorkerToWorkgroup = onCall(async (request: any) => {
+export const addWorkerToWorkgroup = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -189,7 +193,7 @@ export const addWorkerToWorkgroup = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const getWorkgroup = onCall(async (request: any) => {
+export const getWorkgroup = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -209,7 +213,7 @@ export const getWorkgroup = onCall(async (request: any) => {
   return { workgroup: workgroupDoc.data() };
 });
 
-export const listWorkgroups = onCall(async (request: any) => {
+export const listWorkgroups = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }

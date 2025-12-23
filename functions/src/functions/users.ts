@@ -4,7 +4,12 @@ import { User } from '../types';
 
 const db = admin.firestore();
 
-export const registerUser = onCall(async (request: any) => {
+// CORS configuration for local development
+const callableOptions = {
+  cors: [/localhost/, /127\.0\.0\.1/],
+};
+
+export const registerUser = onCall(callableOptions, async (request: any) => {
   const { email, phoneNumber, communicationPreference, requestedRoles } = request.data;
 
   if (!email || !phoneNumber || !communicationPreference || !requestedRoles) {
@@ -38,7 +43,7 @@ export const registerUser = onCall(async (request: any) => {
   return { success: true, userId, user };
 });
 
-export const approveUserRole = onCall(async (request: any) => {
+export const approveUserRole = onCall(callableOptions, async (request: any) => {
   const { userId, approve, roles } = request.data;
 
   if (!userId || approve === undefined) {
@@ -85,7 +90,7 @@ export const approveUserRole = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const updateUserProfile = onCall(async (request: any) => {
+export const updateUserProfile = onCall(callableOptions, async (request: any) => {
   const { userId, updates } = request.data;
 
   if (!userId || !updates) {
@@ -127,7 +132,7 @@ export const updateUserProfile = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const getUser = onCall(async (request: any) => {
+export const getUser = onCall(callableOptions, async (request: any) => {
   try {
     console.log('getUser called with request:', JSON.stringify({ auth: !!request.auth, data: request.data }));
 
@@ -159,7 +164,7 @@ export const getUser = onCall(async (request: any) => {
   }
 });
 
-export const listUsers = onCall(async (request: any) => {
+export const listUsers = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }

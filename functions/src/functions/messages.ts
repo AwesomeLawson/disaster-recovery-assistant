@@ -4,7 +4,11 @@ import { Message } from '../types';
 
 const db = admin.firestore();
 
-export const sendMessage = onCall(async (request: any) => {
+const callableOptions = {
+  cors: [/localhost/, /127\.0\.0\.1/],
+};
+
+export const sendMessage = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -37,7 +41,7 @@ export const sendMessage = onCall(async (request: any) => {
   return { success: true, messageId: messageRef.id, message };
 });
 
-export const sendGroupMessage = onCall(async (request: any) => {
+export const sendGroupMessage = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -106,7 +110,7 @@ export const sendGroupMessage = onCall(async (request: any) => {
   return { success: true, messageId: messageRef.id, message };
 });
 
-export const getMessages = onCall(async (request: any) => {
+export const getMessages = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }

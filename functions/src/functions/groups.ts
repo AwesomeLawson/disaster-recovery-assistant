@@ -4,6 +4,10 @@ import { Group, User } from '../types';
 
 const db = admin.firestore();
 
+const callableOptions = {
+  cors: [/localhost/, /127\.0\.0\.1/],
+};
+
 const requireAdmin = async (uid: string): Promise<void> => {
   const userDoc = await db.collection('users').doc(uid).get();
   const user = userDoc.data() as User;
@@ -13,7 +17,7 @@ const requireAdmin = async (uid: string): Promise<void> => {
   }
 };
 
-export const createGroup = onCall(async (request: any) => {
+export const createGroup = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -57,7 +61,7 @@ export const createGroup = onCall(async (request: any) => {
   return { success: true, groupId: groupRef.id, group };
 });
 
-export const updateGroup = onCall(async (request: any) => {
+export const updateGroup = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -89,7 +93,7 @@ export const updateGroup = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const getGroup = onCall(async (request: any) => {
+export const getGroup = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -109,7 +113,7 @@ export const getGroup = onCall(async (request: any) => {
   return { group: groupDoc.data() };
 });
 
-export const listGroups = onCall(async (request: any) => {
+export const listGroups = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -122,7 +126,7 @@ export const listGroups = onCall(async (request: any) => {
   return { groups };
 });
 
-export const addUserToGroup = onCall(async (request: any) => {
+export const addUserToGroup = onCall(callableOptions, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
