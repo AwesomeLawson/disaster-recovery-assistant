@@ -17,7 +17,10 @@ import {
   FormControlLabel,
   FormGroup,
   FormLabel,
+  Divider,
 } from '@mui/material';
+import GoogleIcon from '@mui/icons-material/Google';
+import FacebookIcon from '@mui/icons-material/Facebook';
 import { authService } from '../services/auth.service';
 import { userService } from '../services/user.service';
 import type { UserRole, CommunicationPreference } from '../types';
@@ -32,6 +35,7 @@ export const Register: React.FC = () => {
   const [requestedRoles, setRequestedRoles] = useState<UserRole[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<'google' | 'facebook' | null>(null);
 
   const availableRoles: { value: UserRole; label: string }[] = [
     { value: 'assessor', label: 'Assessor' },
@@ -87,6 +91,31 @@ export const Register: React.FC = () => {
     }
   };
 
+  const handleSocialSignUp = async (provider: 'google' | 'facebook') => {
+    setError('');
+    setSocialLoading(provider);
+
+    try {
+      provider === 'google'
+        ? await authService.loginWithGoogle()
+        : await authService.loginWithFacebook();
+
+      // Social sign-up always goes to complete profile page
+      navigate('/complete-profile');
+    } catch (err: any) {
+      if (err.code === 'auth/popup-closed-by-user') {
+        return;
+      }
+      if (err.code === 'auth/account-exists-with-different-credential') {
+        setError('An account already exists with this email using a different sign-in method.');
+      } else {
+        setError(err.message || `Failed to sign up with ${provider}`);
+      }
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
   return (
     <Container component="main" maxWidth="sm">
       <Box
@@ -110,6 +139,45 @@ export const Register: React.FC = () => {
               {error}
             </Alert>
           )}
+
+          <Box sx={{ mt: 2 }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<GoogleIcon />}
+              onClick={() => handleSocialSignUp('google')}
+              disabled={loading || socialLoading !== null}
+              sx={{ mb: 1 }}
+            >
+              {socialLoading === 'google' ? 'Signing up...' : 'Sign up with Google'}
+            </Button>
+
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<FacebookIcon />}
+              onClick={() => handleSocialSignUp('facebook')}
+              disabled={loading || socialLoading !== null}
+              sx={{
+                mb: 2,
+                backgroundColor: '#1877F2',
+                color: 'white',
+                borderColor: '#1877F2',
+                '&:hover': {
+                  backgroundColor: '#166FE5',
+                  borderColor: '#166FE5',
+                },
+                '&:disabled': {
+                  backgroundColor: '#1877F2',
+                  opacity: 0.7,
+                },
+              }}
+            >
+              {socialLoading === 'facebook' ? 'Signing up...' : 'Sign up with Facebook'}
+            </Button>
+
+            <Divider sx={{ my: 2 }}>or sign up with email</Divider>
+          </Box>
 
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
             <TextField
@@ -195,7 +263,7 @@ export const Register: React.FC = () => {
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
-              disabled={loading}
+              disabled={loading || socialLoading !== null}
             >
               {loading ? 'Creating Account...' : 'Sign Up'}
             </Button>

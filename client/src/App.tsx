@@ -5,6 +5,7 @@ import { Layout } from './components/Layout';
 import { PrivateRoute } from './components/PrivateRoute';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { CompleteProfile } from './pages/CompleteProfile';
 import { SignLegalRelease } from './pages/SignLegalRelease';
 import { Dashboard } from './pages/Dashboard';
 import { GroupManagement } from './pages/GroupManagement';
@@ -54,6 +55,7 @@ function App() {
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/complete-profile" element={<CompleteProfile />} />
 
             {/* Legal release - requires authentication but not role approval */}
             <Route

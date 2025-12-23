@@ -4,9 +4,24 @@ import {
   signOut,
   sendPasswordResetEmail,
   updatePassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
 } from 'firebase/auth';
 import type { User as FirebaseUser } from 'firebase/auth';
 import { auth } from '../config/firebase';
+
+// Initialize OAuth providers
+const googleProvider = new GoogleAuthProvider();
+const facebookProvider = new FacebookAuthProvider();
+
+// Configure Google provider
+googleProvider.addScope('email');
+googleProvider.addScope('profile');
+
+// Configure Facebook provider
+facebookProvider.addScope('email');
+facebookProvider.addScope('public_profile');
 
 export const authService = {
   // Register new user with email and password
@@ -52,5 +67,17 @@ export const authService = {
       return null;
     }
     return await user.getIdToken();
+  },
+
+  // Sign in with Google
+  async loginWithGoogle(): Promise<FirebaseUser> {
+    const userCredential = await signInWithPopup(auth, googleProvider);
+    return userCredential.user;
+  },
+
+  // Sign in with Facebook
+  async loginWithFacebook(): Promise<FirebaseUser> {
+    const userCredential = await signInWithPopup(auth, facebookProvider);
+    return userCredential.user;
   },
 };
