@@ -8,11 +8,19 @@ import { Register } from './pages/Register';
 import { SignLegalRelease } from './pages/SignLegalRelease';
 import { Dashboard } from './pages/Dashboard';
 import { GroupManagement } from './pages/GroupManagement';
+import { GroupDetail } from './pages/GroupDetail';
 import { CenterManagement } from './pages/CenterManagement';
+import { CenterDetail } from './pages/CenterDetail';
 import { AssessmentList } from './pages/AssessmentList';
+import { AssessmentDetail } from './pages/AssessmentDetail';
 import { CreateAssessment } from './pages/CreateAssessment';
 import { WorkgroupManagement } from './pages/WorkgroupManagement';
+import { WorkgroupDetail } from './pages/WorkgroupDetail';
+import { WorkgroupCreate } from './pages/WorkgroupCreate';
 import { Messaging } from './pages/Messaging';
+import { AdminUsers } from './pages/AdminUsers';
+import { EscalationManagement } from './pages/EscalationManagement';
+import { UserProfile } from './pages/UserProfile';
 
 const theme = createTheme({
   palette: {
@@ -79,10 +87,34 @@ function App() {
                 }
               />
               <Route
+                path="groups/:id"
+                element={
+                  <PrivateRoute requireRoles={['administrator']}>
+                    <GroupDetail />
+                  </PrivateRoute>
+                }
+              />
+              <Route
                 path="centers"
                 element={
                   <PrivateRoute requireRoles={['administrator']}>
                     <CenterManagement />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="centers/:id"
+                element={
+                  <PrivateRoute requireRoles={['administrator']}>
+                    <CenterDetail />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="admin/users"
+                element={
+                  <PrivateRoute requireRoles={['administrator']}>
+                    <AdminUsers />
                   </PrivateRoute>
                 }
               />
@@ -104,6 +136,14 @@ function App() {
                   </PrivateRoute>
                 }
               />
+              <Route
+                path="assessments/:id"
+                element={
+                  <PrivateRoute requireRoles={['assessor', 'administrator', 'workGroupLead']}>
+                    <AssessmentDetail />
+                  </PrivateRoute>
+                }
+              />
 
               {/* Workgroup routes */}
               <Route
@@ -114,6 +154,35 @@ function App() {
                   </PrivateRoute>
                 }
               />
+              <Route
+                path="workgroups/create"
+                element={
+                  <PrivateRoute requireRoles={['workGroupLead', 'administrator']}>
+                    <WorkgroupCreate />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="workgroups/:id"
+                element={
+                  <PrivateRoute requireRoles={['workGroupLead', 'worker', 'administrator']}>
+                    <WorkgroupDetail />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* Escalation routes */}
+              <Route
+                path="escalations"
+                element={
+                  <PrivateRoute requireRoles={['workGroupLead', 'administrator']}>
+                    <EscalationManagement />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* User profile - available to all authenticated users */}
+              <Route path="profile" element={<UserProfile />} />
 
               {/* Messaging - available to all authenticated users */}
               <Route path="messages" element={<Messaging />} />
