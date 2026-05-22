@@ -37,7 +37,7 @@ export const assessmentService = {
   // List assessments with filters
   async listAssessments(filters?: {
     centerId?: string;
-    groupId?: string;
+    eventId?: string;
     flaggedForReview?: boolean;
     limit?: number;
   }): Promise<Assessment[]> {

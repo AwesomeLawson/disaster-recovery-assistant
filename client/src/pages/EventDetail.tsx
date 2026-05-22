@@ -30,13 +30,16 @@ import LocationCityIcon from '@mui/icons-material/LocationCity';
 import { eventService } from '../services/event.service';
 import { centerService } from '../services/center.service';
 import { userService } from '../services/user.service';
-import type { Event, Center, User } from '../types';
+import { assessmentService } from '../services/assessment.service';
+import { AssessmentMap } from '../components/AssessmentMap';
+import type { Event, Center, User, Assessment } from '../types';
 
 export const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
   const [centers, setCenters] = useState<Center[]>([]);
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [, setUsers] = useState<User[]>([]);
   const [members, setMembers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -63,14 +66,16 @@ export const EventDetail: React.FC = () => {
   const loadEvent = async () => {
     try {
       setLoading(true);
-      const [eventData, centersData, usersData] = await Promise.all([
+      const [eventData, centersData, usersData, assessmentsData] = await Promise.all([
         eventService.getEvent(id!),
         centerService.listCenters(id),
         userService.listUsers(),
+        assessmentService.listAssessments({ eventId: id }),
       ]);
 
       setEvent(eventData);
       setCenters(centersData);
+      setAssessments(assessmentsData);
       setAllUsers(usersData);
 
       setEditForm({
@@ -302,6 +307,17 @@ export const EventDetail: React.FC = () => {
                 ))}
               </List>
             )}
+          </Paper>
+        </Grid>
+
+        {/* Assessment Map - full width */}
+        <Grid size={{ xs: 12 }}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Assessment Map ({assessments.length})
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+            <AssessmentMap assessments={assessments} />
           </Paper>
         </Grid>
       </Grid>
