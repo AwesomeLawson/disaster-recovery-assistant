@@ -66,16 +66,14 @@ export const EventDetail: React.FC = () => {
   const loadEvent = async () => {
     try {
       setLoading(true);
-      const [eventData, centersData, usersData, assessmentsData] = await Promise.all([
+      const [eventData, centersData, usersData] = await Promise.all([
         eventService.getEvent(id!),
         centerService.listCenters(id),
         userService.listUsers(),
-        assessmentService.listAssessments({ eventId: id }),
       ]);
 
       setEvent(eventData);
       setCenters(centersData);
-      setAssessments(assessmentsData);
       setAllUsers(usersData);
 
       setEditForm({
@@ -97,6 +95,11 @@ export const EventDetail: React.FC = () => {
     } finally {
       setLoading(false);
     }
+
+    // Load assessments separately so a failure here doesn't block the event from rendering
+    assessmentService.listAssessments({ eventId: id })
+      .then(setAssessments)
+      .catch(() => {});
   };
 
   const handleUpdateEvent = async () => {
