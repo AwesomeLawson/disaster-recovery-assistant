@@ -4,17 +4,17 @@ import { Escalation, User } from '../types';
 
 const db = admin.firestore();
 
-export const createEscalation = onCall(async (request: any) => {
+export const createEscalation = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { workgroupId, centerId, groupId, type, reason, assessmentId } = request.data;
+  const { workgroupId, centerId, eventId, type, reason, assessmentId } = request.data;
 
-  if (!workgroupId || !centerId || !groupId || !type || !reason) {
+  if (!workgroupId || !centerId || !type || !reason) {
     throw new HttpsError(
       'invalid-argument',
-      'Missing required fields: workgroupId, centerId, groupId, type, reason'
+      'Missing required fields: workgroupId, centerId, type, reason'
     );
   }
 
@@ -29,10 +29,8 @@ export const createEscalation = onCall(async (request: any) => {
   const escalationRef = db.collection('escalations').doc();
   const escalation: Escalation = {
     id: escalationRef.id,
-    assessmentId,
     workgroupId,
     centerId,
-    groupId,
     type,
     status: 'pending',
     reason,
@@ -40,6 +38,9 @@ export const createEscalation = onCall(async (request: any) => {
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
+
+  if (assessmentId) escalation.assessmentId = assessmentId;
+  if (eventId) escalation.eventId = eventId;
 
   await escalationRef.set(escalation);
 
@@ -52,7 +53,7 @@ export const createEscalation = onCall(async (request: any) => {
   return { success: true, escalationId: escalationRef.id, escalation };
 });
 
-export const updateEscalationStatus = onCall(async (request: any) => {
+export const updateEscalationStatus = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -92,7 +93,7 @@ export const updateEscalationStatus = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const resolveEscalation = onCall(async (request: any) => {
+export const resolveEscalation = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -128,7 +129,7 @@ export const resolveEscalation = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const getEscalation = onCall(async (request: any) => {
+export const getEscalation = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -148,12 +149,12 @@ export const getEscalation = onCall(async (request: any) => {
   return { escalation: escalationDoc.data() };
 });
 
-export const listEscalations = onCall(async (request: any) => {
+export const listEscalations = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { centerId, groupId, workgroupId, status, limit = 100 } = request.data;
+  const { centerId, eventId, workgroupId, status, limit = 100 } = request.data || {};
 
   let query: admin.firestore.Query = db.collection('escalations');
 
@@ -161,8 +162,8 @@ export const listEscalations = onCall(async (request: any) => {
     query = query.where('centerId', '==', centerId);
   }
 
-  if (groupId) {
-    query = query.where('groupId', '==', groupId);
+  if (eventId) {
+    query = query.where('eventId', '==', eventId);
   }
 
   if (workgroupId) {

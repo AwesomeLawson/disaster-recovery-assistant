@@ -100,7 +100,7 @@ describe('Assessment Management Functions', () => {
     it('should reject creation by non-assessor', async () => {
       const mockGet = jest.fn().mockResolvedValue({
         exists: true,
-        data: () => ({ roles: ['worker'] }),
+        data: () => ({ roles: ['volunteer'] }),
       });
 
       const mockDoc = jest.fn(() => ({ get: mockGet }));
@@ -307,7 +307,7 @@ describe('Assessment Management Functions', () => {
     it('should reject reassessment by non-assessor', async () => {
       const mockGet = jest.fn().mockResolvedValue({
         exists: true,
-        data: () => ({ roles: ['worker'] }),
+        data: () => ({ roles: ['volunteer'] }),
       });
 
       const mockDoc = jest.fn(() => ({ get: mockGet }));

@@ -13,17 +13,17 @@ const requireAdmin = async (uid: string): Promise<void> => {
   }
 };
 
-export const createCenter = onCall(async (request: any) => {
+export const createCenter = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   await requireAdmin(request.auth.uid);
 
-  const { name, address, latitude, longitude, groupId, leadUserIds } = request.data;
+  const { name, address, latitude, longitude, eventIds, leadUserIds } = request.data;
 
-  if (!name || !address || !groupId) {
-    throw new HttpsError('invalid-argument', 'Missing required fields: name, address, groupId');
+  if (!name || !address) {
+    throw new HttpsError('invalid-argument', 'Missing required fields: name, address');
   }
 
   const centerRef = db.collection('centers').doc();
@@ -31,22 +31,35 @@ export const createCenter = onCall(async (request: any) => {
     id: centerRef.id,
     name,
     address,
-    latitude,
-    longitude,
-    groupId,
+    eventIds: eventIds || [],
     leadUserIds: leadUserIds || [],
     createdBy: request.auth.uid,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
 
+  // Only set optional fields if provided
+  if (latitude !== undefined) {
+    center.latitude = latitude;
+  }
+  if (longitude !== undefined) {
+    center.longitude = longitude;
+  }
+
   await centerRef.set(center);
 
-  // Update group to include this center
-  await db.collection('groups').doc(groupId).update({
-    centerIds: admin.firestore.FieldValue.arrayUnion(centerRef.id),
-    updatedAt: Date.now(),
-  });
+  // Update events to include this center
+  if (eventIds && eventIds.length > 0) {
+    const batch = db.batch();
+    eventIds.forEach((eventId: string) => {
+      const eventRef = db.collection('events').doc(eventId);
+      batch.update(eventRef, {
+        centerIds: admin.firestore.FieldValue.arrayUnion(centerRef.id),
+        updatedAt: Date.now(),
+      });
+    });
+    await batch.commit();
+  }
 
   // Update lead users to include this center
   if (leadUserIds && leadUserIds.length > 0) {
@@ -64,7 +77,7 @@ export const createCenter = onCall(async (request: any) => {
   return { success: true, centerId: centerRef.id, center };
 });
 
-export const updateCenter = onCall(async (request: any) => {
+export const updateCenter = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -96,7 +109,7 @@ export const updateCenter = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const getCenter = onCall(async (request: any) => {
+export const getCenter = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -116,21 +129,42 @@ export const getCenter = onCall(async (request: any) => {
   return { center: centerDoc.data() };
 });
 
-export const listCenters = onCall(async (request: any) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated');
+export const listCenters = onCall({ cors: true }, async (request: any) => {
+  try {
+    console.log('listCenters called');
+    console.log('Auth:', request.auth ? `uid=${request.auth.uid}` : 'null');
+    console.log('Data type:', typeof request.data);
+    console.log('Data:', JSON.stringify(request.data));
+
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    // Defensive handling of request.data
+    let data = request.data;
+    if (typeof data !== 'object' || data === null) {
+      data = {};
+    }
+
+    const eventId = data.eventId;
+    const limit = typeof data.limit === 'number' ? data.limit : 100;
+    console.log('Using eventId:', eventId, 'limit:', limit);
+
+    let query: admin.firestore.Query = db.collection('centers');
+
+    if (eventId) {
+      query = query.where('eventIds', 'array-contains', eventId);
+    }
+
+    const snapshot = await query.limit(limit).get();
+    console.log('Found', snapshot.docs.length, 'centers');
+
+    const centers = snapshot.docs.map((doc) => doc.data());
+
+    return { centers };
+  } catch (error: any) {
+    console.error('listCenters error:', error);
+    console.error('Error stack:', error?.stack);
+    throw error;
   }
-
-  const { groupId, limit = 100 } = request.data;
-
-  let query: admin.firestore.Query = db.collection('centers');
-
-  if (groupId) {
-    query = query.where('groupId', '==', groupId);
-  }
-
-  const snapshot = await query.limit(limit).get();
-  const centers = snapshot.docs.map((doc) => doc.data());
-
-  return { centers };
 });

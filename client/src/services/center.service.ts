@@ -9,7 +9,7 @@ export const centerService = {
     address: string;
     latitude?: number;
     longitude?: number;
-    groupId: string;
+    eventIds?: string[];
     leadUserIds?: string[];
   }): Promise<Center> {
     const createCenterFn = httpsCallable(functions, 'createCenter');
@@ -31,9 +31,9 @@ export const centerService = {
   },
 
   // List centers
-  async listCenters(groupId?: string, limit?: number): Promise<Center[]> {
+  async listCenters(eventId?: string, limit?: number): Promise<Center[]> {
     const listCentersFn = httpsCallable(functions, 'listCenters');
-    const result = await listCentersFn({ groupId, limit });
+    const result = await listCentersFn({ eventId, limit });
     return (result.data as any).centers;
   },
 };

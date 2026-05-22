@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Yellow quadrants: top-left and bottom-right -->
+  <rect x="0" y="0" width="13" height="13" fill="#F2C230"/>
+  <rect x="19" y="19" width="13" height="13" fill="#F2C230"/>
+  <!-- Blue quadrants: top-right and bottom-left -->
+  <rect x="19" y="0" width="13" height="13" fill="#3464B9"/>
+  <rect x="0" y="19" width="13" height="13" fill="#3464B9"/>
+  <!-- Cross arms -->
+  <rect x="13" y="0" width="6" height="32" fill="#1C2B5A"/>
+  <rect x="0" y="13" width="32" height="6" fill="#1C2B5A"/>
+</svg>

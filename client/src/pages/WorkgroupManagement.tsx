@@ -77,8 +77,8 @@ export const WorkgroupManagement: React.FC = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Workgroups</Typography>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" sx={{ mb: 2 }}>Workgroups</Typography>
         {canCreateWorkgroup && (
           <Button
             variant="contained"
@@ -148,7 +148,7 @@ export const WorkgroupManagement: React.FC = () => {
                           sx={{ mr: 1 }}
                         />
                         <Chip
-                          label={`${workgroup.workerUserIds.length} workers`}
+                          label={`${workgroup.volunteerUserIds.length} volunteers`}
                           size="small"
                           variant="outlined"
                           sx={{ mr: 1 }}

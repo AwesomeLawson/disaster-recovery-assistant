@@ -7,6 +7,8 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   FacebookAuthProvider,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
 } from 'firebase/auth';
 import type { User as FirebaseUser } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -46,12 +48,15 @@ export const authService = {
     await sendPasswordResetEmail(auth, email);
   },
 
-  // Update current user's password
-  async changePassword(newPassword: string): Promise<void> {
+  // Update current user's password (requires reauthentication)
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
     const user = auth.currentUser;
-    if (!user) {
+    if (!user || !user.email) {
       throw new Error('No authenticated user');
     }
+    // Reauthenticate user before changing password
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
     await updatePassword(user, newPassword);
   },
 

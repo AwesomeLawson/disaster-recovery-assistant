@@ -20,10 +20,22 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  Divider,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { userService } from '../services/user.service';
 import type { User, UserRole } from '../types';
+
+const ALL_ROLES: { value: UserRole; label: string }[] = [
+  { value: 'administrator', label: 'Administrator' },
+  { value: 'assessor', label: 'Assessor' },
+  { value: 'workGroupLead', label: 'Work Group Lead' },
+  { value: 'volunteer', label: 'Volunteer' },
+  { value: 'thirdParty', label: 'Third Party' },
+];
 
 export const AdminUsers: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -35,6 +47,10 @@ export const AdminUsers: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingRoles, setEditingRoles] = useState<UserRole[]>([]);
+  const [savingRoles, setSavingRoles] = useState(false);
+  const [authInfo, setAuthInfo] = useState<{ creationTime: string; lastSignInTime: string; providers: string[] } | null>(null);
+  const [authInfoLoading, setAuthInfoLoading] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -57,10 +73,12 @@ export const AdminUsers: React.FC = () => {
     let filtered = users;
 
     if (searchTerm) {
+      const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (u) =>
-          u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          u.phoneNumber.includes(searchTerm)
+          u.email.toLowerCase().includes(term) ||
+          u.phoneNumber.includes(term) ||
+          `${u.firstName} ${u.lastName}`.toLowerCase().includes(term)
       );
     }
 
@@ -107,7 +125,7 @@ export const AdminUsers: React.FC = () => {
         return 'primary';
       case 'workGroupLead':
         return 'secondary';
-      case 'worker':
+      case 'volunteer':
         return 'info';
       case 'thirdParty':
         return 'default';
@@ -116,9 +134,40 @@ export const AdminUsers: React.FC = () => {
     }
   };
 
-  const openUserDialog = (user: User) => {
+  const openUserDialog = async (user: User) => {
     setSelectedUser(user);
+    setEditingRoles([...user.roles]);
+    setAuthInfo(null);
     setDialogOpen(true);
+    setAuthInfoLoading(true);
+    try {
+      const info = await userService.getUserAuthInfo(user.id);
+      setAuthInfo(info);
+    } catch {
+      // non-fatal — auth info just won't show
+    } finally {
+      setAuthInfoLoading(false);
+    }
+  };
+
+  const handleRoleToggle = (role: UserRole) => {
+    setEditingRoles((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
+    );
+  };
+
+  const handleSaveRoles = async () => {
+    if (!selectedUser) return;
+    setSavingRoles(true);
+    try {
+      await userService.updateUserRoles(selectedUser.id, editingRoles);
+      await loadUsers();
+      setDialogOpen(false);
+    } catch (err: any) {
+      setError(err.message || 'Failed to update roles');
+    } finally {
+      setSavingRoles(false);
+    }
   };
 
   if (loading) {
@@ -144,7 +193,7 @@ export const AdminUsers: React.FC = () => {
       <Paper sx={{ p: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
           <TextField
-            placeholder="Search by email or phone..."
+            placeholder="Search by name, email, or phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             sx={{ flexGrow: 1, minWidth: 200 }}
@@ -180,7 +229,7 @@ export const AdminUsers: React.FC = () => {
               <MenuItem value="administrator">Administrator</MenuItem>
               <MenuItem value="assessor">Assessor</MenuItem>
               <MenuItem value="workGroupLead">Work Group Lead</MenuItem>
-              <MenuItem value="worker">Worker</MenuItem>
+              <MenuItem value="volunteer">Volunteer</MenuItem>
               <MenuItem value="thirdParty">Third Party</MenuItem>
             </Select>
           </FormControl>
@@ -210,11 +259,11 @@ export const AdminUsers: React.FC = () => {
                 onClick={() => openUserDialog(user)}
               >
                 <ListItemText
-                  primary={user.email}
+                  primary={`${user.firstName} ${user.lastName}`}
                   secondary={
                     <Box sx={{ mt: 1 }}>
                       <Typography variant="body2" component="span">
-                        Phone: {user.phoneNumber}
+                        {user.email} &bull; {user.phoneNumber}
                       </Typography>
                       <Box sx={{ mt: 0.5 }}>
                         <Chip
@@ -292,6 +341,17 @@ export const AdminUsers: React.FC = () => {
             <DialogTitle>User Details</DialogTitle>
             <DialogContent>
               <Box sx={{ pt: 2 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">First Name</Typography>
+                    <Typography variant="body1">{selectedUser.firstName}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">Last Name</Typography>
+                    <Typography variant="body1">{selectedUser.lastName}</Typography>
+                  </Box>
+                </Box>
+
                 <Typography variant="subtitle2" color="text.secondary">
                   Email
                 </Typography>
@@ -305,6 +365,19 @@ export const AdminUsers: React.FC = () => {
                 <Typography variant="body1" sx={{ mb: 2 }}>
                   {selectedUser.phoneNumber}
                 </Typography>
+
+                {selectedUser.address && (selectedUser.address.street || selectedUser.address.city) && (
+                  <>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Address
+                    </Typography>
+                    <Typography variant="body1" sx={{ mb: 2 }}>
+                      {[selectedUser.address.street, selectedUser.address.city, selectedUser.address.state, selectedUser.address.zip]
+                        .filter(Boolean)
+                        .join(', ')}
+                    </Typography>
+                  </>
+                )}
 
                 <Typography variant="subtitle2" color="text.secondary">
                   Communication Preference
@@ -323,26 +396,27 @@ export const AdminUsers: React.FC = () => {
                   sx={{ mb: 2 }}
                 />
 
-                <Typography variant="subtitle2" color="text.secondary">
-                  Current Roles
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                  Roles
                 </Typography>
-                <Box sx={{ mb: 2 }}>
-                  {selectedUser.roles.length === 0 ? (
-                    <Typography variant="body2" color="text.secondary">
-                      No roles assigned
-                    </Typography>
-                  ) : (
-                    selectedUser.roles.map((role) => (
-                      <Chip
-                        key={role}
-                        label={role}
-                        size="small"
-                        color={getRoleColor(role) as any}
-                        sx={{ mr: 0.5 }}
-                      />
-                    ))
-                  )}
-                </Box>
+                <FormGroup row>
+                  {ALL_ROLES.map(({ value, label }) => (
+                    <FormControlLabel
+                      key={value}
+                      control={
+                        <Checkbox
+                          checked={editingRoles.includes(value)}
+                          onChange={() => handleRoleToggle(value)}
+                          size="small"
+                        />
+                      }
+                      label={label}
+                      sx={{ minWidth: 160 }}
+                    />
+                  ))}
+                </FormGroup>
+                <Divider sx={{ my: 2 }} />
 
                 {selectedUser.requestedRoles && selectedUser.requestedRoles.length > 0 && (
                   <>
@@ -371,12 +445,42 @@ export const AdminUsers: React.FC = () => {
                   {selectedUser.legalReleaseSigned ? 'Yes' : 'No'}
                 </Typography>
 
-                <Typography variant="subtitle2" color="text.secondary">
-                  Created At
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                  Account Activity
                 </Typography>
-                <Typography variant="body1">
-                  {new Date(selectedUser.createdAt).toLocaleString()}
-                </Typography>
+                {authInfoLoading ? (
+                  <Typography variant="body2" color="text.secondary">Loading…</Typography>
+                ) : (
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" display="block">Profile Created</Typography>
+                      <Typography variant="body2">{new Date(selectedUser.createdAt).toLocaleString()}</Typography>
+                    </Box>
+                    {authInfo && (
+                      <>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary" display="block">Auth Account Created</Typography>
+                          <Typography variant="body2">{new Date(authInfo.creationTime).toLocaleString()}</Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary" display="block">Last Sign-In</Typography>
+                          <Typography variant="body2">{new Date(authInfo.lastSignInTime).toLocaleString()}</Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary" display="block">Sign-In Method</Typography>
+                          <Typography variant="body2">
+                            {authInfo.providers.map((p) =>
+                              p === 'password' ? 'Email/Password' :
+                              p === 'google.com' ? 'Google' :
+                              p === 'facebook.com' ? 'Facebook' : p
+                            ).join(', ')}
+                          </Typography>
+                        </Box>
+                      </>
+                    )}
+                  </Box>
+                )}
               </Box>
             </DialogContent>
             <DialogActions>
@@ -397,7 +501,15 @@ export const AdminUsers: React.FC = () => {
                   </Button>
                 </>
               )}
-              <Button onClick={() => setDialogOpen(false)}>Close</Button>
+              <Box sx={{ flex: 1 }} />
+              <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button
+                variant="contained"
+                onClick={handleSaveRoles}
+                disabled={savingRoles}
+              >
+                {savingRoles ? 'Saving...' : 'Save Roles'}
+              </Button>
             </DialogActions>
           </>
         )}

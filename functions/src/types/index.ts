@@ -1,4 +1,4 @@
-export type UserRole = 'administrator' | 'assessor' | 'workGroupLead' | 'worker' | 'thirdParty';
+export type UserRole = 'administrator' | 'assessor' | 'workGroupLead' | 'volunteer' | 'thirdParty';
 
 export type CommunicationPreference = 'email' | 'sms';
 
@@ -10,15 +10,25 @@ export type EscalationStatus = 'pending' | 'inProgress' | 'resolved' | 'rejected
 
 export type WorkgroupTaskStatus = 'notStarted' | 'inProgress' | 'partiallyCompleted' | 'completed' | 'needsEscalation';
 
+export interface UserAddress {
+  street?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+}
+
 export interface User {
   id: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phoneNumber: string;
+  address?: UserAddress;
   communicationPreference: CommunicationPreference;
   roles: UserRole[];
   requestedRoles?: UserRole[];
   roleApprovalStatus: 'pending' | 'approved' | 'rejected';
-  groupIds?: string[];
+  eventIds?: string[];
   centerIds?: string[];
   legalReleaseId?: string;
   legalReleaseSigned: boolean;
@@ -26,10 +36,10 @@ export interface User {
   updatedAt: number;
 }
 
-export interface Group {
+export interface Event {
   id: string;
   name: string;
-  eventType: string; // e.g., "storm", "flood", "conference"
+  eventType: string; // e.g., "storm", "flood", "tornado", "earthquake"
   description?: string;
   userIds: string[];
   centerIds: string[];
@@ -44,7 +54,7 @@ export interface Center {
   address: string;
   latitude?: number;
   longitude?: number;
-  groupId: string;
+  eventIds: string[]; // Centers can be associated with multiple events
   leadUserIds: string[];
   createdBy: string;
   createdAt: number;
@@ -59,7 +69,7 @@ export interface Assessment {
   longitude?: number;
   assessorId: string;
   centerId: string;
-  groupId: string;
+  eventId?: string; // Optional - which event this assessment is for
   damages: string;
   needs: string;
   affectedPeople: number;
@@ -76,9 +86,9 @@ export interface Workgroup {
   id: string;
   name: string;
   centerId: string;
-  groupId: string;
+  eventId?: string; // Optional - which event this workgroup is for
   leadUserId: string;
-  workerUserIds: string[];
+  volunteerUserIds: string[];
   assessmentId: string;
   taskDescription: string;
   taskStatus: WorkgroupTaskStatus;
@@ -94,7 +104,7 @@ export interface Escalation {
   assessmentId?: string;
   workgroupId: string;
   centerId: string;
-  groupId: string;
+  eventId?: string;
   type: EscalationType;
   status: EscalationStatus;
   reason: string;
@@ -113,7 +123,7 @@ export interface Message {
   recipientIds: string[];
   content: string;
   type: 'sms' | 'email' | 'inApp';
-  groupId?: string;
+  eventId?: string;
   centerId?: string;
   workgroupId?: string;
   createdAt: number;

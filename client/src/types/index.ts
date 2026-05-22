@@ -1,6 +1,6 @@
 // Type definitions matching backend types
 
-export type UserRole = 'administrator' | 'assessor' | 'workGroupLead' | 'worker' | 'thirdParty';
+export type UserRole = 'administrator' | 'assessor' | 'workGroupLead' | 'volunteer' | 'thirdParty';
 
 export type CommunicationPreference = 'email' | 'sms';
 
@@ -16,15 +16,25 @@ export type MessageType = 'sms' | 'email' | 'inApp';
 
 export type ReleaseType = 'volunteer' | 'propertyAccess';
 
+export interface UserAddress {
+  street?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+}
+
 export interface User {
   id: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phoneNumber: string;
+  address?: UserAddress;
   communicationPreference: CommunicationPreference;
   roles: UserRole[];
   requestedRoles?: UserRole[];
   roleApprovalStatus: 'pending' | 'approved' | 'rejected';
-  groupIds?: string[];
+  eventIds?: string[];
   centerIds?: string[];
   legalReleaseId?: string;
   legalReleaseSigned: boolean;
@@ -32,10 +42,10 @@ export interface User {
   updatedAt: number;
 }
 
-export interface Group {
+export interface Event {
   id: string;
   name: string;
-  eventType: string;
+  eventType: string; // e.g., "storm", "flood", "tornado", "earthquake"
   description?: string;
   userIds: string[];
   centerIds: string[];
@@ -50,7 +60,7 @@ export interface Center {
   address: string;
   latitude?: number;
   longitude?: number;
-  groupId: string;
+  eventIds: string[]; // Centers can be associated with multiple events
   leadUserIds: string[];
   createdBy: string;
   createdAt: number;
@@ -65,7 +75,7 @@ export interface Assessment {
   longitude?: number;
   assessorId: string;
   centerId: string;
-  groupId: string;
+  eventId?: string;
   damages: string;
   needs: string;
   affectedPeople: number;
@@ -88,9 +98,9 @@ export interface Workgroup {
   id: string;
   name: string;
   centerId: string;
-  groupId: string;
+  eventId?: string;
   leadUserId: string;
-  workerUserIds: string[];
+  volunteerUserIds: string[];
   assessmentId: string;
   taskDescription: string;
   taskStatus: WorkgroupTaskStatus;
@@ -106,7 +116,7 @@ export interface Escalation {
   assessmentId?: string;
   workgroupId: string;
   centerId: string;
-  groupId: string;
+  eventId?: string;
   type: EscalationType;
   status: EscalationStatus;
   reason: string;
@@ -125,7 +135,7 @@ export interface Message {
   recipientIds: string[];
   content: string;
   type: MessageType;
-  groupId?: string;
+  eventId?: string;
   centerId?: string;
   workgroupId?: string;
   createdAt: number;
@@ -155,7 +165,10 @@ export interface ApiResponse<T> {
 export interface RegisterFormData {
   email: string;
   password: string;
+  firstName: string;
+  lastName: string;
   phoneNumber: string;
+  address?: UserAddress;
   communicationPreference: CommunicationPreference;
   requestedRoles: UserRole[];
 }
@@ -166,7 +179,7 @@ export interface AssessmentFormData {
   latitude?: number;
   longitude?: number;
   centerId: string;
-  groupId: string;
+  eventId?: string;
   damages: string;
   needs: string;
   affectedPeople: number;
@@ -178,9 +191,9 @@ export interface AssessmentFormData {
 export interface WorkgroupFormData {
   name: string;
   centerId: string;
-  groupId: string;
+  eventId?: string;
   leadUserId: string;
-  workerUserIds?: string[];
+  volunteerUserIds?: string[];
   assessmentId: string;
   taskDescription: string;
 }
@@ -188,7 +201,7 @@ export interface WorkgroupFormData {
 export interface EscalationFormData {
   workgroupId: string;
   centerId: string;
-  groupId: string;
+  eventId?: string;
   type: EscalationType;
   reason: string;
   assessmentId?: string;

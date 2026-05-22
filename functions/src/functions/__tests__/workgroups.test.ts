@@ -52,7 +52,7 @@ describe('Workgroup Management Functions', () => {
         centerId: 'center123',
         groupId: 'group123',
         leadUserId: 'lead123',
-        workerUserIds: ['worker1', 'worker2'],
+        volunteerUserIds: ['worker1', 'worker2'],
         assessmentId: 'assessment123',
         taskDescription: 'Roof repair and cleanup',
       };
@@ -117,7 +117,7 @@ describe('Workgroup Management Functions', () => {
     it('should reject creation by non-workgroup-lead/non-admin', async () => {
       const mockGet = jest.fn().mockResolvedValue({
         exists: true,
-        data: () => ({ roles: ['worker'] }),
+        data: () => ({ roles: ['volunteer'] }),
       });
 
       const mockDoc = jest.fn(() => ({ get: mockGet }));
@@ -171,7 +171,7 @@ describe('Workgroup Management Functions', () => {
       const mockGet = jest.fn()
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ leadUserId: 'lead123', workerUserIds: [] }),
+          data: () => ({ leadUserId: 'lead123', volunteerUserIds: [] }),
         })
         .mockResolvedValueOnce({
           exists: true,
@@ -198,16 +198,16 @@ describe('Workgroup Management Functions', () => {
       expect(mockUpdate).toHaveBeenCalled();
     });
 
-    it('should allow worker to update their assigned workgroup', async () => {
+    it('should allow volunteer to update their assigned workgroup', async () => {
       const mockUpdate = jest.fn().mockResolvedValue(undefined);
       const mockGet = jest.fn()
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ leadUserId: 'lead123', workerUserIds: ['worker123'] }),
+          data: () => ({ leadUserId: 'lead123', volunteerUserIds: ['worker123'] }),
         })
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ roles: ['worker'] }),
+          data: () => ({ roles: ['volunteer'] }),
         });
 
       const mockDoc = jest.fn(() => ({ get: mockGet, update: mockUpdate }));
@@ -233,11 +233,11 @@ describe('Workgroup Management Functions', () => {
       const mockGet = jest.fn()
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ leadUserId: 'lead123', workerUserIds: [] }),
+          data: () => ({ leadUserId: 'lead123', volunteerUserIds: [] }),
         })
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ roles: ['worker'] }),
+          data: () => ({ roles: ['volunteer'] }),
         });
 
       const mockDoc = jest.fn(() => ({ get: mockGet }));
@@ -286,11 +286,11 @@ describe('Workgroup Management Functions', () => {
       const mockGet = jest.fn()
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ leadUserId: 'lead123', workerUserIds: ['worker123'] }),
+          data: () => ({ leadUserId: 'lead123', volunteerUserIds: ['worker123'] }),
         })
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ roles: ['worker'] }),
+          data: () => ({ roles: ['volunteer'] }),
         });
 
       const mockDoc = jest.fn(() => ({ get: mockGet, update: mockUpdate }));
@@ -323,11 +323,11 @@ describe('Workgroup Management Functions', () => {
       const mockGet = jest.fn()
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ leadUserId: 'lead123', workerUserIds: [] }),
+          data: () => ({ leadUserId: 'lead123', volunteerUserIds: [] }),
         })
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ roles: ['worker'] }),
+          data: () => ({ roles: ['volunteer'] }),
         });
 
       const mockDoc = jest.fn(() => ({ get: mockGet }));
@@ -371,12 +371,12 @@ describe('Workgroup Management Functions', () => {
   });
 
   describe('addWorkerToWorkgroup', () => {
-    it('should allow workgroup lead to add worker', async () => {
+    it('should allow workgroup lead to add volunteer', async () => {
       const mockUpdate = jest.fn().mockResolvedValue(undefined);
       const mockGet = jest.fn()
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ leadUserId: 'lead123', workerUserIds: [] }),
+          data: () => ({ leadUserId: 'lead123', volunteerUserIds: [] }),
         })
         .mockResolvedValueOnce({
           exists: true,
@@ -407,12 +407,12 @@ describe('Workgroup Management Functions', () => {
       expect(mockUpdate).toHaveBeenCalled();
     });
 
-    it('should allow administrator to add worker', async () => {
+    it('should allow administrator to add volunteer', async () => {
       const mockUpdate = jest.fn().mockResolvedValue(undefined);
       const mockGet = jest.fn()
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ leadUserId: 'lead123', workerUserIds: [] }),
+          data: () => ({ leadUserId: 'lead123', volunteerUserIds: [] }),
         })
         .mockResolvedValueOnce({
           exists: true,
@@ -442,15 +442,15 @@ describe('Workgroup Management Functions', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject worker addition by non-lead/non-admin', async () => {
+    it('should reject volunteer addition by non-lead/non-admin', async () => {
       const mockGet = jest.fn()
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ leadUserId: 'lead123', workerUserIds: [] }),
+          data: () => ({ leadUserId: 'lead123', volunteerUserIds: [] }),
         })
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ roles: ['worker'] }),
+          data: () => ({ roles: ['volunteer'] }),
         });
 
       const mockDoc = jest.fn(() => ({ get: mockGet }));
@@ -467,7 +467,7 @@ describe('Workgroup Management Functions', () => {
         auth: { uid: 'user123', token: {} },
       };
 
-      await expect(wrapped(data, context)).rejects.toThrow('Only work group leads or administrators can add workers');
+      await expect(wrapped(data, context)).rejects.toThrow('Only work group leads or administrators can add volunteers');
     });
   });
 

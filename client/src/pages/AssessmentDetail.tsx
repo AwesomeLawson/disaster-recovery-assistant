@@ -28,18 +28,18 @@ import EditIcon from '@mui/icons-material/Edit';
 import FlagIcon from '@mui/icons-material/Flag';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import { assessmentService } from '../services/assessment.service';
-import { groupService } from '../services/group.service';
+import { eventService } from '../services/event.service';
 import { centerService } from '../services/center.service';
 import { userService } from '../services/user.service';
 import { useAuth } from '../context/AuthContext';
-import type { Assessment, AssessmentSeverity, Group, Center, User } from '../types';
+import type { Assessment, AssessmentSeverity, Event, Center, User } from '../types';
 
 export const AssessmentDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [assessment, setAssessment] = useState<Assessment | null>(null);
-  const [group, setGroup] = useState<Group | null>(null);
+  const [event, setEvent] = useState<Event | null>(null);
   const [center, setCenter] = useState<Center | null>(null);
   const [assessor, setAssessor] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,12 +76,12 @@ export const AssessmentDetail: React.FC = () => {
         flagForReview: data.flaggedForReview,
       });
 
-      const [groupData, centerData, assessorData] = await Promise.all([
-        groupService.getGroup(data.groupId),
+      const [eventData, centerData, assessorData] = await Promise.all([
+        data.eventId ? eventService.getEvent(data.eventId) : Promise.resolve(null),
         centerService.getCenter(data.centerId),
         userService.getUser(data.assessorId),
       ]);
-      setGroup(groupData);
+      setEvent(eventData);
       setCenter(centerData);
       setAssessor(assessorData);
     } catch (err: any) {
@@ -307,15 +307,21 @@ export const AssessmentDetail: React.FC = () => {
             <Divider sx={{ mb: 2 }} />
 
             <Typography variant="subtitle2" color="text.secondary">
-              Group
+              Event
             </Typography>
-            <Typography
-              variant="body1"
-              sx={{ mb: 2, cursor: 'pointer', color: 'primary.main' }}
-              onClick={() => navigate(`/groups/${assessment.groupId}`)}
-            >
-              {group?.name || assessment.groupId}
-            </Typography>
+            {assessment.eventId ? (
+              <Typography
+                variant="body1"
+                sx={{ mb: 2, cursor: 'pointer', color: 'primary.main' }}
+                onClick={() => navigate(`/events/${assessment.eventId}`)}
+              >
+                {event?.name || assessment.eventId}
+              </Typography>
+            ) : (
+              <Typography variant="body1" sx={{ mb: 2 }} color="text.secondary">
+                No event assigned
+              </Typography>
+            )}
 
             <Typography variant="subtitle2" color="text.secondary">
               Center

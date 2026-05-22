@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "faith-responders"
+    "default": "demo-project",
+    "prod": "faith-responders-prod"
   }
 }

@@ -23,14 +23,22 @@ import GoogleIcon from '@mui/icons-material/Google';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import { authService } from '../services/auth.service';
 import { userService } from '../services/user.service';
+import { useAuth } from '../context/AuthContext';
 import type { UserRole, CommunicationPreference } from '../types';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [addressStreet, setAddressStreet] = useState('');
+  const [addressCity, setAddressCity] = useState('');
+  const [addressState, setAddressState] = useState('');
+  const [addressZip, setAddressZip] = useState('');
   const [communicationPreference, setCommunicationPreference] = useState<CommunicationPreference>('email');
   const [requestedRoles, setRequestedRoles] = useState<UserRole[]>([]);
   const [error, setError] = useState('');
@@ -40,7 +48,7 @@ export const Register: React.FC = () => {
   const availableRoles: { value: UserRole; label: string }[] = [
     { value: 'assessor', label: 'Assessor' },
     { value: 'workGroupLead', label: 'Work Group Lead' },
-    { value: 'worker', label: 'Worker' },
+    { value: 'volunteer', label: 'Volunteer' },
   ];
 
   const handleRoleToggle = (role: UserRole) => {
@@ -64,12 +72,22 @@ export const Register: React.FC = () => {
       return;
     }
 
+    if (!firstName.trim() || !lastName.trim()) {
+      setError('First and last name are required');
+      return;
+    }
+
     if (requestedRoles.length === 0) {
       setError('Please select at least one role');
       return;
     }
 
     setLoading(true);
+
+    const hasAddress = addressStreet || addressCity || addressState || addressZip;
+    const address = hasAddress
+      ? { street: addressStreet, city: addressCity, state: addressState, zip: addressZip }
+      : undefined;
 
     try {
       // Create Firebase auth user
@@ -78,11 +96,16 @@ export const Register: React.FC = () => {
       // Register user profile
       await userService.registerUser({
         email,
+        firstName,
+        lastName,
         phoneNumber,
+        address,
         communicationPreference,
         requestedRoles,
       });
 
+      // Doc is now in Firestore — force AuthContext to load it before navigating
+      await refreshUser();
       navigate('/sign-legal-release');
     } catch (err: any) {
       setError(err.message || 'Failed to register');
@@ -180,6 +203,31 @@ export const Register: React.FC = () => {
           </Box>
 
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="firstName"
+                label="First Name"
+                name="firstName"
+                autoComplete="given-name"
+                autoFocus
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="lastName"
+                label="Last Name"
+                name="lastName"
+                autoComplete="family-name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
+            </Box>
             <TextField
               margin="normal"
               required
@@ -188,7 +236,6 @@ export const Register: React.FC = () => {
               label="Email Address"
               name="email"
               autoComplete="email"
-              autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -203,6 +250,51 @@ export const Register: React.FC = () => {
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
             />
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 0.5 }}>
+              Address (optional)
+            </Typography>
+            <TextField
+              margin="dense"
+              fullWidth
+              id="addressStreet"
+              label="Street"
+              name="addressStreet"
+              autoComplete="address-line1"
+              value={addressStreet}
+              onChange={(e) => setAddressStreet(e.target.value)}
+            />
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                margin="dense"
+                fullWidth
+                id="addressCity"
+                label="City"
+                name="addressCity"
+                autoComplete="address-level2"
+                value={addressCity}
+                onChange={(e) => setAddressCity(e.target.value)}
+              />
+              <TextField
+                margin="dense"
+                sx={{ width: 100 }}
+                id="addressState"
+                label="State"
+                name="addressState"
+                autoComplete="address-level1"
+                value={addressState}
+                onChange={(e) => setAddressState(e.target.value)}
+              />
+              <TextField
+                margin="dense"
+                sx={{ width: 120 }}
+                id="addressZip"
+                label="ZIP"
+                name="addressZip"
+                autoComplete="postal-code"
+                value={addressZip}
+                onChange={(e) => setAddressZip(e.target.value)}
+              />
+            </Box>
             <TextField
               margin="normal"
               required

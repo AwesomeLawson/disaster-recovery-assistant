@@ -34,24 +34,24 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { workgroupService } from '../services/workgroup.service';
-import { groupService } from '../services/group.service';
+import { eventService } from '../services/event.service';
 import { centerService } from '../services/center.service';
 import { userService } from '../services/user.service';
 import { assessmentService } from '../services/assessment.service';
 import { escalationService } from '../services/escalation.service';
 import { useAuth } from '../context/AuthContext';
-import type { Workgroup, WorkgroupTaskStatus, Group, Center, User, Assessment, EscalationFormData } from '../types';
+import type { Workgroup, WorkgroupTaskStatus, Event, Center, User, Assessment, EscalationFormData } from '../types';
 
 export const WorkgroupDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [workgroup, setWorkgroup] = useState<Workgroup | null>(null);
-  const [group, setGroup] = useState<Group | null>(null);
+  const [event, setEvent] = useState<Event | null>(null);
   const [center, setCenter] = useState<Center | null>(null);
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [lead, setLead] = useState<User | null>(null);
-  const [workers, setWorkers] = useState<User[]>([]);
+  const [volunteers, setVolunteers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [usersMap, setUsersMap] = useState<Record<string, User>>({});
   const [loading, setLoading] = useState(true);
@@ -63,8 +63,8 @@ export const WorkgroupDetail: React.FC = () => {
   const [statusPhotos, setStatusPhotos] = useState<File[]>([]);
   const [updating, setUpdating] = useState(false);
 
-  const [addWorkerDialogOpen, setAddWorkerDialogOpen] = useState(false);
-  const [selectedWorker, setSelectedWorker] = useState<User | null>(null);
+  const [addVolunteerDialogOpen, setAddVolunteerDialogOpen] = useState(false);
+  const [selectedVolunteer, setSelectedVolunteer] = useState<User | null>(null);
 
   const [escalateDialogOpen, setEscalateDialogOpen] = useState(false);
   const [escalationReason, setEscalationReason] = useState('');
@@ -83,26 +83,26 @@ export const WorkgroupDetail: React.FC = () => {
       setWorkgroup(data);
       setNewStatus(data.taskStatus);
 
-      const [groupData, centerData, assessmentData, allUsersData] = await Promise.all([
-        groupService.getGroup(data.groupId),
+      const [eventData, centerData, assessmentData, allUsersData] = await Promise.all([
+        data.eventId ? eventService.getEvent(data.eventId) : Promise.resolve(null),
         centerService.getCenter(data.centerId),
         assessmentService.getAssessment(data.assessmentId),
         userService.listUsers(),
       ]);
 
-      setGroup(groupData);
+      setEvent(eventData);
       setCenter(centerData);
       setAssessment(assessmentData);
       setAllUsers(allUsersData);
 
       const usersById: Record<string, User> = {};
-      allUsersData.forEach((u) => {
+      allUsersData.forEach((u: User) => {
         usersById[u.id] = u;
       });
       setUsersMap(usersById);
 
       setLead(usersById[data.leadUserId] || null);
-      setWorkers(data.workerUserIds.map((uid) => usersById[uid]).filter(Boolean));
+      setVolunteers(data.volunteerUserIds.map((uid) => usersById[uid]).filter(Boolean));
     } catch (err: any) {
       setError(err.message || 'Failed to load workgroup');
     } finally {
@@ -139,17 +139,17 @@ export const WorkgroupDetail: React.FC = () => {
     }
   };
 
-  const handleAddWorker = async () => {
-    if (!workgroup || !selectedWorker) return;
+  const handleAddVolunteer = async () => {
+    if (!workgroup || !selectedVolunteer) return;
 
     try {
       setUpdating(true);
-      await workgroupService.addWorkerToWorkgroup(workgroup.id, selectedWorker.id);
-      setAddWorkerDialogOpen(false);
-      setSelectedWorker(null);
+      await workgroupService.addWorkerToWorkgroup(workgroup.id, selectedVolunteer.id);
+      setAddVolunteerDialogOpen(false);
+      setSelectedVolunteer(null);
       await loadWorkgroup();
     } catch (err: any) {
-      setError(err.message || 'Failed to add worker');
+      setError(err.message || 'Failed to add volunteer');
     } finally {
       setUpdating(false);
     }
@@ -163,7 +163,7 @@ export const WorkgroupDetail: React.FC = () => {
       const escalationData: EscalationFormData = {
         workgroupId: workgroup.id,
         centerId: workgroup.centerId,
-        groupId: workgroup.groupId,
+        eventId: workgroup.eventId,
         type: escalationType,
         reason: escalationReason,
         assessmentId: workgroup.assessmentId,
@@ -221,10 +221,10 @@ export const WorkgroupDetail: React.FC = () => {
     user?.roles.includes('workGroupLead') ||
     user?.id === workgroup?.leadUserId;
 
-  const availableWorkers = allUsers.filter(
+  const availableVolunteers = allUsers.filter(
     (u) =>
-      (u.roles.includes('worker') || u.roles.includes('workGroupLead')) &&
-      !workgroup?.workerUserIds.includes(u.id) &&
+      (u.roles.includes('volunteer') || u.roles.includes('workGroupLead')) &&
+      !workgroup?.volunteerUserIds.includes(u.id) &&
       u.id !== workgroup?.leadUserId
   );
 
@@ -378,8 +378,8 @@ export const WorkgroupDetail: React.FC = () => {
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6">Team</Typography>
               {canManage && (
-                <Button size="small" startIcon={<PersonAddIcon />} onClick={() => setAddWorkerDialogOpen(true)}>
-                  Add Worker
+                <Button size="small" startIcon={<PersonAddIcon />} onClick={() => setAddVolunteerDialogOpen(true)}>
+                  Add Volunteer
                 </Button>
               )}
             </Box>
@@ -396,22 +396,22 @@ export const WorkgroupDetail: React.FC = () => {
             </Box>
 
             <Typography variant="subtitle2" color="text.secondary">
-              Workers ({workers.length})
+              Volunteers ({volunteers.length})
             </Typography>
-            {workers.length === 0 ? (
+            {volunteers.length === 0 ? (
               <Typography variant="body2" color="text.secondary">
-                No workers assigned
+                No volunteers assigned
               </Typography>
             ) : (
               <List dense>
-                {workers.map((worker) => (
-                  <ListItem key={worker.id} sx={{ px: 0 }}>
+                {volunteers.map((volunteer) => (
+                  <ListItem key={volunteer.id} sx={{ px: 0 }}>
                     <ListItemAvatar>
                       <Avatar sx={{ width: 32, height: 32 }}>
-                        {worker.email.charAt(0).toUpperCase()}
+                        {volunteer.email.charAt(0).toUpperCase()}
                       </Avatar>
                     </ListItemAvatar>
-                    <ListItemText primary={worker.email} />
+                    <ListItemText primary={volunteer.email} />
                   </ListItem>
                 ))}
               </List>
@@ -425,15 +425,21 @@ export const WorkgroupDetail: React.FC = () => {
             <Divider sx={{ mb: 2 }} />
 
             <Typography variant="subtitle2" color="text.secondary">
-              Group
+              Event
             </Typography>
-            <Typography
-              variant="body1"
-              sx={{ mb: 2, cursor: 'pointer', color: 'primary.main' }}
-              onClick={() => navigate(`/groups/${workgroup.groupId}`)}
-            >
-              {group?.name || workgroup.groupId}
-            </Typography>
+            {workgroup.eventId ? (
+              <Typography
+                variant="body1"
+                sx={{ mb: 2, cursor: 'pointer', color: 'primary.main' }}
+                onClick={() => navigate(`/events/${workgroup.eventId}`)}
+              >
+                {event?.name || workgroup.eventId}
+              </Typography>
+            ) : (
+              <Typography variant="body1" sx={{ mb: 2 }} color="text.secondary">
+                No event assigned
+              </Typography>
+            )}
 
             <Typography variant="subtitle2" color="text.secondary">
               Center
@@ -531,30 +537,30 @@ export const WorkgroupDetail: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Add Worker Dialog */}
-      <Dialog open={addWorkerDialogOpen} onClose={() => setAddWorkerDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add Worker</DialogTitle>
+      {/* Add Volunteer Dialog */}
+      <Dialog open={addVolunteerDialogOpen} onClose={() => setAddVolunteerDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Add Volunteer</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
             <Autocomplete
-              options={availableWorkers}
+              options={availableVolunteers}
               getOptionLabel={(option) => option.email}
-              value={selectedWorker}
-              onChange={(_, value) => setSelectedWorker(value)}
-              renderInput={(params) => <TextField {...params} label="Select Worker" />}
+              value={selectedVolunteer}
+              onChange={(_, value) => setSelectedVolunteer(value)}
+              renderInput={(params) => <TextField {...params} label="Select Volunteer" />}
             />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAddWorkerDialogOpen(false)} disabled={updating}>
+          <Button onClick={() => setAddVolunteerDialogOpen(false)} disabled={updating}>
             Cancel
           </Button>
           <Button
             variant="contained"
-            onClick={handleAddWorker}
-            disabled={updating || !selectedWorker}
+            onClick={handleAddVolunteer}
+            disabled={updating || !selectedVolunteer}
           >
-            {updating ? 'Adding...' : 'Add Worker'}
+            {updating ? 'Adding...' : 'Add Volunteer'}
           </Button>
         </DialogActions>
       </Dialog>

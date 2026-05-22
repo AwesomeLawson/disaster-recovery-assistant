@@ -19,12 +19,12 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { workgroupService } from '../services/workgroup.service';
-import { groupService } from '../services/group.service';
+import { eventService } from '../services/event.service';
 import { centerService } from '../services/center.service';
 import { userService } from '../services/user.service';
 import { assessmentService } from '../services/assessment.service';
 import { useAuth } from '../context/AuthContext';
-import type { Group, Center, User, Assessment, WorkgroupFormData } from '../types';
+import type { Event, Center, User, Assessment, WorkgroupFormData } from '../types';
 
 export const WorkgroupCreate: React.FC = () => {
   const navigate = useNavigate();
@@ -32,13 +32,13 @@ export const WorkgroupCreate: React.FC = () => {
   const [searchParams] = useSearchParams();
   const preselectedAssessmentId = searchParams.get('assessmentId');
 
-  const [groups, setGroups] = useState<Group[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [centers, setCenters] = useState<Center[]>([]);
   const [filteredCenters, setFilteredCenters] = useState<Center[]>([]);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [filteredAssessments, setFilteredAssessments] = useState<Assessment[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [availableWorkers, setAvailableWorkers] = useState<User[]>([]);
+  const [availableVolunteers, setAvailableWorkers] = useState<User[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -47,31 +47,32 @@ export const WorkgroupCreate: React.FC = () => {
   const [formData, setFormData] = useState<WorkgroupFormData>({
     name: '',
     centerId: '',
-    groupId: '',
+    eventId: '',
     leadUserId: '',
-    workerUserIds: [],
+    volunteerUserIds: [],
     assessmentId: '',
     taskDescription: '',
   });
 
-  const [selectedWorkers, setSelectedWorkers] = useState<User[]>([]);
+  const [selectedVolunteers, setSelectedWorkers] = useState<User[]>([]);
 
   useEffect(() => {
     loadInitialData();
   }, []);
 
   useEffect(() => {
-    if (formData.groupId) {
-      const groupCenters = centers.filter((c) => c.groupId === formData.groupId);
-      setFilteredCenters(groupCenters);
+    if (formData.eventId) {
+      const eventCenters = centers.filter((c) => formData.eventId && c.eventIds.includes(formData.eventId));
+      setFilteredCenters(eventCenters);
 
-      if (!groupCenters.find((c) => c.id === formData.centerId)) {
+      if (!eventCenters.find((c) => c.id === formData.centerId)) {
         setFormData((prev) => ({ ...prev, centerId: '', assessmentId: '' }));
       }
     } else {
-      setFilteredCenters([]);
+      // Show all centers when no event is selected
+      setFilteredCenters(centers);
     }
-  }, [formData.groupId, centers]);
+  }, [formData.eventId, centers]);
 
   useEffect(() => {
     if (formData.centerId) {
@@ -81,18 +82,18 @@ export const WorkgroupCreate: React.FC = () => {
       if (!centerAssessments.find((a) => a.id === formData.assessmentId)) {
         setFormData((prev) => ({ ...prev, assessmentId: '' }));
       }
-    } else if (formData.groupId) {
-      const groupAssessments = assessments.filter((a) => a.groupId === formData.groupId);
-      setFilteredAssessments(groupAssessments);
+    } else if (formData.eventId) {
+      const eventAssessments = assessments.filter((a) => a.eventId === formData.eventId);
+      setFilteredAssessments(eventAssessments);
     } else {
-      setFilteredAssessments([]);
+      setFilteredAssessments(assessments);
     }
-  }, [formData.centerId, formData.groupId, assessments]);
+  }, [formData.centerId, formData.eventId, assessments]);
 
   useEffect(() => {
     const workers = users.filter(
       (u) =>
-        (u.roles.includes('worker') || u.roles.includes('workGroupLead')) &&
+        (u.roles.includes('volunteer') || u.roles.includes('workGroupLead')) &&
         u.roleApprovalStatus === 'approved'
     );
     setAvailableWorkers(workers);
@@ -101,14 +102,14 @@ export const WorkgroupCreate: React.FC = () => {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const [groupsData, centersData, assessmentsData, usersData] = await Promise.all([
-        groupService.listGroups(),
+      const [eventsData, centersData, assessmentsData, usersData] = await Promise.all([
+        eventService.listEvents(),
         centerService.listCenters(),
         assessmentService.listAssessments(),
         userService.listUsers(),
       ]);
 
-      setGroups(groupsData);
+      setEvents(eventsData);
       setCenters(centersData);
       setAssessments(assessmentsData);
       setUsers(usersData);
@@ -120,12 +121,12 @@ export const WorkgroupCreate: React.FC = () => {
 
       // Handle preselected assessment
       if (preselectedAssessmentId) {
-        const assessment = assessmentsData.find((a) => a.id === preselectedAssessmentId);
+        const assessment = assessmentsData.find((a: Assessment) => a.id === preselectedAssessmentId);
         if (assessment) {
           setFormData((prev) => ({
             ...prev,
             assessmentId: assessment.id,
-            groupId: assessment.groupId,
+            eventId: assessment.eventId || '',
             centerId: assessment.centerId,
             name: `Workgroup for ${assessment.placeName}`,
           }));
@@ -143,10 +144,6 @@ export const WorkgroupCreate: React.FC = () => {
 
     if (!formData.name.trim()) {
       setError('Name is required');
-      return;
-    }
-    if (!formData.groupId) {
-      setError('Group is required');
       return;
     }
     if (!formData.centerId) {
@@ -170,7 +167,7 @@ export const WorkgroupCreate: React.FC = () => {
       setSubmitting(true);
       const workgroup = await workgroupService.createWorkgroup({
         ...formData,
-        workerUserIds: selectedWorkers.map((w) => w.id),
+        volunteerUserIds: selectedVolunteers.map((w) => w.id),
       });
       navigate(`/workgroups/${workgroup.id}`);
     } catch (err: any) {
@@ -223,16 +220,19 @@ export const WorkgroupCreate: React.FC = () => {
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth required>
-                <InputLabel>Group</InputLabel>
+              <FormControl fullWidth>
+                <InputLabel>Event (Optional)</InputLabel>
                 <Select
-                  value={formData.groupId}
-                  label="Group"
-                  onChange={(e) => setFormData({ ...formData, groupId: e.target.value })}
+                  value={formData.eventId}
+                  label="Event (Optional)"
+                  onChange={(e) => setFormData({ ...formData, eventId: e.target.value })}
                 >
-                  {groups.map((group) => (
-                    <MenuItem key={group.id} value={group.id}>
-                      {group.name}
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                  {events.map((event) => (
+                    <MenuItem key={event.id} value={event.id}>
+                      {event.name}
                     </MenuItem>
                   ))}
                 </Select>
@@ -240,7 +240,7 @@ export const WorkgroupCreate: React.FC = () => {
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth required disabled={!formData.groupId}>
+              <FormControl fullWidth required>
                 <InputLabel>Center</InputLabel>
                 <Select
                   value={formData.centerId}
@@ -257,7 +257,7 @@ export const WorkgroupCreate: React.FC = () => {
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <FormControl fullWidth required disabled={!formData.groupId}>
+              <FormControl fullWidth required>
                 <InputLabel>Assessment</InputLabel>
                 <Select
                   value={formData.assessmentId}
@@ -306,12 +306,12 @@ export const WorkgroupCreate: React.FC = () => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <Autocomplete
                 multiple
-                options={availableWorkers.filter((w) => w.id !== formData.leadUserId)}
+                options={availableVolunteers.filter((w) => w.id !== formData.leadUserId)}
                 getOptionLabel={(option) => option.email}
-                value={selectedWorkers}
+                value={selectedVolunteers}
                 onChange={(_, value) => setSelectedWorkers(value)}
                 renderInput={(params) => (
-                  <TextField {...params} label="Workers (optional)" placeholder="Select workers" />
+                  <TextField {...params} label="Volunteers (optional)" placeholder="Select volunteers" />
                 )}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => (

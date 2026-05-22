@@ -16,13 +16,13 @@ import {
 } from '@mui/material';
 import { assessmentService } from '../services/assessment.service';
 import { centerService } from '../services/center.service';
-import { groupService } from '../services/group.service';
-import type { AssessmentSeverity, Center, Group } from '../types';
+import { eventService } from '../services/event.service';
+import type { AssessmentSeverity, Center, Event } from '../types';
 
 export const CreateAssessment: React.FC = () => {
   const navigate = useNavigate();
   const [centers, setCenters] = useState<Center[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
@@ -30,7 +30,7 @@ export const CreateAssessment: React.FC = () => {
     placeName: '',
     address: '',
     centerId: '',
-    groupId: '',
+    eventId: '',
     damages: '',
     needs: '',
     affectedPeople: 0,
@@ -43,12 +43,12 @@ export const CreateAssessment: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [centersData, groupsData] = await Promise.all([
+      const [centersData, eventsData] = await Promise.all([
         centerService.listCenters(),
-        groupService.listGroups(),
+        eventService.listEvents(),
       ]);
       setCenters(centersData);
-      setGroups(groupsData);
+      setEvents(eventsData);
     } catch (err: any) {
       setError(err.message || 'Failed to load data');
     }
@@ -119,16 +119,19 @@ export const CreateAssessment: React.FC = () => {
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth required>
-                <InputLabel>Group</InputLabel>
+              <FormControl fullWidth>
+                <InputLabel>Event (Optional)</InputLabel>
                 <Select
-                  value={formData.groupId}
-                  label="Group"
-                  onChange={(e) => setFormData({ ...formData, groupId: e.target.value })}
+                  value={formData.eventId}
+                  label="Event (Optional)"
+                  onChange={(e) => setFormData({ ...formData, eventId: e.target.value })}
                 >
-                  {groups.map((group) => (
-                    <MenuItem key={group.id} value={group.id}>
-                      {group.name}
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                  {events.map((event) => (
+                    <MenuItem key={event.id} value={event.id}>
+                      {event.name}
                     </MenuItem>
                   ))}
                 </Select>

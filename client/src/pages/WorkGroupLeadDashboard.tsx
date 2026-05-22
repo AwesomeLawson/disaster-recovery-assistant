@@ -185,7 +185,7 @@ export const WorkGroupLeadDashboard: React.FC = () => {
                               sx={{ mr: 1 }}
                             />
                             <Chip
-                              label={`${workgroup.workerUserIds.length} workers`}
+                              label={`${workgroup.volunteerUserIds.length} volunteers`}
                               size="small"
                               variant="outlined"
                             />

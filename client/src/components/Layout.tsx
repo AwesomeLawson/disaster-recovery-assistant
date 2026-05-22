@@ -27,6 +27,7 @@ import LocationCityIcon from '@mui/icons-material/LocationCity';
 import WorkIcon from '@mui/icons-material/Work';
 import WarningIcon from '@mui/icons-material/Warning';
 import MessageIcon from '@mui/icons-material/Message';
+import EventIcon from '@mui/icons-material/Event';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth.service';
 
@@ -68,7 +69,7 @@ export const Layout: React.FC = () => {
 
     if (user.roles.includes('administrator')) {
       items.push(
-        { text: 'Groups', icon: <GroupIcon />, path: '/groups' },
+        { text: 'Events', icon: <EventIcon />, path: '/events' },
         { text: 'Centers', icon: <LocationCityIcon />, path: '/centers' },
         { text: 'Users', icon: <GroupIcon />, path: '/admin/users' }
       );
@@ -80,7 +81,7 @@ export const Layout: React.FC = () => {
 
     if (
       user.roles.includes('workGroupLead') ||
-      user.roles.includes('worker') ||
+      user.roles.includes('volunteer') ||
       user.roles.includes('administrator')
     ) {
       items.push({ text: 'Workgroups', icon: <WorkIcon />, path: '/workgroups' });
@@ -100,10 +101,13 @@ export const Layout: React.FC = () => {
 
   const drawer = (
     <div>
-      <Toolbar>
-        <Typography variant="h6" noWrap component="div">
-          Faith Responders
-        </Typography>
+      <Toolbar sx={{ justifyContent: 'center', py: 1 }}>
+        <img
+          src="/logo.png"
+          alt="Faith Responders"
+          style={{ height: 52, cursor: 'pointer' }}
+          onClick={() => navigate('/dashboard')}
+        />
       </Toolbar>
       <Divider />
       <List>
@@ -125,7 +129,7 @@ export const Layout: React.FC = () => {
         position="fixed"
         sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
       >
-        <Container maxWidth="xl">
+        <Container maxWidth="xl" sx={{ pl: { sm: 1 } }}>
           <Toolbar disableGutters>
             <IconButton
               color="inherit"
@@ -136,14 +140,13 @@ export const Layout: React.FC = () => {
             >
               <MenuIcon />
             </IconButton>
-            <Typography
-              variant="h6"
-              noWrap
-              component="div"
-              sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
-            >
-              Faith Responders
-            </Typography>
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'flex' }, alignItems: 'center' }}>
+              <img
+                src="/logo.png"
+                alt="Faith Responders"
+                style={{ height: 44, borderRadius: 6, background: '#fff', padding: '2px 8px' }}
+              />
+            </Box>
             <Box sx={{ flexGrow: 0 }}>
               <Tooltip title="Open settings">
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>

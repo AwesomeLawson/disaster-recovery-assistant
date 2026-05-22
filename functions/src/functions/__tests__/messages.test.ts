@@ -131,14 +131,14 @@ describe('Message Management Functions', () => {
     });
   });
 
-  describe('sendGroupMessage', () => {
+  describe('sendEventMessage', () => {
     it('should send message to workgroup members', async () => {
       const mockSet = jest.fn().mockResolvedValue(undefined);
       const mockGet = jest.fn().mockResolvedValue({
         exists: true,
         data: () => ({
           leadUserId: 'lead123',
-          workerUserIds: ['worker1', 'worker2'],
+          volunteerUserIds: ['worker1', 'worker2'],
         }),
       });
       const mockDoc = jest.fn(() => ({
@@ -149,7 +149,7 @@ describe('Message Management Functions', () => {
 
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.sendGroupMessage);
+      wrapped = testEnv.wrap(functions.sendEventMessage);
 
       const data = {
         workgroupId: 'workgroup123',
@@ -188,7 +188,7 @@ describe('Message Management Functions', () => {
 
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.sendGroupMessage);
+      wrapped = testEnv.wrap(functions.sendEventMessage);
 
       const data = {
         centerId: 'center123',
@@ -211,7 +211,7 @@ describe('Message Management Functions', () => {
       );
     });
 
-    it('should send message to group members', async () => {
+    it('should send message to event members', async () => {
       const mockSet = jest.fn().mockResolvedValue(undefined);
       const mockGet = jest.fn().mockResolvedValue({
         exists: true,
@@ -227,11 +227,11 @@ describe('Message Management Functions', () => {
 
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.sendGroupMessage);
+      wrapped = testEnv.wrap(functions.sendEventMessage);
 
       const data = {
-        groupId: 'group123',
-        content: 'Group update',
+        eventId: 'event123',
+        content: 'Event update',
         type: 'email',
       };
 
@@ -244,7 +244,7 @@ describe('Message Management Functions', () => {
       expect(result.success).toBe(true);
       expect(mockSet).toHaveBeenCalledWith(
         expect.objectContaining({
-          groupId: 'group123',
+          eventId: 'event123',
           recipientIds: ['user1', 'user2', 'user3'],
         })
       );
@@ -263,7 +263,7 @@ describe('Message Management Functions', () => {
 
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.sendGroupMessage);
+      wrapped = testEnv.wrap(functions.sendEventMessage);
 
       const data = {
         centerId: 'center123',
@@ -278,27 +278,27 @@ describe('Message Management Functions', () => {
       await expect(wrapped(data, context)).rejects.toThrow('No recipients found');
     });
 
-    it('should reject without specifying target group/center/workgroup', async () => {
-      wrapped = testEnv.wrap(functions.sendGroupMessage);
+    it('should reject without specifying target event/center/workgroup', async () => {
+      wrapped = testEnv.wrap(functions.sendEventMessage);
 
       const data = {
         content: 'Test message',
         type: 'sms',
-        // missing groupId, centerId, workgroupId
+        // missing eventId, centerId, workgroupId
       };
 
       const context = {
         auth: { uid: 'sender123', token: {} },
       };
 
-      await expect(wrapped(data, context)).rejects.toThrow('Must specify at least one of: groupId, centerId, workgroupId');
+      await expect(wrapped(data, context)).rejects.toThrow('Must specify at least one of: eventId, centerId, workgroupId');
     });
 
     it('should reject without authentication', async () => {
-      wrapped = testEnv.wrap(functions.sendGroupMessage);
+      wrapped = testEnv.wrap(functions.sendEventMessage);
 
       const data = {
-        groupId: 'group123',
+        eventId: 'event123',
         content: 'Test message',
         type: 'sms',
       };
@@ -307,10 +307,10 @@ describe('Message Management Functions', () => {
     });
 
     it('should reject with missing content or type', async () => {
-      wrapped = testEnv.wrap(functions.sendGroupMessage);
+      wrapped = testEnv.wrap(functions.sendEventMessage);
 
       const data = {
-        groupId: 'group123',
+        eventId: 'event123',
         // missing content and type
       };
 

@@ -36,9 +36,8 @@ export const WorkerDashboard: React.FC = () => {
     try {
       setLoading(true);
 
-      // Load workgroups where user is a worker
       const allWorkgroups = await workgroupService.listWorkgroups();
-      const mine = allWorkgroups.filter((w) => w.workerUserIds.includes(user?.id || ''));
+      const mine = allWorkgroups.filter((w) => w.volunteerUserIds.includes(user?.id || ''));
       setMyWorkgroups(mine);
     } catch (err: any) {
       setError(err.message || 'Failed to load workgroups');
@@ -73,7 +72,7 @@ export const WorkerDashboard: React.FC = () => {
     <Container maxWidth="lg">
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" gutterBottom>
-          Worker Dashboard
+          Volunteer Dashboard
         </Typography>
         <Typography variant="body1" color="text.secondary">
           Welcome back, {user?.email}

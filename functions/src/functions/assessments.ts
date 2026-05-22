@@ -13,19 +13,19 @@ const requireAssessor = async (uid: string): Promise<void> => {
   }
 };
 
-export const createAssessment = onCall(async (request: any) => {
+export const createAssessment = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   await requireAssessor(request.auth.uid);
 
-  const { placeName, address, latitude, longitude, centerId, groupId, damages, needs, affectedPeople, severity, photoUrls, legalReleaseUrl } = request.data;
+  const { placeName, address, latitude, longitude, centerId, eventId, damages, needs, affectedPeople, severity, photoUrls, legalReleaseUrl } = request.data;
 
-  if (!placeName || !address || !centerId || !groupId || !damages || !needs || affectedPeople === undefined || !severity) {
+  if (!placeName || !address || !centerId || !damages || !needs || affectedPeople === undefined || !severity) {
     throw new HttpsError(
       'invalid-argument',
-      'Missing required fields: placeName, address, centerId, groupId, damages, needs, affectedPeople, severity'
+      'Missing required fields: placeName, address, centerId, damages, needs, affectedPeople, severity'
     );
   }
 
@@ -34,29 +34,31 @@ export const createAssessment = onCall(async (request: any) => {
     id: assessmentRef.id,
     placeName,
     address,
-    latitude,
-    longitude,
     assessorId: request.auth.uid,
     centerId,
-    groupId,
     damages,
     needs,
     affectedPeople,
     severity,
     photoUrls: photoUrls || [],
-    legalReleaseUrl,
     reassessmentCount: 0,
     flaggedForReview: false,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
 
+  // Set optional fields
+  if (latitude !== undefined) assessment.latitude = latitude;
+  if (longitude !== undefined) assessment.longitude = longitude;
+  if (eventId) assessment.eventId = eventId;
+  if (legalReleaseUrl) assessment.legalReleaseUrl = legalReleaseUrl;
+
   await assessmentRef.set(assessment);
 
   return { success: true, assessmentId: assessmentRef.id, assessment };
 });
 
-export const updateAssessment = onCall(async (request: any) => {
+export const updateAssessment = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -100,7 +102,7 @@ export const updateAssessment = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const reassessment = onCall(async (request: any) => {
+export const reassessment = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -136,7 +138,7 @@ export const reassessment = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const getAssessment = onCall(async (request: any) => {
+export const getAssessment = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -156,12 +158,12 @@ export const getAssessment = onCall(async (request: any) => {
   return { assessment: assessmentDoc.data() };
 });
 
-export const listAssessments = onCall(async (request: any) => {
+export const listAssessments = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { centerId, groupId, flaggedForReview, limit = 100 } = request.data;
+  const { centerId, eventId, flaggedForReview, limit = 100 } = request.data || {};
 
   let query: admin.firestore.Query = db.collection('assessments');
 
@@ -169,8 +171,8 @@ export const listAssessments = onCall(async (request: any) => {
     query = query.where('centerId', '==', centerId);
   }
 
-  if (groupId) {
-    query = query.where('groupId', '==', groupId);
+  if (eventId) {
+    query = query.where('eventId', '==', eventId);
   }
 
   if (flaggedForReview !== undefined) {

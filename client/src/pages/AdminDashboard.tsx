@@ -16,13 +16,13 @@ import {
   Alert,
   Grid,
 } from '@mui/material';
-import GroupIcon from '@mui/icons-material/Group';
+import EventIcon from '@mui/icons-material/Event';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import PeopleIcon from '@mui/icons-material/People';
 import { useAuth } from '../context/AuthContext';
 import { userService } from '../services/user.service';
-import { groupService } from '../services/group.service';
+import { eventService } from '../services/event.service';
 import { centerService } from '../services/center.service';
 import { assessmentService } from '../services/assessment.service';
 import type { User } from '../types';
@@ -32,7 +32,7 @@ export const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const [pendingUsers, setPendingUsers] = useState<User[]>([]);
   const [stats, setStats] = useState({
-    groups: 0,
+    events: 0,
     centers: 0,
     assessments: 0,
   });
@@ -50,14 +50,14 @@ export const AdminDashboard: React.FC = () => {
       setPendingUsers(pending);
 
       // Load statistics
-      const [groups, centers, assessments] = await Promise.all([
-        groupService.listGroups(),
+      const [events, centers, assessments] = await Promise.all([
+        eventService.listEvents(),
         centerService.listCenters(),
         assessmentService.listAssessments(),
       ]);
 
       setStats({
-        groups: groups.length,
+        events: events.length,
         centers: centers.length,
         assessments: assessments.length,
       });
@@ -98,13 +98,13 @@ export const AdminDashboard: React.FC = () => {
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <GroupIcon color="primary" sx={{ mr: 1 }} />
-                <Typography variant="h6">Groups</Typography>
+                <EventIcon color="primary" sx={{ mr: 1 }} />
+                <Typography variant="h6">Events</Typography>
               </Box>
-              <Typography variant="h3">{stats.groups}</Typography>
+              <Typography variant="h3">{stats.events}</Typography>
             </CardContent>
             <CardActions>
-              <Button size="small" onClick={() => navigate('/groups')}>
+              <Button size="small" onClick={() => navigate('/events')}>
                 Manage
               </Button>
             </CardActions>
@@ -233,17 +233,17 @@ export const AdminDashboard: React.FC = () => {
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
               <Button
                 variant="contained"
-                startIcon={<GroupIcon />}
-                onClick={() => navigate('/groups/create')}
+                startIcon={<EventIcon />}
+                onClick={() => navigate('/events')}
               >
-                Create Group
+                Manage Events
               </Button>
               <Button
                 variant="contained"
                 startIcon={<LocationCityIcon />}
-                onClick={() => navigate('/centers/create')}
+                onClick={() => navigate('/centers')}
               >
-                Create Center
+                Manage Centers
               </Button>
               <Button
                 variant="contained"

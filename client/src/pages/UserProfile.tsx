@@ -38,8 +38,14 @@ export const UserProfile: React.FC = () => {
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState({
+    firstName: '',
+    lastName: '',
     phoneNumber: '',
     communicationPreference: 'email' as CommunicationPreference,
+    addressStreet: '',
+    addressCity: '',
+    addressState: '',
+    addressZip: '',
   });
 
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
@@ -52,8 +58,14 @@ export const UserProfile: React.FC = () => {
   useEffect(() => {
     if (user) {
       setEditForm({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
         phoneNumber: user.phoneNumber,
         communicationPreference: user.communicationPreference,
+        addressStreet: user.address?.street || '',
+        addressCity: user.address?.city || '',
+        addressState: user.address?.state || '',
+        addressZip: user.address?.zip || '',
       });
     }
   }, [user]);
@@ -63,9 +75,15 @@ export const UserProfile: React.FC = () => {
 
     try {
       setUpdating(true);
+      const hasAddress = editForm.addressStreet || editForm.addressCity || editForm.addressState || editForm.addressZip;
       await userService.updateUserProfile(user.id, {
+        firstName: editForm.firstName,
+        lastName: editForm.lastName,
         phoneNumber: editForm.phoneNumber,
         communicationPreference: editForm.communicationPreference,
+        address: hasAddress
+          ? { street: editForm.addressStreet, city: editForm.addressCity, state: editForm.addressState, zip: editForm.addressZip }
+          : undefined,
       });
       await refreshUser();
       setEditDialogOpen(false);
@@ -109,7 +127,7 @@ export const UserProfile: React.FC = () => {
         return 'primary';
       case 'workGroupLead':
         return 'secondary';
-      case 'worker':
+      case 'volunteer':
         return 'info';
       case 'thirdParty':
         return 'default';
@@ -179,6 +197,22 @@ export const UserProfile: React.FC = () => {
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Typography variant="subtitle2" color="text.secondary">
+                  First Name
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                  {user.firstName}
+                </Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Last Name
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                  {user.lastName}
+                </Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="subtitle2" color="text.secondary">
                   Email
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 2 }}>
@@ -201,6 +235,19 @@ export const UserProfile: React.FC = () => {
             <Typography variant="body1" sx={{ mb: 2, textTransform: 'capitalize' }}>
               {user.communicationPreference}
             </Typography>
+
+            {user.address && (user.address.street || user.address.city) && (
+              <>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Address
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                  {[user.address.street, user.address.city, user.address.state, user.address.zip]
+                    .filter(Boolean)
+                    .join(', ')}
+                </Typography>
+              </>
+            )}
 
             <Typography variant="subtitle2" color="text.secondary">
               Account Created
@@ -292,6 +339,22 @@ export const UserProfile: React.FC = () => {
         <DialogTitle>Edit Profile</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+              <TextField
+                fullWidth
+                required
+                label="First Name"
+                value={editForm.firstName}
+                onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+              />
+              <TextField
+                fullWidth
+                required
+                label="Last Name"
+                value={editForm.lastName}
+                onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+              />
+            </Box>
             <TextField
               fullWidth
               label="Phone Number"
@@ -299,7 +362,7 @@ export const UserProfile: React.FC = () => {
               onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })}
               sx={{ mb: 2 }}
             />
-            <FormControl fullWidth>
+            <FormControl fullWidth sx={{ mb: 2 }}>
               <InputLabel>Communication Preference</InputLabel>
               <Select
                 value={editForm.communicationPreference}
@@ -315,6 +378,36 @@ export const UserProfile: React.FC = () => {
                 <MenuItem value="sms">SMS</MenuItem>
               </Select>
             </FormControl>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+              Address (optional)
+            </Typography>
+            <TextField
+              fullWidth
+              label="Street"
+              value={editForm.addressStreet}
+              onChange={(e) => setEditForm({ ...editForm, addressStreet: e.target.value })}
+              sx={{ mb: 1 }}
+            />
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="City"
+                value={editForm.addressCity}
+                onChange={(e) => setEditForm({ ...editForm, addressCity: e.target.value })}
+              />
+              <TextField
+                sx={{ width: 100 }}
+                label="State"
+                value={editForm.addressState}
+                onChange={(e) => setEditForm({ ...editForm, addressState: e.target.value })}
+              />
+              <TextField
+                sx={{ width: 120 }}
+                label="ZIP"
+                value={editForm.addressZip}
+                onChange={(e) => setEditForm({ ...editForm, addressZip: e.target.value })}
+              />
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions>
@@ -324,7 +417,7 @@ export const UserProfile: React.FC = () => {
           <Button
             variant="contained"
             onClick={handleUpdateProfile}
-            disabled={updating || !editForm.phoneNumber.trim()}
+            disabled={updating || !editForm.phoneNumber.trim() || !editForm.firstName.trim() || !editForm.lastName.trim()}
           >
             {updating ? 'Saving...' : 'Save'}
           </Button>

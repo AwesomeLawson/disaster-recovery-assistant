@@ -35,7 +35,7 @@ export const Dashboard: React.FC = () => {
     return <AssessorDashboard />;
   } else if (user.roles.includes('workGroupLead')) {
     return <WorkGroupLeadDashboard />;
-  } else if (user.roles.includes('worker')) {
+  } else if (user.roles.includes('volunteer')) {
     return <WorkerDashboard />;
   }
 

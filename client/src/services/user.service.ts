@@ -40,4 +40,17 @@ export const userService = {
     const approveUserRoleFn = httpsCallable(functions, 'approveUserRole');
     await approveUserRoleFn({ userId, approve, roles });
   },
+
+  // Get Firebase Auth metadata for a user (admin only)
+  async getUserAuthInfo(userId: string): Promise<{ creationTime: string; lastSignInTime: string; providers: string[] }> {
+    const fn = httpsCallable(functions, 'getUserAuthInfo');
+    const result = await fn({ userId });
+    return (result.data as any);
+  },
+
+  // Update roles for an already-approved user (admin only)
+  async updateUserRoles(userId: string, roles: UserRole[]): Promise<void> {
+    const fn = httpsCallable(functions, 'updateUserRoles');
+    await fn({ userId, roles });
+  },
 };

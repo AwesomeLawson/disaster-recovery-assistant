@@ -15,6 +15,7 @@ export const DigitalSignature: React.FC<DigitalSignatureProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
+  const hasDrawnRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -60,12 +61,13 @@ export const DigitalSignature: React.FC<DigitalSignatureProps> = ({
 
     ctx.lineTo(x, y);
     ctx.stroke();
+    hasDrawnRef.current = true;
     setHasSignature(true);
   };
 
   const stopDrawing = () => {
     setIsDrawing(false);
-    if (hasSignature) {
+    if (hasDrawnRef.current) {
       const canvas = canvasRef.current;
       if (canvas) {
         onSignatureChange(canvas.toDataURL('image/png'));
@@ -81,6 +83,7 @@ export const DigitalSignature: React.FC<DigitalSignatureProps> = ({
     if (!ctx) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasDrawnRef.current = false;
     setHasSignature(false);
     onSignatureChange(null);
   };
@@ -114,6 +117,9 @@ export const DigitalSignature: React.FC<DigitalSignatureProps> = ({
           Clear Signature
         </Button>
       </Box>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+        The parties hereto consent to signing this document electronically.
+      </Typography>
     </Box>
   );
 };

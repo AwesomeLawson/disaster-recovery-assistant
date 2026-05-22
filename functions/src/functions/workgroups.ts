@@ -13,19 +13,19 @@ const requireWorkGroupLeadOrAdmin = async (uid: string): Promise<void> => {
   }
 };
 
-export const createWorkgroup = onCall(async (request: any) => {
+export const createWorkgroup = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   await requireWorkGroupLeadOrAdmin(request.auth.uid);
 
-  const { name, centerId, groupId, leadUserId, workerUserIds, assessmentId, taskDescription } = request.data;
+  const { name, centerId, eventId, leadUserId, volunteerUserIds, assessmentId, taskDescription } = request.data;
 
-  if (!name || !centerId || !groupId || !leadUserId || !assessmentId || !taskDescription) {
+  if (!name || !centerId || !leadUserId || !assessmentId || !taskDescription) {
     throw new HttpsError(
       'invalid-argument',
-      'Missing required fields: name, centerId, groupId, leadUserId, assessmentId, taskDescription'
+      'Missing required fields: name, centerId, leadUserId, assessmentId, taskDescription'
     );
   }
 
@@ -34,9 +34,8 @@ export const createWorkgroup = onCall(async (request: any) => {
     id: workgroupRef.id,
     name,
     centerId,
-    groupId,
     leadUserId,
-    workerUserIds: workerUserIds || [],
+    volunteerUserIds: volunteerUserIds || [],
     assessmentId,
     taskDescription,
     taskStatus: 'notStarted',
@@ -47,12 +46,16 @@ export const createWorkgroup = onCall(async (request: any) => {
     updatedAt: Date.now(),
   };
 
+  if (eventId) {
+    workgroup.eventId = eventId;
+  }
+
   await workgroupRef.set(workgroup);
 
   return { success: true, workgroupId: workgroupRef.id, workgroup };
 });
 
-export const updateWorkgroup = onCall(async (request: any) => {
+export const updateWorkgroup = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -78,9 +81,9 @@ export const updateWorkgroup = onCall(async (request: any) => {
 
   const isAdmin = user && user.roles.includes('administrator');
   const isLead = workgroup.leadUserId === request.auth.uid;
-  const isWorker = workgroup.workerUserIds.includes(request.auth.uid);
+  const isVolunteer = workgroup.volunteerUserIds.includes(request.auth.uid);
 
-  if (!isAdmin && !isLead && !isWorker) {
+  if (!isAdmin && !isLead && !isVolunteer) {
     throw new HttpsError('permission-denied', 'Permission denied');
   }
 
@@ -96,7 +99,7 @@ export const updateWorkgroup = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const updateWorkgroupStatus = onCall(async (request: any) => {
+export const updateWorkgroupStatus = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -122,9 +125,9 @@ export const updateWorkgroupStatus = onCall(async (request: any) => {
 
   const isAdmin = user && user.roles.includes('administrator');
   const isLead = workgroup.leadUserId === request.auth.uid;
-  const isWorker = workgroup.workerUserIds.includes(request.auth.uid);
+  const isVolunteer = workgroup.volunteerUserIds.includes(request.auth.uid);
 
-  if (!isAdmin && !isLead && !isWorker) {
+  if (!isAdmin && !isLead && !isVolunteer) {
     throw new HttpsError('permission-denied', 'Permission denied');
   }
 
@@ -150,7 +153,7 @@ export const updateWorkgroupStatus = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const addWorkerToWorkgroup = onCall(async (request: any) => {
+export const addWorkerToWorkgroup = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -178,18 +181,18 @@ export const addWorkerToWorkgroup = onCall(async (request: any) => {
   const isLead = workgroup.leadUserId === request.auth.uid;
 
   if (!isAdmin && !isLead) {
-    throw new HttpsError('permission-denied', 'Only work group leads or administrators can add workers');
+    throw new HttpsError('permission-denied', 'Only work group leads or administrators can add volunteers');
   }
 
   await workgroupRef.update({
-    workerUserIds: admin.firestore.FieldValue.arrayUnion(userId),
+    volunteerUserIds: admin.firestore.FieldValue.arrayUnion(userId),
     updatedAt: Date.now(),
   });
 
   return { success: true };
 });
 
-export const getWorkgroup = onCall(async (request: any) => {
+export const getWorkgroup = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -209,12 +212,12 @@ export const getWorkgroup = onCall(async (request: any) => {
   return { workgroup: workgroupDoc.data() };
 });
 
-export const listWorkgroups = onCall(async (request: any) => {
+export const listWorkgroups = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { centerId, groupId, assessmentId, limit = 100 } = request.data;
+  const { centerId, eventId, assessmentId, limit = 100 } = request.data || {};
 
   let query: admin.firestore.Query = db.collection('workgroups');
 
@@ -222,8 +225,8 @@ export const listWorkgroups = onCall(async (request: any) => {
     query = query.where('centerId', '==', centerId);
   }
 
-  if (groupId) {
-    query = query.where('groupId', '==', groupId);
+  if (eventId) {
+    query = query.where('eventId', '==', eventId);
   }
 
   if (assessmentId) {

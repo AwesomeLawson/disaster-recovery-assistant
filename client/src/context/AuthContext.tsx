@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import type { User as FirebaseUser } from 'firebase/auth';
@@ -10,6 +10,7 @@ interface AuthContextType {
   firebaseUser: FirebaseUser | null;
   user: User | null;
   loading: boolean;
+  userLoadComplete: boolean;
   refreshUser: () => Promise<void>;
 }
 
@@ -23,22 +24,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userLoadComplete, setUserLoadComplete] = useState(false);
+  const loadGeneration = useRef(0);
 
-  const loadUserData = async (firebaseUser: FirebaseUser) => {
-    try {
-      const userData = await userService.getUser(firebaseUser.uid);
-      setUser(userData);
-    } catch (error: any) {
-      // For newly registered users, the Firestore document may not exist yet
-      // This is expected during the registration flow
-      if (error?.code === 'functions/not-found') {
-        console.log('User document not yet created - this is expected for new registrations');
-        setUser(null);
-      } else {
+  const loadUserData = async (fbUser: FirebaseUser, retries = 5) => {
+    const gen = ++loadGeneration.current;
+
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const userData = await userService.getUser(fbUser.uid);
+        if (gen !== loadGeneration.current) return;
+        setUser(userData);
+        setUserLoadComplete(true);
+        return;
+      } catch (error: any) {
+        if (gen !== loadGeneration.current) return;
+        if (error?.code === 'functions/not-found' && attempt < retries - 1) {
+          await new Promise(r => setTimeout(r, 1500));
+          if (gen !== loadGeneration.current) return;
+          continue;
+        }
         console.error('Error loading user data:', error);
-        setUser(null);
+        setUserLoadComplete(true);
+        return;
       }
     }
+    if (gen !== loadGeneration.current) return;
+    setUserLoadComplete(true);
   };
 
   const refreshUser = async () => {
@@ -48,13 +60,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setFirebaseUser(firebaseUser);
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setFirebaseUser(fbUser);
+      setUser(null);
+      setUserLoadComplete(false);
 
-      if (firebaseUser) {
-        await loadUserData(firebaseUser);
+      if (fbUser) {
+        await loadUserData(fbUser);
       } else {
-        setUser(null);
+        setUserLoadComplete(true);
       }
 
       setLoading(false);
@@ -67,6 +81,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     firebaseUser,
     user,
     loading,
+    userLoadComplete,
     refreshUser,
   };
 

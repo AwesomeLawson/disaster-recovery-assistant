@@ -27,17 +27,17 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
-import { groupService } from '../services/group.service';
+import { eventService } from '../services/event.service';
 import { centerService } from '../services/center.service';
 import { userService } from '../services/user.service';
-import type { Group, Center, User } from '../types';
+import type { Event, Center, User } from '../types';
 
-export const GroupDetail: React.FC = () => {
+export const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [group, setGroup] = useState<Group | null>(null);
+  const [event, setEvent] = useState<Event | null>(null);
   const [centers, setCenters] = useState<Center[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [, setUsers] = useState<User[]>([]);
   const [members, setMembers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,27 +56,27 @@ export const GroupDetail: React.FC = () => {
 
   useEffect(() => {
     if (id) {
-      loadGroup();
+      loadEvent();
     }
   }, [id]);
 
-  const loadGroup = async () => {
+  const loadEvent = async () => {
     try {
       setLoading(true);
-      const [groupData, centersData, usersData] = await Promise.all([
-        groupService.getGroup(id!),
+      const [eventData, centersData, usersData] = await Promise.all([
+        eventService.getEvent(id!),
         centerService.listCenters(id),
         userService.listUsers(),
       ]);
 
-      setGroup(groupData);
+      setEvent(eventData);
       setCenters(centersData);
       setAllUsers(usersData);
 
       setEditForm({
-        name: groupData.name,
-        eventType: groupData.eventType,
-        description: groupData.description || '',
+        name: eventData.name,
+        eventType: eventData.eventType,
+        description: eventData.description || '',
       });
 
       const usersById: Record<string, User> = {};
@@ -85,43 +85,43 @@ export const GroupDetail: React.FC = () => {
       });
       setUsers(usersData);
 
-      const groupMembers = groupData.userIds.map((uid) => usersById[uid]).filter(Boolean);
-      setMembers(groupMembers);
+      const eventMembers = eventData.userIds.map((uid) => usersById[uid]).filter(Boolean);
+      setMembers(eventMembers);
     } catch (err: any) {
-      setError(err.message || 'Failed to load group');
+      setError(err.message || 'Failed to load event');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateGroup = async () => {
-    if (!group) return;
+  const handleUpdateEvent = async () => {
+    if (!event) return;
 
     try {
       setUpdating(true);
-      await groupService.updateGroup(group.id, {
+      await eventService.updateEvent(event.id, {
         name: editForm.name,
         eventType: editForm.eventType,
         description: editForm.description || undefined,
       });
       setEditDialogOpen(false);
-      await loadGroup();
+      await loadEvent();
     } catch (err: any) {
-      setError(err.message || 'Failed to update group');
+      setError(err.message || 'Failed to update event');
     } finally {
       setUpdating(false);
     }
   };
 
   const handleAddMember = async () => {
-    if (!group || !selectedUser) return;
+    if (!event || !selectedUser) return;
 
     try {
       setUpdating(true);
-      await groupService.addUserToGroup(group.id, selectedUser.id);
+      await eventService.addUserToEvent(event.id, selectedUser.id);
       setAddMemberDialogOpen(false);
       setSelectedUser(null);
-      await loadGroup();
+      await loadEvent();
     } catch (err: any) {
       setError(err.message || 'Failed to add member');
     } finally {
@@ -145,23 +145,23 @@ export const GroupDetail: React.FC = () => {
   };
 
   const availableUsers = allUsers.filter(
-    (u) => u.roleApprovalStatus === 'approved' && !group?.userIds.includes(u.id)
+    (u) => u.roleApprovalStatus === 'approved' && !event?.userIds.includes(u.id)
   );
 
   if (loading) {
     return (
       <Container maxWidth="lg">
-        <Typography>Loading group...</Typography>
+        <Typography>Loading event...</Typography>
       </Container>
     );
   }
 
-  if (!group) {
+  if (!event) {
     return (
       <Container maxWidth="lg">
-        <Alert severity="error">Group not found</Alert>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/groups')} sx={{ mt: 2 }}>
-          Back to Groups
+        <Alert severity="error">Event not found</Alert>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/events')} sx={{ mt: 2 }}>
+          Back to Events
         </Button>
       </Container>
     );
@@ -170,11 +170,11 @@ export const GroupDetail: React.FC = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
-        <IconButton onClick={() => navigate('/groups')}>
+        <IconButton onClick={() => navigate('/events')}>
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h4" sx={{ flexGrow: 1 }}>
-          {group.name}
+          {event.name}
         </Typography>
         <Button variant="contained" startIcon={<EditIcon />} onClick={() => setEditDialogOpen(true)}>
           Edit
@@ -191,7 +191,7 @@ export const GroupDetail: React.FC = () => {
         <Grid size={{ xs: 12, md: 8 }}>
           <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Group Details
+              Event Details
             </Typography>
             <Divider sx={{ mb: 2 }} />
 
@@ -200,18 +200,18 @@ export const GroupDetail: React.FC = () => {
             </Typography>
             <Box sx={{ mb: 2 }}>
               <Chip
-                label={group.eventType}
-                color={getEventTypeColor(group.eventType) as any}
+                label={event.eventType}
+                color={getEventTypeColor(event.eventType) as any}
               />
             </Box>
 
-            {group.description && (
+            {event.description && (
               <>
                 <Typography variant="subtitle2" color="text.secondary">
                   Description
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 2, whiteSpace: 'pre-wrap' }}>
-                  {group.description}
+                  {event.description}
                 </Typography>
               </>
             )}
@@ -220,7 +220,7 @@ export const GroupDetail: React.FC = () => {
               Created
             </Typography>
             <Typography variant="body1">
-              {new Date(group.createdAt).toLocaleString()}
+              {new Date(event.createdAt).toLocaleString()}
             </Typography>
           </Paper>
 
@@ -238,7 +238,7 @@ export const GroupDetail: React.FC = () => {
             <Divider sx={{ mb: 2 }} />
 
             {centers.length === 0 ? (
-              <Typography color="text.secondary">No centers in this group</Typography>
+              <Typography color="text.secondary">No centers associated with this event</Typography>
             ) : (
               <List>
                 {centers.map((center) => (
@@ -284,7 +284,7 @@ export const GroupDetail: React.FC = () => {
             <Divider sx={{ mb: 2 }} />
 
             {members.length === 0 ? (
-              <Typography color="text.secondary">No members in this group</Typography>
+              <Typography color="text.secondary">No members assigned to this event</Typography>
             ) : (
               <List dense>
                 {members.map((member) => (
@@ -306,9 +306,9 @@ export const GroupDetail: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Edit Group Dialog */}
+      {/* Edit Event Dialog */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Group</DialogTitle>
+        <DialogTitle>Edit Event</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
             <TextField
@@ -342,7 +342,7 @@ export const GroupDetail: React.FC = () => {
           </Button>
           <Button
             variant="contained"
-            onClick={handleUpdateGroup}
+            onClick={handleUpdateEvent}
             disabled={updating || !editForm.name.trim() || !editForm.eventType.trim()}
           >
             {updating ? 'Saving...' : 'Save'}
@@ -352,7 +352,7 @@ export const GroupDetail: React.FC = () => {
 
       {/* Add Member Dialog */}
       <Dialog open={addMemberDialogOpen} onClose={() => setAddMemberDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add Member to Group</DialogTitle>
+        <DialogTitle>Add Member to Event</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
             <Autocomplete

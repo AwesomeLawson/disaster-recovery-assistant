@@ -4,7 +4,7 @@ import { Message } from '../types';
 
 const db = admin.firestore();
 
-export const sendMessage = onCall(async (request: any) => {
+export const sendMessage = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -37,32 +37,32 @@ export const sendMessage = onCall(async (request: any) => {
   return { success: true, messageId: messageRef.id, message };
 });
 
-export const sendGroupMessage = onCall(async (request: any) => {
+export const sendEventMessage = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { groupId, centerId, workgroupId, content, type } = request.data;
+  const { eventId, centerId, workgroupId, content, type } = request.data;
 
   if (!content || !type) {
     throw new HttpsError('invalid-argument', 'Missing required fields: content, type');
   }
 
-  if (!groupId && !centerId && !workgroupId) {
+  if (!eventId && !centerId && !workgroupId) {
     throw new HttpsError(
       'invalid-argument',
-      'Must specify at least one of: groupId, centerId, workgroupId'
+      'Must specify at least one of: eventId, centerId, workgroupId'
     );
   }
 
-  // Determine recipients based on group/center/workgroup
+  // Determine recipients based on event/center/workgroup
   let recipientIds: string[] = [];
 
   if (workgroupId) {
     const workgroupDoc = await db.collection('workgroups').doc(workgroupId).get();
     if (workgroupDoc.exists) {
       const workgroup = workgroupDoc.data();
-      recipientIds = [workgroup!.leadUserId, ...workgroup!.workerUserIds];
+      recipientIds = [workgroup!.leadUserId, ...workgroup!.volunteerUserIds];
     }
   } else if (centerId) {
     const centerDoc = await db.collection('centers').doc(centerId).get();
@@ -70,11 +70,11 @@ export const sendGroupMessage = onCall(async (request: any) => {
       const center = centerDoc.data();
       recipientIds = center!.leadUserIds;
     }
-  } else if (groupId) {
-    const groupDoc = await db.collection('groups').doc(groupId).get();
-    if (groupDoc.exists) {
-      const group = groupDoc.data();
-      recipientIds = group!.userIds;
+  } else if (eventId) {
+    const eventDoc = await db.collection('events').doc(eventId).get();
+    if (eventDoc.exists) {
+      const event = eventDoc.data();
+      recipientIds = event!.userIds;
     }
   }
 
@@ -82,7 +82,7 @@ export const sendGroupMessage = onCall(async (request: any) => {
     throw new HttpsError('not-found', 'No recipients found');
   }
 
-  const threadId = workgroupId || centerId || groupId || '';
+  const threadId = workgroupId || centerId || eventId || '';
 
   const messageRef = db.collection('messages').doc();
   const message: Message = {
@@ -92,7 +92,7 @@ export const sendGroupMessage = onCall(async (request: any) => {
     recipientIds,
     content,
     type,
-    groupId,
+    eventId,
     centerId,
     workgroupId,
     createdAt: Date.now(),
@@ -101,12 +101,12 @@ export const sendGroupMessage = onCall(async (request: any) => {
   await messageRef.set(message);
 
   // TODO: Implement actual SMS/email sending based on user preferences
-  console.log(`Group message sent: ${messageRef.id}`);
+  console.log(`Event message sent: ${messageRef.id}`);
 
   return { success: true, messageId: messageRef.id, message };
 });
 
-export const getMessages = onCall(async (request: any) => {
+export const getMessages = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }

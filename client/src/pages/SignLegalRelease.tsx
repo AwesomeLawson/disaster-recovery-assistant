@@ -71,10 +71,11 @@ export const SignLegalRelease: React.FC = () => {
     <Container component="main" maxWidth="md">
       <Box
         sx={{
-          marginTop: 8,
+          minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
         <Paper elevation={3} sx={{ p: 4, width: '100%' }}>

@@ -18,12 +18,12 @@ import {
   Chip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { groupService } from '../services/group.service';
-import type { Group } from '../types';
+import { eventService } from '../services/event.service';
+import type { Event } from '../types';
 
-export const GroupManagement: React.FC = () => {
+export const EventManagement: React.FC = () => {
   const navigate = useNavigate();
-  const [groups, setGroups] = useState<Group[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
@@ -34,42 +34,42 @@ export const GroupManagement: React.FC = () => {
   });
 
   useEffect(() => {
-    loadGroups();
+    loadEvents();
   }, []);
 
-  const loadGroups = async () => {
+  const loadEvents = async () => {
     try {
       setLoading(true);
-      const data = await groupService.listGroups();
-      setGroups(data);
+      const data = await eventService.listEvents();
+      setEvents(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load groups');
+      setError(err.message || 'Failed to load events');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateGroup = async () => {
+  const handleCreateEvent = async () => {
     try {
-      await groupService.createGroup(formData);
+      await eventService.createEvent(formData);
       setOpenDialog(false);
       setFormData({ name: '', eventType: '', description: '' });
-      await loadGroups();
+      await loadEvents();
     } catch (err: any) {
-      setError(err.message || 'Failed to create group');
+      setError(err.message || 'Failed to create event');
     }
   };
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Group Management</Typography>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" sx={{ mb: 2 }}>Event Management</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setOpenDialog(true)}
         >
-          Create Group
+          Create Event
         </Button>
       </Box>
 
@@ -80,13 +80,13 @@ export const GroupManagement: React.FC = () => {
       )}
 
       <Paper sx={{ p: 3 }}>
-        {groups.length === 0 ? (
-          <Typography color="text.secondary">No groups found. Create your first group!</Typography>
+        {events.length === 0 ? (
+          <Typography color="text.secondary">No events found. Create your first event!</Typography>
         ) : (
           <List>
-            {groups.map((group) => (
+            {events.map((event) => (
               <ListItem
-                key={group.id}
+                key={event.id}
                 sx={{
                   border: '1px solid',
                   borderColor: 'grey.300',
@@ -97,25 +97,25 @@ export const GroupManagement: React.FC = () => {
                     bgcolor: 'grey.50',
                   },
                 }}
-                onClick={() => navigate(`/groups/${group.id}`)}
+                onClick={() => navigate(`/events/${event.id}`)}
               >
                 <ListItemText
-                  primary={group.name}
+                  primary={event.name}
                   secondary={
                     <Box sx={{ mt: 1 }}>
                       <Typography variant="body2" component="span">
-                        {group.description || 'No description'}
+                        {event.description || 'No description'}
                       </Typography>
                       <Box sx={{ mt: 0.5 }}>
-                        <Chip label={group.eventType} size="small" sx={{ mr: 1 }} />
+                        <Chip label={event.eventType} size="small" sx={{ mr: 1 }} />
                         <Chip
-                          label={`${group.userIds.length} users`}
+                          label={`${event.userIds.length} users`}
                           size="small"
                           variant="outlined"
                           sx={{ mr: 1 }}
                         />
                         <Chip
-                          label={`${group.centerIds.length} centers`}
+                          label={`${event.centerIds.length} centers`}
                           size="small"
                           variant="outlined"
                         />
@@ -130,12 +130,12 @@ export const GroupManagement: React.FC = () => {
       </Paper>
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Create New Group</DialogTitle>
+        <DialogTitle>Create New Event</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            label="Group Name"
+            label="Event Name"
             type="text"
             fullWidth
             variant="outlined"
@@ -149,7 +149,7 @@ export const GroupManagement: React.FC = () => {
             type="text"
             fullWidth
             variant="outlined"
-            placeholder="e.g., Hurricane, Flood, Conference"
+            placeholder="e.g., Hurricane, Flood, Tornado, Earthquake"
             value={formData.eventType}
             onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
             sx={{ mb: 2 }}
@@ -169,7 +169,7 @@ export const GroupManagement: React.FC = () => {
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
           <Button
-            onClick={handleCreateGroup}
+            onClick={handleCreateEvent}
             variant="contained"
             disabled={!formData.name || !formData.eventType}
           >

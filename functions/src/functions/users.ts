@@ -4,13 +4,16 @@ import { User } from '../types';
 
 const db = admin.firestore();
 
-export const registerUser = onCall(async (request: any) => {
-  const { email, phoneNumber, communicationPreference, requestedRoles } = request.data;
+// Options for onCall functions
+const callOptions = { cors: true };
 
-  if (!email || !phoneNumber || !communicationPreference || !requestedRoles) {
+export const registerUser = onCall(callOptions, async (request: any) => {
+  const { email, firstName, lastName, phoneNumber, address, communicationPreference, requestedRoles } = request.data;
+
+  if (!email || !firstName || !lastName || !phoneNumber || !communicationPreference || !requestedRoles) {
     throw new HttpsError(
       'invalid-argument',
-      'Missing required fields: email, phoneNumber, communicationPreference, requestedRoles'
+      'Missing required fields: email, firstName, lastName, phoneNumber, communicationPreference, requestedRoles'
     );
   }
 
@@ -22,8 +25,11 @@ export const registerUser = onCall(async (request: any) => {
 
   const user: User = {
     id: userId,
+    firstName,
+    lastName,
     email,
     phoneNumber,
+    ...(address ? { address } : {}),
     communicationPreference,
     roles: [], // Initially empty until approved
     requestedRoles,
@@ -38,7 +44,7 @@ export const registerUser = onCall(async (request: any) => {
   return { success: true, userId, user };
 });
 
-export const approveUserRole = onCall(async (request: any) => {
+export const approveUserRole = onCall(callOptions, async (request: any) => {
   const { userId, approve, roles } = request.data;
 
   if (!userId || approve === undefined) {
@@ -85,7 +91,7 @@ export const approveUserRole = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const updateUserProfile = onCall(async (request: any) => {
+export const updateUserProfile = onCall(callOptions, async (request: any) => {
   const { userId, updates } = request.data;
 
   if (!userId || !updates) {
@@ -127,7 +133,7 @@ export const updateUserProfile = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const getUser = onCall(async (request: any) => {
+export const getUser = onCall(callOptions, async (request: any) => {
   try {
     console.log('getUser called with request:', JSON.stringify({ auth: !!request.auth, data: request.data }));
 
@@ -159,12 +165,58 @@ export const getUser = onCall(async (request: any) => {
   }
 });
 
-export const listUsers = onCall(async (request: any) => {
+export const getUserAuthInfo = onCall(callOptions, async (request: any) => {
+  const { userId } = request.data;
+
+  if (!userId) throw new HttpsError('invalid-argument', 'Missing required field: userId');
+  if (!request.auth) throw new HttpsError('unauthenticated', 'User must be authenticated');
+
+  const callerDoc = await db.collection('users').doc(request.auth.uid).get();
+  const caller = callerDoc.data() as User;
+  if (!caller?.roles.includes('administrator')) {
+    throw new HttpsError('permission-denied', 'Only administrators can view auth info');
+  }
+
+  const authUser = await admin.auth().getUser(userId);
+  return {
+    creationTime: authUser.metadata.creationTime,
+    lastSignInTime: authUser.metadata.lastSignInTime,
+    providers: authUser.providerData.map((p) => p.providerId),
+  };
+});
+
+export const updateUserRoles = onCall(callOptions, async (request: any) => {
+  const { userId, roles } = request.data;
+
+  if (!userId || !Array.isArray(roles)) {
+    throw new HttpsError('invalid-argument', 'Missing required fields: userId, roles');
+  }
+
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { role, groupId, centerId, limit = 100 } = request.data;
+  const callerDoc = await db.collection('users').doc(request.auth.uid).get();
+  const caller = callerDoc.data() as User;
+  if (!caller?.roles.includes('administrator')) {
+    throw new HttpsError('permission-denied', 'Only administrators can update roles');
+  }
+
+  const userRef = db.collection('users').doc(userId);
+  if (!(await userRef.get()).exists) {
+    throw new HttpsError('not-found', 'User not found');
+  }
+
+  await userRef.update({ roles, updatedAt: Date.now() });
+  return { success: true };
+});
+
+export const listUsers = onCall(callOptions, async (request: any) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { role, eventId, centerId, limit = 100 } = request.data || {};
 
   let query: admin.firestore.Query = db.collection('users');
 
@@ -172,8 +224,8 @@ export const listUsers = onCall(async (request: any) => {
     query = query.where('roles', 'array-contains', role);
   }
 
-  if (groupId) {
-    query = query.where('groupIds', 'array-contains', groupId);
+  if (eventId) {
+    query = query.where('eventIds', 'array-contains', eventId);
   }
 
   if (centerId) {

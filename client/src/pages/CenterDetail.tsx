@@ -22,23 +22,27 @@ import {
   ListItemAvatar,
   Avatar,
   Autocomplete,
+  ListItemSecondaryAction,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import EventIcon from '@mui/icons-material/Event';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { centerService } from '../services/center.service';
-import { groupService } from '../services/group.service';
+import { eventService } from '../services/event.service';
 import { userService } from '../services/user.service';
 import { assessmentService } from '../services/assessment.service';
 import { workgroupService } from '../services/workgroup.service';
-import type { Center, Group, User, Assessment, Workgroup } from '../types';
+import type { Center, Event, User, Assessment, Workgroup } from '../types';
 
 export const CenterDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [center, setCenter] = useState<Center | null>(null);
-  const [group, setGroup] = useState<Group | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [leads, setLeads] = useState<User[]>([]);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [workgroups, setWorkgroups] = useState<Workgroup[]>([]);
@@ -57,6 +61,9 @@ export const CenterDetail: React.FC = () => {
 
   const [addLeadDialogOpen, setAddLeadDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const [addEventDialogOpen, setAddEventDialogOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -77,17 +84,23 @@ export const CenterDetail: React.FC = () => {
         longitude: centerData.longitude?.toString() || '',
       });
 
-      const [groupData, usersData, assessmentsData, workgroupsData] = await Promise.all([
-        groupService.getGroup(centerData.groupId),
+      const [allEventsData, usersData, assessmentsData, workgroupsData] = await Promise.all([
+        eventService.listEvents(),
         userService.listUsers(),
         assessmentService.listAssessments({ centerId: id }),
         workgroupService.listWorkgroups({ centerId: id }),
       ]);
 
-      setGroup(groupData);
+      setAllEvents(allEventsData);
       setAllUsers(usersData);
       setAssessments(assessmentsData);
       setWorkgroups(workgroupsData);
+
+      // Get events associated with this center
+      const centerEvents = allEventsData.filter((e) =>
+        centerData.eventIds?.includes(e.id)
+      );
+      setEvents(centerEvents);
 
       const usersById: Record<string, User> = {};
       usersData.forEach((u) => {
@@ -141,6 +154,36 @@ export const CenterDetail: React.FC = () => {
     }
   };
 
+  const handleAddEvent = async () => {
+    if (!center || !selectedEvent) return;
+
+    try {
+      setUpdating(true);
+      await eventService.addCenterToEvent(selectedEvent.id, center.id);
+      setAddEventDialogOpen(false);
+      setSelectedEvent(null);
+      await loadCenter();
+    } catch (err: any) {
+      setError(err.message || 'Failed to add event');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleRemoveEvent = async (eventId: string) => {
+    if (!center) return;
+
+    try {
+      setUpdating(true);
+      await eventService.removeCenterFromEvent(eventId, center.id);
+      await loadCenter();
+    } catch (err: any) {
+      setError(err.message || 'Failed to remove event');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical':
@@ -174,6 +217,10 @@ export const CenterDetail: React.FC = () => {
       (u.roles.includes('workGroupLead') || u.roles.includes('administrator')) &&
       u.roleApprovalStatus === 'approved' &&
       !center?.leadUserIds.includes(u.id)
+  );
+
+  const availableEvents = allEvents.filter(
+    (e) => !center?.eventIds?.includes(e.id)
   );
 
   if (loading) {
@@ -246,22 +293,78 @@ export const CenterDetail: React.FC = () => {
             </Grid>
 
             <Typography variant="subtitle2" color="text.secondary">
-              Group
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{ mb: 2, cursor: 'pointer', color: 'primary.main' }}
-              onClick={() => navigate(`/groups/${center.groupId}`)}
-            >
-              {group?.name || center.groupId}
-            </Typography>
-
-            <Typography variant="subtitle2" color="text.secondary">
               Created
             </Typography>
             <Typography variant="body1">
               {new Date(center.createdAt).toLocaleString()}
             </Typography>
+          </Paper>
+
+          {/* Events Section */}
+          <Paper sx={{ p: 3, mb: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">Associated Events ({events.length})</Typography>
+              <Button size="small" startIcon={<EventIcon />} onClick={() => setAddEventDialogOpen(true)}>
+                Add Event
+              </Button>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+
+            {events.length === 0 ? (
+              <Typography color="text.secondary">
+                No events associated with this center. Add events to track disaster response activities.
+              </Typography>
+            ) : (
+              <List>
+                {events.map((event) => (
+                  <ListItem
+                    key={event.id}
+                    sx={{
+                      border: '1px solid',
+                      borderColor: 'grey.300',
+                      borderRadius: 1,
+                      mb: 1,
+                    }}
+                  >
+                    <ListItemAvatar>
+                      <Avatar>
+                        <EventIcon />
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={
+                        <Typography
+                          sx={{ cursor: 'pointer', color: 'primary.main' }}
+                          onClick={() => navigate(`/events/${event.id}`)}
+                        >
+                          {event.name}
+                        </Typography>
+                      }
+                      secondary={
+                        <Box sx={{ mt: 0.5 }}>
+                          <Chip label={event.eventType} size="small" sx={{ mr: 1 }} />
+                          {event.description && (
+                            <Typography variant="caption" color="text.secondary">
+                              {event.description}
+                            </Typography>
+                          )}
+                        </Box>
+                      }
+                    />
+                    <ListItemSecondaryAction>
+                      <IconButton
+                        edge="end"
+                        onClick={() => handleRemoveEvent(event.id)}
+                        disabled={updating}
+                        size="small"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+              </List>
+            )}
           </Paper>
 
           <Paper sx={{ p: 3, mb: 3 }}>
@@ -336,7 +439,7 @@ export const CenterDetail: React.FC = () => {
                   >
                     <ListItemText
                       primary={workgroup.name}
-                      secondary={`${workgroup.workerUserIds.length} workers`}
+                      secondary={`${workgroup.volunteerUserIds.length} volunteers`}
                     />
                     <Chip
                       label={workgroup.taskStatus}
@@ -464,6 +567,40 @@ export const CenterDetail: React.FC = () => {
             disabled={updating || !selectedUser}
           >
             {updating ? 'Adding...' : 'Add Lead'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Event Dialog */}
+      <Dialog open={addEventDialogOpen} onClose={() => setAddEventDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Associate Event with Center</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            {availableEvents.length === 0 ? (
+              <Typography color="text.secondary">
+                No available events. Create an event first from the Events page.
+              </Typography>
+            ) : (
+              <Autocomplete
+                options={availableEvents}
+                getOptionLabel={(option) => `${option.name} (${option.eventType})`}
+                value={selectedEvent}
+                onChange={(_, value) => setSelectedEvent(value)}
+                renderInput={(params) => <TextField {...params} label="Select Event" />}
+              />
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddEventDialogOpen(false)} disabled={updating}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleAddEvent}
+            disabled={updating || !selectedEvent}
+          >
+            {updating ? 'Adding...' : 'Add Event'}
           </Button>
         </DialogActions>
       </Dialog>

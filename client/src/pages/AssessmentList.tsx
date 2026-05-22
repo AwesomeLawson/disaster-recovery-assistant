@@ -80,8 +80,8 @@ export const AssessmentList: React.FC = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Assessments</Typography>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" sx={{ mb: 2 }}>Assessments</Typography>
         {canCreateAssessment && (
           <Button
             variant="contained"

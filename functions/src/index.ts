@@ -6,7 +6,7 @@ if (!admin.apps.length) {
 }
 
 import * as userFunctions from './functions/users';
-import * as groupFunctions from './functions/groups';
+import * as eventFunctions from './functions/events';
 import * as centerFunctions from './functions/centers';
 import * as assessmentFunctions from './functions/assessments';
 import * as workgroupFunctions from './functions/workgroups';
@@ -17,16 +17,20 @@ import * as legalReleaseFunctions from './functions/legalReleases';
 // User Management
 export const registerUser = userFunctions.registerUser;
 export const approveUserRole = userFunctions.approveUserRole;
+export const getUserAuthInfo = userFunctions.getUserAuthInfo;
+export const updateUserRoles = userFunctions.updateUserRoles;
 export const updateUserProfile = userFunctions.updateUserProfile;
 export const getUser = userFunctions.getUser;
 export const listUsers = userFunctions.listUsers;
 
-// Group Management
-export const createGroup = groupFunctions.createGroup;
-export const updateGroup = groupFunctions.updateGroup;
-export const getGroup = groupFunctions.getGroup;
-export const listGroups = groupFunctions.listGroups;
-export const addUserToGroup = groupFunctions.addUserToGroup;
+// Event Management
+export const createEvent = eventFunctions.createEvent;
+export const updateEvent = eventFunctions.updateEvent;
+export const getEvent = eventFunctions.getEvent;
+export const listEvents = eventFunctions.listEvents;
+export const addUserToEvent = eventFunctions.addUserToEvent;
+export const addCenterToEvent = eventFunctions.addCenterToEvent;
+export const removeCenterFromEvent = eventFunctions.removeCenterFromEvent;
 
 // Center Management
 export const createCenter = centerFunctions.createCenter;
@@ -58,7 +62,7 @@ export const listEscalations = escalationFunctions.listEscalations;
 
 // Message Management
 export const sendMessage = messageFunctions.sendMessage;
-export const sendGroupMessage = messageFunctions.sendGroupMessage;
+export const sendEventMessage = messageFunctions.sendEventMessage;
 export const getMessages = messageFunctions.getMessages;
 
 // Legal Release Management

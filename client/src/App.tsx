@@ -8,8 +8,8 @@ import { Register } from './pages/Register';
 import { CompleteProfile } from './pages/CompleteProfile';
 import { SignLegalRelease } from './pages/SignLegalRelease';
 import { Dashboard } from './pages/Dashboard';
-import { GroupManagement } from './pages/GroupManagement';
-import { GroupDetail } from './pages/GroupDetail';
+import { EventManagement } from './pages/EventManagement';
+import { EventDetail } from './pages/EventDetail';
 import { CenterManagement } from './pages/CenterManagement';
 import { CenterDetail } from './pages/CenterDetail';
 import { AssessmentList } from './pages/AssessmentList';
@@ -26,10 +26,24 @@ import { UserProfile } from './pages/UserProfile';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2',
+      main: '#3464B9',
+      dark: '#1E3F8C',
+      light: '#6B93D6',
+      contrastText: '#ffffff',
     },
     secondary: {
-      main: '#dc004e',
+      main: '#F2C230',
+      dark: '#C49B10',
+      light: '#F7D97A',
+      contrastText: '#1C2B5A',
+    },
+    background: {
+      default: '#F5F7FB',
+      paper: '#ffffff',
+    },
+    text: {
+      primary: '#1C2B5A',
+      secondary: '#4A5C8A',
     },
   },
   typography: {
@@ -42,6 +56,30 @@ const theme = createTheme({
       'Arial',
       'sans-serif',
     ].join(','),
+  },
+  components: {
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#1C2B5A',
+        },
+      },
+    },
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          borderRight: '3px solid #F2C230',
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        containedSecondary: {
+          color: '#1C2B5A',
+          fontWeight: 700,
+        },
+      },
+    },
   },
 });
 
@@ -81,18 +119,18 @@ function App() {
 
               {/* Admin routes */}
               <Route
-                path="groups"
+                path="events"
                 element={
                   <PrivateRoute requireRoles={['administrator']}>
-                    <GroupManagement />
+                    <EventManagement />
                   </PrivateRoute>
                 }
               />
               <Route
-                path="groups/:id"
+                path="events/:id"
                 element={
                   <PrivateRoute requireRoles={['administrator']}>
-                    <GroupDetail />
+                    <EventDetail />
                   </PrivateRoute>
                 }
               />
@@ -151,7 +189,7 @@ function App() {
               <Route
                 path="workgroups"
                 element={
-                  <PrivateRoute requireRoles={['workGroupLead', 'worker', 'administrator']}>
+                  <PrivateRoute requireRoles={['workGroupLead', 'volunteer', 'administrator']}>
                     <WorkgroupManagement />
                   </PrivateRoute>
                 }
@@ -167,7 +205,7 @@ function App() {
               <Route
                 path="workgroups/:id"
                 element={
-                  <PrivateRoute requireRoles={['workGroupLead', 'worker', 'administrator']}>
+                  <PrivateRoute requireRoles={['workGroupLead', 'volunteer', 'administrator']}>
                     <WorkgroupDetail />
                   </PrivateRoute>
                 }

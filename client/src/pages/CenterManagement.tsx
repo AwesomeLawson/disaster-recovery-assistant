@@ -16,27 +16,22 @@ import {
   TextField,
   Alert,
   Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { centerService } from '../services/center.service';
-import { groupService } from '../services/group.service';
-import type { Center, Group } from '../types';
+import { eventService } from '../services/event.service';
+import type { Center, Event } from '../types';
 
 export const CenterManagement: React.FC = () => {
   const navigate = useNavigate();
   const [centers, setCenters] = useState<Center[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     address: '',
-    groupId: '',
   });
 
   useEffect(() => {
@@ -46,12 +41,12 @@ export const CenterManagement: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [centersData, groupsData] = await Promise.all([
+      const [centersData, eventsData] = await Promise.all([
         centerService.listCenters(),
-        groupService.listGroups(),
+        eventService.listEvents(),
       ]);
       setCenters(centersData);
-      setGroups(groupsData);
+      setEvents(eventsData);
     } catch (err: any) {
       setError(err.message || 'Failed to load data');
     } finally {
@@ -61,24 +56,27 @@ export const CenterManagement: React.FC = () => {
 
   const handleCreateCenter = async () => {
     try {
-      await centerService.createCenter(formData);
+      await centerService.createCenter({
+        name: formData.name,
+        address: formData.address,
+      });
       setOpenDialog(false);
-      setFormData({ name: '', address: '', groupId: '' });
+      setFormData({ name: '', address: '' });
       await loadData();
     } catch (err: any) {
       setError(err.message || 'Failed to create center');
     }
   };
 
-  const getGroupName = (groupId: string) => {
-    const group = groups.find((g) => g.id === groupId);
-    return group?.name || 'Unknown Group';
+  const getEventName = (eventId: string) => {
+    const event = events.find((e) => e.id === eventId);
+    return event?.name || 'Unknown Event';
   };
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Center Management</Typography>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" sx={{ mb: 2 }}>Center Management</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
@@ -122,12 +120,24 @@ export const CenterManagement: React.FC = () => {
                         {center.address}
                       </Typography>
                       <Box sx={{ mt: 0.5 }}>
-                        <Chip
-                          label={getGroupName(center.groupId)}
-                          size="small"
-                          color="primary"
-                          sx={{ mr: 1 }}
-                        />
+                        {center.eventIds && center.eventIds.length > 0 ? (
+                          center.eventIds.map((eventId) => (
+                            <Chip
+                              key={eventId}
+                              label={getEventName(eventId)}
+                              size="small"
+                              color="primary"
+                              sx={{ mr: 0.5, mb: 0.5 }}
+                            />
+                          ))
+                        ) : (
+                          <Chip
+                            label="No events"
+                            size="small"
+                            variant="outlined"
+                            sx={{ mr: 1 }}
+                          />
+                        )}
                         <Chip
                           label={`${center.leadUserIds.length} leads`}
                           size="small"
@@ -167,27 +177,16 @@ export const CenterManagement: React.FC = () => {
             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
             sx={{ mb: 2 }}
           />
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Group</InputLabel>
-            <Select
-              value={formData.groupId}
-              label="Group"
-              onChange={(e) => setFormData({ ...formData, groupId: e.target.value })}
-            >
-              {groups.map((group) => (
-                <MenuItem key={group.id} value={group.id}>
-                  {group.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Typography variant="caption" color="text.secondary">
+            You can associate this center with events after creation from the center details page.
+          </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
           <Button
             onClick={handleCreateCenter}
             variant="contained"
-            disabled={!formData.name || !formData.address || !formData.groupId}
+            disabled={!formData.name || !formData.address}
           >
             Create
           </Button>

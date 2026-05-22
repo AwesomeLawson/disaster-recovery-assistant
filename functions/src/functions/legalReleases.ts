@@ -4,55 +4,77 @@ import { LegalRelease } from '../types';
 
 const db = admin.firestore();
 
-export const createLegalRelease = onCall(async (request: any) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated');
-  }
+export const createLegalRelease = onCall({ cors: true }, async (request: any) => {
+  try {
+    console.log('createLegalRelease called, auth:', !!request.auth);
 
-  const { userId, releaseType, documentUrl, signatureImageUrl, signedDigitally, assessmentId } = request.data;
-
-  if (!userId || !releaseType) {
-    throw new HttpsError('invalid-argument', 'Missing required fields: userId, releaseType');
-  }
-
-  // Users can create their own releases, or admins can create for others
-  if (request.auth.uid !== userId) {
-    const userDoc = await db.collection('users').doc(request.auth.uid).get();
-    const user = userDoc.data();
-
-    if (!user || !user.roles || !user.roles.includes('administrator')) {
-      throw new HttpsError('permission-denied', 'Permission denied');
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
-  }
 
-  const releaseRef = db.collection('legalReleases').doc();
-  const release: LegalRelease = {
-    id: releaseRef.id,
-    userId,
-    releaseType,
-    documentUrl,
-    signatureImageUrl,
-    signedDigitally: signedDigitally || false,
-    assessmentId,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
+    console.log('Auth UID:', request.auth.uid);
+    console.log('Request data:', JSON.stringify(request.data));
 
-  await releaseRef.set(release);
+    const { userId, releaseType, documentUrl, signatureImageUrl, signedDigitally, assessmentId } = request.data;
 
-  // Update user with legal release reference if it's a volunteer waiver
-  if (releaseType === 'volunteer') {
-    await db.collection('users').doc(userId).update({
-      legalReleaseId: releaseRef.id,
-      legalReleaseSigned: false,
+    if (!userId || !releaseType) {
+      throw new HttpsError('invalid-argument', 'Missing required fields: userId, releaseType');
+    }
+
+    // Users can create their own releases, or admins can create for others
+    if (request.auth.uid !== userId) {
+      console.log('Checking admin permissions for user:', request.auth.uid);
+      const userDoc = await db.collection('users').doc(request.auth.uid).get();
+      const user = userDoc.data();
+
+      if (!user || !user.roles || !user.roles.includes('administrator')) {
+        throw new HttpsError('permission-denied', 'Permission denied');
+      }
+    }
+
+    console.log('Creating legal release document');
+    const releaseRef = db.collection('legalReleases').doc();
+    const release: Partial<LegalRelease> = {
+      id: releaseRef.id,
+      userId,
+      releaseType,
+      signedDigitally: signedDigitally || false,
+      createdAt: Date.now(),
       updatedAt: Date.now(),
-    });
-  }
+    };
 
-  return { success: true, releaseId: releaseRef.id, release };
+    // Only add optional fields if they have values (Firestore doesn't accept undefined)
+    if (documentUrl) release.documentUrl = documentUrl;
+    if (signatureImageUrl) release.signatureImageUrl = signatureImageUrl;
+    if (assessmentId) release.assessmentId = assessmentId;
+
+    console.log('Setting release document:', releaseRef.id);
+    await releaseRef.set(release);
+    console.log('Release document created');
+
+    // Update user with legal release reference if it's a volunteer waiver
+    if (releaseType === 'volunteer') {
+      console.log('Updating user document for volunteer release');
+      await db.collection('users').doc(userId).update({
+        legalReleaseId: releaseRef.id,
+        legalReleaseSigned: false,
+        updatedAt: Date.now(),
+      });
+      console.log('User document updated');
+    }
+
+    return { success: true, releaseId: releaseRef.id, release };
+  } catch (error: any) {
+    console.error('createLegalRelease error:', error);
+    console.error('Error stack:', error.stack);
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+    throw new HttpsError('internal', error.message || 'An unexpected error occurred');
+  }
 });
 
-export const signLegalRelease = onCall(async (request: any) => {
+export const signLegalRelease = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -95,7 +117,7 @@ export const signLegalRelease = onCall(async (request: any) => {
   return { success: true };
 });
 
-export const getLegalRelease = onCall(async (request: any) => {
+export const getLegalRelease = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }

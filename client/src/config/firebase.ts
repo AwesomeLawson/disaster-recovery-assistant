@@ -28,7 +28,9 @@ if (import.meta.env.VITE_USE_EMULATOR === 'true') {
   connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
   connectFirestoreEmulator(db, 'localhost', 8080);
   connectStorageEmulator(storage, 'localhost', 9199);
-  connectFunctionsEmulator(functions, 'localhost', 5001);
+  // Use Vite proxy for functions to avoid CORS issues
+  // Vite proxies /demo-project/* to http://127.0.0.1:5001
+  connectFunctionsEmulator(functions, window.location.hostname, parseInt(window.location.port) || 5173);
 }
 
 export default app;

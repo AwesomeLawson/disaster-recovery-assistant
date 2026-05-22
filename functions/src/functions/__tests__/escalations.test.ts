@@ -125,10 +125,10 @@ describe('Escalation Management Functions', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject creation by worker', async () => {
+    it('should reject creation by volunteer', async () => {
       const mockGet = jest.fn().mockResolvedValue({
         exists: true,
-        data: () => ({ roles: ['worker'] }),
+        data: () => ({ roles: ['volunteer'] }),
       });
 
       const mockDoc = jest.fn(() => ({ get: mockGet }));
@@ -259,7 +259,7 @@ describe('Escalation Management Functions', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject update by worker', async () => {
+    it('should reject update by volunteer', async () => {
       const mockGet = jest.fn()
         .mockResolvedValueOnce({
           exists: true,
@@ -267,7 +267,7 @@ describe('Escalation Management Functions', () => {
         })
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ roles: ['worker'] }),
+          data: () => ({ roles: ['volunteer'] }),
         });
 
       const mockDoc = jest.fn(() => ({ get: mockGet }));
@@ -387,7 +387,7 @@ describe('Escalation Management Functions', () => {
         })
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ roles: ['worker'] }),
+          data: () => ({ roles: ['volunteer'] }),
         });
 
       const mockDoc = jest.fn(() => ({ get: mockGet }));

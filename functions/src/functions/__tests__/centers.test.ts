@@ -99,7 +99,7 @@ describe('Center Management Functions', () => {
     it('should reject creation by non-administrator', async () => {
       const mockGet = jest.fn().mockResolvedValue({
         exists: true,
-        data: () => ({ roles: ['worker'] }),
+        data: () => ({ roles: ['volunteer'] }),
       });
 
       const mockDoc = jest.fn(() => ({ get: mockGet }));
@@ -180,7 +180,7 @@ describe('Center Management Functions', () => {
     it('should reject update by non-administrator', async () => {
       const mockGet = jest.fn().mockResolvedValue({
         exists: true,
-        data: () => ({ roles: ['worker'] }),
+        data: () => ({ roles: ['volunteer'] }),
       });
 
       const mockDoc = jest.fn(() => ({ get: mockGet }));

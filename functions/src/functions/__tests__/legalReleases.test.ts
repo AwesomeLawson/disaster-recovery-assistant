@@ -118,7 +118,7 @@ describe('Legal Release Management Functions', () => {
     it('should prevent non-admin from creating release for other user', async () => {
       const mockGet = jest.fn().mockResolvedValue({
         exists: true,
-        data: () => ({ roles: ['worker'] }),
+        data: () => ({ roles: ['volunteer'] }),
       });
 
       const mockDoc = jest.fn(() => ({ get: mockGet }));
@@ -461,7 +461,7 @@ describe('Legal Release Management Functions', () => {
         })
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ roles: ['worker'] }),
+          data: () => ({ roles: ['volunteer'] }),
         });
 
       const mockDoc = jest.fn(() => ({ get: mockGet }));
