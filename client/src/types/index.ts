@@ -1,6 +1,11 @@
 // Type definitions matching backend types
 
-export type UserRole = 'administrator' | 'assessor' | 'workGroupLead' | 'volunteer' | 'thirdParty';
+export type UserRole = 'administrator' | 'assessor' | 'workGroupLead' | 'volunteer' | 'thirdParty' | 'fieldCoordinator';
+
+export interface AvailabilityRange {
+  start: number;
+  end: number;
+}
 
 export type CommunicationPreference = 'email' | 'sms';
 
@@ -36,6 +41,8 @@ export interface User {
   roleApprovalStatus: 'pending' | 'approved' | 'rejected';
   eventIds?: string[];
   centerIds?: string[];
+  organization?: string;
+  availability?: AvailabilityRange[];
   legalReleaseId?: string;
   legalReleaseSigned: boolean;
   lastBackgroundCheck?: number;
@@ -170,6 +177,9 @@ export interface RegisterFormData {
   lastName: string;
   phoneNumber: string;
   address?: UserAddress;
+  organization?: string;
+  availability?: AvailabilityRange[];
+  eventIds?: string[];
   communicationPreference: CommunicationPreference;
   requestedRoles: UserRole[];
 }

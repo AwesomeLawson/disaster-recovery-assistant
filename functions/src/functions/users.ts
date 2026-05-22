@@ -8,7 +8,7 @@ const db = admin.firestore();
 const callOptions = { cors: true };
 
 export const registerUser = onCall(callOptions, async (request: any) => {
-  const { email, firstName, lastName, phoneNumber, address, communicationPreference, requestedRoles } = request.data;
+  const { email, firstName, lastName, phoneNumber, address, organization, availability, eventIds, communicationPreference, requestedRoles } = request.data;
 
   if (!email || !firstName || !lastName || !phoneNumber || !communicationPreference || !requestedRoles) {
     throw new HttpsError(
@@ -30,6 +30,9 @@ export const registerUser = onCall(callOptions, async (request: any) => {
     email,
     phoneNumber,
     ...(address ? { address } : {}),
+    ...(organization ? { organization } : {}),
+    ...(availability?.length ? { availability } : {}),
+    ...(eventIds?.length ? { eventIds } : {}),
     communicationPreference,
     roles: [], // Initially empty until approved
     requestedRoles,
@@ -236,4 +239,24 @@ export const listUsers = onCall(callOptions, async (request: any) => {
   const users = snapshot.docs.map((doc) => doc.data());
 
   return { users };
+});
+
+export const listOrganizations = onCall(callOptions, async (request: any) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const snapshot = await db.collection('users')
+    .where('organization', '!=', '')
+    .select('organization')
+    .limit(500)
+    .get();
+
+  const orgs = new Set<string>();
+  snapshot.docs.forEach((doc) => {
+    const org = doc.data().organization;
+    if (org) orgs.add(org);
+  });
+
+  return { organizations: Array.from(orgs).sort() };
 });

@@ -33,6 +33,7 @@ import type { User, UserRole } from '../types';
 const ALL_ROLES: { value: UserRole; label: string }[] = [
   { value: 'administrator', label: 'Administrator' },
   { value: 'assessor', label: 'Assessor' },
+  { value: 'fieldCoordinator', label: 'Field Coordinator' },
   { value: 'workGroupLead', label: 'Work Group Lead' },
   { value: 'volunteer', label: 'Volunteer' },
   { value: 'thirdParty', label: 'Third Party' },
@@ -296,6 +297,7 @@ export const AdminUsers: React.FC = () => {
               <MenuItem value="all">All Roles</MenuItem>
               <MenuItem value="administrator">Administrator</MenuItem>
               <MenuItem value="assessor">Assessor</MenuItem>
+              <MenuItem value="fieldCoordinator">Field Coordinator</MenuItem>
               <MenuItem value="workGroupLead">Work Group Lead</MenuItem>
               <MenuItem value="volunteer">Volunteer</MenuItem>
               <MenuItem value="thirdParty">Third Party</MenuItem>
@@ -507,6 +509,32 @@ export const AdminUsers: React.FC = () => {
                     onChange={(e) => setEditingProfile({ ...editingProfile, addressZip: e.target.value })}
                   />
                 </Box>
+
+                {(selectedUser.organization || selectedUser.availability?.length) ? (
+                  <>
+                    {selectedUser.organization && (
+                      <>
+                        <Typography variant="subtitle2" color="text.secondary">Church / Organization</Typography>
+                        <Typography variant="body2" sx={{ mb: 2 }}>{selectedUser.organization}</Typography>
+                      </>
+                    )}
+                    {selectedUser.availability && selectedUser.availability.length > 0 && (
+                      <>
+                        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>Availability</Typography>
+                        <Box sx={{ mb: 2 }}>
+                          {selectedUser.availability.map((r, i) => (
+                            <Chip
+                              key={i}
+                              label={`${new Date(r.start).toLocaleDateString()} – ${new Date(r.end).toLocaleDateString()}`}
+                              size="small"
+                              sx={{ mr: 0.5, mb: 0.5 }}
+                            />
+                          ))}
+                        </Box>
+                      </>
+                    )}
+                  </>
+                ) : null}
 
                 <TextField
                   fullWidth

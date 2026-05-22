@@ -20,14 +20,17 @@ import {
   DialogActions,
   Divider,
   IconButton,
+  Autocomplete,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import LockIcon from '@mui/icons-material/Lock';
 import { useAuth } from '../context/AuthContext';
 import { userService } from '../services/user.service';
 import { authService } from '../services/auth.service';
-import type { CommunicationPreference } from '../types';
+import type { CommunicationPreference, AvailabilityRange } from '../types';
 
 export const UserProfile: React.FC = () => {
   const navigate = useNavigate();
@@ -46,7 +49,10 @@ export const UserProfile: React.FC = () => {
     addressCity: '',
     addressState: '',
     addressZip: '',
+    organization: '',
   });
+  const [editAvailability, setEditAvailability] = useState<{ start: string; end: string }[]>([]);
+  const [organizations, setOrganizations] = useState<string[]>([]);
 
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
@@ -54,6 +60,10 @@ export const UserProfile: React.FC = () => {
     newPassword: '',
     confirmPassword: '',
   });
+
+  useEffect(() => {
+    userService.listOrganizations().then(setOrganizations).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -66,7 +76,14 @@ export const UserProfile: React.FC = () => {
         addressCity: user.address?.city || '',
         addressState: user.address?.state || '',
         addressZip: user.address?.zip || '',
+        organization: user.organization || '',
       });
+      setEditAvailability(
+        (user.availability || []).map((r) => ({
+          start: new Date(r.start).toISOString().split('T')[0],
+          end: new Date(r.end).toISOString().split('T')[0],
+        }))
+      );
     }
   }, [user]);
 
@@ -76,6 +93,9 @@ export const UserProfile: React.FC = () => {
     try {
       setUpdating(true);
       const hasAddress = editForm.addressStreet || editForm.addressCity || editForm.addressState || editForm.addressZip;
+      const availabilityRanges: AvailabilityRange[] = editAvailability
+        .filter((r) => r.start && r.end)
+        .map((r) => ({ start: new Date(r.start).getTime(), end: new Date(r.end).getTime() }));
       await userService.updateUserProfile(user.id, {
         firstName: editForm.firstName,
         lastName: editForm.lastName,
@@ -84,6 +104,8 @@ export const UserProfile: React.FC = () => {
         address: hasAddress
           ? { street: editForm.addressStreet, city: editForm.addressCity, state: editForm.addressState, zip: editForm.addressZip }
           : undefined,
+        organization: editForm.organization.trim() || undefined,
+        availability: availabilityRanges.length ? availabilityRanges : undefined,
       });
       await refreshUser();
       setEditDialogOpen(false);
@@ -249,6 +271,35 @@ export const UserProfile: React.FC = () => {
               </>
             )}
 
+            {user.organization && (
+              <>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Church / Organization
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                  {user.organization}
+                </Typography>
+              </>
+            )}
+
+            {user.availability && user.availability.length > 0 && (
+              <>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Availability
+                </Typography>
+                <Box sx={{ mb: 2 }}>
+                  {user.availability.map((r, i) => (
+                    <Chip
+                      key={i}
+                      label={`${new Date(r.start).toLocaleDateString()} – ${new Date(r.end).toLocaleDateString()}`}
+                      size="small"
+                      sx={{ mr: 0.5, mb: 0.5 }}
+                    />
+                  ))}
+                </Box>
+              </>
+            )}
+
             <Typography variant="subtitle2" color="text.secondary">
               Account Created
             </Typography>
@@ -398,7 +449,7 @@ export const UserProfile: React.FC = () => {
               onChange={(e) => setEditForm({ ...editForm, addressStreet: e.target.value })}
               sx={{ mb: 1 }}
             />
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
               <TextField
                 fullWidth
                 label="City"
@@ -417,6 +468,47 @@ export const UserProfile: React.FC = () => {
                 value={editForm.addressZip}
                 onChange={(e) => setEditForm({ ...editForm, addressZip: e.target.value })}
               />
+            </Box>
+
+            <Autocomplete
+              freeSolo
+              options={organizations}
+              value={editForm.organization}
+              onInputChange={(_, val) => setEditForm({ ...editForm, organization: val })}
+              renderInput={(params) => (
+                <TextField {...params} fullWidth label="Church / Organization (optional)" sx={{ mb: 2 }} />
+              )}
+            />
+
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+                  Availability (optional)
+                </Typography>
+                <Button size="small" startIcon={<AddIcon />} onClick={() => setEditAvailability((p) => [...p, { start: '', end: '' }])}>
+                  Add Range
+                </Button>
+              </Box>
+              {editAvailability.map((range, i) => (
+                <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
+                  <TextField
+                    size="small" type="date" label="From" InputLabelProps={{ shrink: true }}
+                    value={range.start}
+                    onChange={(e) => setEditAvailability((p) => p.map((r, j) => j === i ? { ...r, start: e.target.value } : r))}
+                    sx={{ flex: 1 }}
+                  />
+                  <TextField
+                    size="small" type="date" label="To" InputLabelProps={{ shrink: true }}
+                    inputProps={{ min: range.start }}
+                    value={range.end}
+                    onChange={(e) => setEditAvailability((p) => p.map((r, j) => j === i ? { ...r, end: e.target.value } : r))}
+                    sx={{ flex: 1 }}
+                  />
+                  <IconButton size="small" onClick={() => setEditAvailability((p) => p.filter((_, j) => j !== i))}>
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              ))}
             </Box>
           </Box>
         </DialogContent>

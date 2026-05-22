@@ -53,4 +53,11 @@ export const userService = {
     const fn = httpsCallable(functions, 'updateUserRoles');
     await fn({ userId, roles });
   },
+
+  // Get distinct organization names for typeahead
+  async listOrganizations(): Promise<string[]> {
+    const fn = httpsCallable(functions, 'listOrganizations');
+    const result = await fn({});
+    return (result.data as any).organizations;
+  },
 };

@@ -22,6 +22,7 @@ export const updateUserRoles = userFunctions.updateUserRoles;
 export const updateUserProfile = userFunctions.updateUserProfile;
 export const getUser = userFunctions.getUser;
 export const listUsers = userFunctions.listUsers;
+export const listOrganizations = userFunctions.listOrganizations;
 
 // Event Management
 export const createEvent = eventFunctions.createEvent;
