@@ -37,6 +37,7 @@ export interface User {
   centerIds?: string[];
   organization?: string;
   availability?: AvailabilityRange[];
+  contacted?: boolean;
   legalReleaseId?: string;
   legalReleaseSigned: boolean;
   lastBackgroundCheck?: number;

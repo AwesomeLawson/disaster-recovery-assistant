@@ -26,6 +26,7 @@ import {
   Divider,
 } from '@mui/material';
 import type { CommunicationPreference } from '../types';
+import DownloadIcon from '@mui/icons-material/Download';
 import SearchIcon from '@mui/icons-material/Search';
 import { userService } from '../services/user.service';
 import type { User, UserRole } from '../types';
@@ -61,6 +62,7 @@ export const AdminUsers: React.FC = () => {
     addressState: '',
     addressZip: '',
     lastBackgroundCheck: '',
+    contacted: false,
   });
   const [saving, setSaving] = useState(false);
   const [authInfo, setAuthInfo] = useState<{ creationTime: string; lastSignInTime: string; providers: string[] } | null>(null);
@@ -190,6 +192,7 @@ export const AdminUsers: React.FC = () => {
       lastBackgroundCheck: user.lastBackgroundCheck
         ? new Date(user.lastBackgroundCheck).toISOString().split('T')[0]
         : '',
+      contacted: user.contacted ?? false,
     });
     setAuthInfo(null);
     setDialogOpen(true);
@@ -227,6 +230,7 @@ export const AdminUsers: React.FC = () => {
           lastBackgroundCheck: editingProfile.lastBackgroundCheck
             ? new Date(editingProfile.lastBackgroundCheck).getTime()
             : undefined,
+          contacted: editingProfile.contacted,
         }),
         userService.updateUserRoles(selectedUser.id, editingRoles),
       ]);
@@ -239,6 +243,50 @@ export const AdminUsers: React.FC = () => {
     }
   };
 
+  const handleExport = () => {
+    const BG_VALIDITY_MS = 365 * 24 * 60 * 60 * 1000;
+    const csvEscape = (v: any) => {
+      const s = v == null ? '' : String(v);
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const headers = [
+      'First Name', 'Last Name', 'Email', 'Phone', 'Organization',
+      'Address Street', 'Address City', 'Address State', 'Address ZIP',
+      'Communication Preference', 'Roles', 'Requested Roles', 'Approval Status',
+      'Events', 'Availability',
+      'Legal Release Signed', 'Contacted',
+      'Background Check Date', 'Background Check Expiry',
+      'Account Created',
+    ];
+
+    const rows = filteredUsers.map((u) => {
+      const bgDate = u.lastBackgroundCheck ? new Date(u.lastBackgroundCheck).toLocaleDateString() : '';
+      const bgExpiry = u.lastBackgroundCheck ? new Date(u.lastBackgroundCheck + BG_VALIDITY_MS).toLocaleDateString() : '';
+      const avail = (u.availability || [])
+        .map((r) => `${new Date(r.start).toLocaleDateString()}–${new Date(r.end).toLocaleDateString()}`)
+        .join('; ');
+      return [
+        u.firstName, u.lastName, u.email, u.phoneNumber, u.organization || '',
+        u.address?.street || '', u.address?.city || '', u.address?.state || '', u.address?.zip || '',
+        u.communicationPreference, (u.roles || []).join('; '), (u.requestedRoles || []).join('; '), u.roleApprovalStatus,
+        (u.eventIds || []).join('; '), avail,
+        u.legalReleaseSigned ? 'Yes' : 'No', u.contacted ? 'Yes' : 'No',
+        bgDate, bgExpiry,
+        new Date(u.createdAt).toLocaleDateString(),
+      ].map(csvEscape).join(',');
+    });
+
+    const csv = [headers.map(csvEscape).join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `faith-responders-users-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <Container maxWidth="lg">
@@ -249,8 +297,16 @@ export const AdminUsers: React.FC = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4">User Management</Typography>
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Typography variant="h4" sx={{ flex: 1 }}>User Management</Typography>
+        <Button
+          variant="outlined"
+          startIcon={<DownloadIcon />}
+          onClick={handleExport}
+          disabled={filteredUsers.length === 0}
+        >
+          Export CSV
+        </Button>
       </Box>
 
       {error && (
@@ -356,6 +412,7 @@ export const AdminUsers: React.FC = () => {
                           color={getStatusColor(user.roleApprovalStatus) as any}
                           sx={{ mr: 1 }}
                         />
+                        {user.contacted && <Chip label="Contacted" size="small" color="success" variant="outlined" sx={{ mr: 1 }} />}
                         {(() => {
                           const status = getBgCheckStatus(user);
                           const expiry = getBgCheckExpiry(user);
@@ -545,6 +602,17 @@ export const AdminUsers: React.FC = () => {
                   onChange={(e) => setEditingProfile({ ...editingProfile, lastBackgroundCheck: e.target.value })}
                   InputLabelProps={{ shrink: true }}
                   inputProps={{ max: new Date().toISOString().split('T')[0] }}
+                  sx={{ mb: 1 }}
+                />
+
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={editingProfile.contacted}
+                      onChange={(e) => setEditingProfile({ ...editingProfile, contacted: e.target.checked })}
+                    />
+                  }
+                  label="Contacted"
                   sx={{ mb: 2 }}
                 />
 
