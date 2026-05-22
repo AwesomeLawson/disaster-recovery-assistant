@@ -17,6 +17,7 @@ import {
 import { assessmentService } from '../services/assessment.service';
 import { centerService } from '../services/center.service';
 import { eventService } from '../services/event.service';
+import { AddressAutocomplete } from '../components/AddressAutocomplete';
 import type { AssessmentSeverity, Center, Event } from '../types';
 
 export const CreateAssessment: React.FC = () => {
@@ -29,6 +30,8 @@ export const CreateAssessment: React.FC = () => {
   const [formData, setFormData] = useState({
     placeName: '',
     address: '',
+    latitude: undefined as number | undefined,
+    longitude: undefined as number | undefined,
     centerId: '',
     eventId: '',
     damages: '',
@@ -109,12 +112,20 @@ export const CreateAssessment: React.FC = () => {
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <TextField
+              <AddressAutocomplete
                 required
-                fullWidth
-                label="Address"
                 value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                onChange={(address) =>
+                  setFormData({ ...formData, address, latitude: undefined, longitude: undefined })
+                }
+                onPlaceSelect={({ address, latitude, longitude }) =>
+                  setFormData({ ...formData, address, latitude, longitude })
+                }
+                coordinates={
+                  formData.latitude != null && formData.longitude != null
+                    ? { latitude: formData.latitude, longitude: formData.longitude }
+                    : null
+                }
               />
             </Grid>
 
