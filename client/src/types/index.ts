@@ -38,6 +38,7 @@ export interface User {
   centerIds?: string[];
   legalReleaseId?: string;
   legalReleaseSigned: boolean;
+  lastBackgroundCheck?: number;
   createdAt: number;
   updatedAt: number;
 }

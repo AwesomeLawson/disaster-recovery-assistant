@@ -58,6 +58,7 @@ export const AdminUsers: React.FC = () => {
     addressCity: '',
     addressState: '',
     addressZip: '',
+    lastBackgroundCheck: '',
   });
   const [saving, setSaving] = useState(false);
   const [authInfo, setAuthInfo] = useState<{ creationTime: string; lastSignInTime: string; providers: string[] } | null>(null);
@@ -157,6 +158,9 @@ export const AdminUsers: React.FC = () => {
       addressCity: user.address?.city || '',
       addressState: user.address?.state || '',
       addressZip: user.address?.zip || '',
+      lastBackgroundCheck: user.lastBackgroundCheck
+        ? new Date(user.lastBackgroundCheck).toISOString().split('T')[0]
+        : '',
     });
     setAuthInfo(null);
     setDialogOpen(true);
@@ -190,6 +194,9 @@ export const AdminUsers: React.FC = () => {
           communicationPreference: editingProfile.communicationPreference,
           address: hasAddress
             ? { street: editingProfile.addressStreet, city: editingProfile.addressCity, state: editingProfile.addressState, zip: editingProfile.addressZip }
+            : undefined,
+          lastBackgroundCheck: editingProfile.lastBackgroundCheck
+            ? new Date(editingProfile.lastBackgroundCheck).getTime()
             : undefined,
         }),
         userService.updateUserRoles(selectedUser.id, editingRoles),
@@ -450,6 +457,18 @@ export const AdminUsers: React.FC = () => {
                     onChange={(e) => setEditingProfile({ ...editingProfile, addressZip: e.target.value })}
                   />
                 </Box>
+
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="date"
+                  label="Background Check Date"
+                  value={editingProfile.lastBackgroundCheck}
+                  onChange={(e) => setEditingProfile({ ...editingProfile, lastBackgroundCheck: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                  inputProps={{ max: new Date().toISOString().split('T')[0] }}
+                  sx={{ mb: 2 }}
+                />
 
                 <Typography variant="subtitle2" color="text.secondary">
                   Status

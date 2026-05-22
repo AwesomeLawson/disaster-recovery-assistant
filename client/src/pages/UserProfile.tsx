@@ -324,10 +324,20 @@ export const UserProfile: React.FC = () => {
             <Typography variant="subtitle2" color="text.secondary">
               Legal Release
             </Typography>
-            <Box>
+            <Box sx={{ mb: 2 }}>
               <Chip
                 label={user.legalReleaseSigned ? 'Signed' : 'Not Signed'}
                 color={user.legalReleaseSigned ? 'success' : 'warning'}
+              />
+            </Box>
+
+            <Typography variant="subtitle2" color="text.secondary">
+              Background Check
+            </Typography>
+            <Box>
+              <Chip
+                label={user.lastBackgroundCheck ? new Date(user.lastBackgroundCheck).toLocaleDateString() : 'Not on file'}
+                color={user.lastBackgroundCheck ? 'success' : 'default'}
               />
             </Box>
           </Paper>
