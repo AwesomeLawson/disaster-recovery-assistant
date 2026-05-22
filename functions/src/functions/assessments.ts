@@ -175,7 +175,7 @@ export const listAssessments = onCall({ cors: true }, async (request: any) => {
     query = query.where('eventId', '==', eventId);
   }
 
-  if (flaggedForReview !== undefined) {
+  if (typeof flaggedForReview === 'boolean') {
     query = query.where('flaggedForReview', '==', flaggedForReview);
   }
 
