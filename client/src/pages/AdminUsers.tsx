@@ -46,6 +46,7 @@ export const AdminUsers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [bgCheckFilter, setBgCheckFilter] = useState<string>('all');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRoles, setEditingRoles] = useState<UserRole[]>([]);
@@ -81,6 +82,22 @@ export const AdminUsers: React.FC = () => {
     }
   };
 
+  const BG_CHECK_VALIDITY_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
+
+  const getBgCheckExpiry = (u: User): number | null =>
+    u.lastBackgroundCheck ? u.lastBackgroundCheck + BG_CHECK_VALIDITY_MS : null;
+
+  const getBgCheckStatus = (u: User): 'expired' | 'week' | 'twoWeeks' | 'ok' | 'none' => {
+    const expiry = getBgCheckExpiry(u);
+    if (expiry === null) return 'none';
+    const now = Date.now();
+    const msLeft = expiry - now;
+    if (msLeft < 0) return 'expired';
+    if (msLeft <= 7 * 24 * 60 * 60 * 1000) return 'week';
+    if (msLeft <= 14 * 24 * 60 * 60 * 1000) return 'twoWeeks';
+    return 'ok';
+  };
+
   useEffect(() => {
     let filtered = users;
 
@@ -102,8 +119,19 @@ export const AdminUsers: React.FC = () => {
       filtered = filtered.filter((u) => u.roles.includes(roleFilter as UserRole));
     }
 
+    if (bgCheckFilter !== 'all') {
+      filtered = filtered.filter((u) => {
+        const status = getBgCheckStatus(u);
+        if (bgCheckFilter === 'expired') return status === 'expired';
+        if (bgCheckFilter === 'week') return status === 'week';
+        if (bgCheckFilter === 'twoWeeks') return status === 'week' || status === 'twoWeeks';
+        if (bgCheckFilter === 'none') return status === 'none';
+        return true;
+      });
+    }
+
     setFilteredUsers(filtered);
-  }, [searchTerm, statusFilter, roleFilter, users]);
+  }, [searchTerm, statusFilter, roleFilter, bgCheckFilter, users]);
 
   const handleApproveUser = async (user: User, approve: boolean) => {
     try {
@@ -273,6 +301,20 @@ export const AdminUsers: React.FC = () => {
               <MenuItem value="thirdParty">Third Party</MenuItem>
             </Select>
           </FormControl>
+          <FormControl sx={{ minWidth: 180 }}>
+            <InputLabel>Background Check</InputLabel>
+            <Select
+              value={bgCheckFilter}
+              label="Background Check"
+              onChange={(e) => setBgCheckFilter(e.target.value)}
+            >
+              <MenuItem value="all">All</MenuItem>
+              <MenuItem value="week">Expires within 1 week</MenuItem>
+              <MenuItem value="twoWeeks">Expires within 2 weeks</MenuItem>
+              <MenuItem value="expired">Expired</MenuItem>
+              <MenuItem value="none">No check on file</MenuItem>
+            </Select>
+          </FormControl>
         </Box>
 
         {filteredUsers.length === 0 ? (
@@ -312,6 +354,14 @@ export const AdminUsers: React.FC = () => {
                           color={getStatusColor(user.roleApprovalStatus) as any}
                           sx={{ mr: 1 }}
                         />
+                        {(() => {
+                          const status = getBgCheckStatus(user);
+                          const expiry = getBgCheckExpiry(user);
+                          if (status === 'expired') return <Chip label="BG Check Expired" size="small" color="error" sx={{ mr: 1 }} />;
+                          if (status === 'week') return <Chip label={`BG Expires ${new Date(expiry!).toLocaleDateString()}`} size="small" color="error" variant="outlined" sx={{ mr: 1 }} />;
+                          if (status === 'twoWeeks') return <Chip label={`BG Expires ${new Date(expiry!).toLocaleDateString()}`} size="small" color="warning" variant="outlined" sx={{ mr: 1 }} />;
+                          return null;
+                        })()}
                         {user.roles.map((role) => (
                           <Chip
                             key={role}
