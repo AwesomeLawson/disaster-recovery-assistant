@@ -106,7 +106,7 @@ export const getEvent = onCall({ cors: true }, async (request: any) => {
     throw new HttpsError('not-found', 'Event not found');
   }
 
-  return { event: eventDoc.data() };
+  return { event: { id: eventDoc.id, ...eventDoc.data() } };
 });
 
 export const listEvents = onCall({ cors: true }, async (request: any) => {
@@ -126,7 +126,7 @@ export const listEvents = onCall({ cors: true }, async (request: any) => {
     const limit = typeof data.limit === 'number' ? data.limit : 100;
 
     const snapshot = await db.collection('events').limit(limit).get();
-    const events = snapshot.docs.map((doc) => doc.data());
+    const events = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
     return { events };
   } catch (error: any) {
