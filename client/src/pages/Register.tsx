@@ -64,6 +64,7 @@ export const Register: React.FC = () => {
   const availableRoles: { value: UserRole; label: string }[] = [
     { value: 'assessor', label: 'Assessor' },
     { value: 'fieldCoordinator', label: 'Field Coordinator' },
+    { value: 'baseCampHost', label: 'Base Camp Host' },
     { value: 'workGroupLead', label: 'Work Group Lead' },
     { value: 'volunteer', label: 'Volunteer' },
   ];

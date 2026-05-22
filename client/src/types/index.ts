@@ -1,6 +1,6 @@
 // Type definitions matching backend types
 
-export type UserRole = 'administrator' | 'assessor' | 'workGroupLead' | 'volunteer' | 'thirdParty' | 'fieldCoordinator';
+export type UserRole = 'administrator' | 'assessor' | 'workGroupLead' | 'volunteer' | 'thirdParty' | 'fieldCoordinator' | 'baseCampHost';
 
 export interface AvailabilityRange {
   start: number;

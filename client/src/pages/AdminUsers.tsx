@@ -35,6 +35,7 @@ const ALL_ROLES: { value: UserRole; label: string }[] = [
   { value: 'administrator', label: 'Administrator' },
   { value: 'assessor', label: 'Assessor' },
   { value: 'fieldCoordinator', label: 'Field Coordinator' },
+  { value: 'baseCampHost', label: 'Base Camp Host' },
   { value: 'workGroupLead', label: 'Work Group Lead' },
   { value: 'volunteer', label: 'Volunteer' },
   { value: 'thirdParty', label: 'Third Party' },
@@ -354,6 +355,7 @@ export const AdminUsers: React.FC = () => {
               <MenuItem value="administrator">Administrator</MenuItem>
               <MenuItem value="assessor">Assessor</MenuItem>
               <MenuItem value="fieldCoordinator">Field Coordinator</MenuItem>
+              <MenuItem value="baseCampHost">Base Camp Host</MenuItem>
               <MenuItem value="workGroupLead">Work Group Lead</MenuItem>
               <MenuItem value="volunteer">Volunteer</MenuItem>
               <MenuItem value="thirdParty">Third Party</MenuItem>
