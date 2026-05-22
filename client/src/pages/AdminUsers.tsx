@@ -25,6 +25,7 @@ import {
   Checkbox,
   Divider,
 } from '@mui/material';
+import type { CommunicationPreference } from '../types';
 import SearchIcon from '@mui/icons-material/Search';
 import { userService } from '../services/user.service';
 import type { User, UserRole } from '../types';
@@ -48,7 +49,17 @@ export const AdminUsers: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRoles, setEditingRoles] = useState<UserRole[]>([]);
-  const [savingRoles, setSavingRoles] = useState(false);
+  const [editingProfile, setEditingProfile] = useState({
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
+    communicationPreference: 'email' as CommunicationPreference,
+    addressStreet: '',
+    addressCity: '',
+    addressState: '',
+    addressZip: '',
+  });
+  const [saving, setSaving] = useState(false);
   const [authInfo, setAuthInfo] = useState<{ creationTime: string; lastSignInTime: string; providers: string[] } | null>(null);
   const [authInfoLoading, setAuthInfoLoading] = useState(false);
 
@@ -137,6 +148,16 @@ export const AdminUsers: React.FC = () => {
   const openUserDialog = async (user: User) => {
     setSelectedUser(user);
     setEditingRoles([...user.roles]);
+    setEditingProfile({
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      phoneNumber: user.phoneNumber || '',
+      communicationPreference: user.communicationPreference || 'email',
+      addressStreet: user.address?.street || '',
+      addressCity: user.address?.city || '',
+      addressState: user.address?.state || '',
+      addressZip: user.address?.zip || '',
+    });
     setAuthInfo(null);
     setDialogOpen(true);
     setAuthInfoLoading(true);
@@ -156,17 +177,29 @@ export const AdminUsers: React.FC = () => {
     );
   };
 
-  const handleSaveRoles = async () => {
+  const handleSave = async () => {
     if (!selectedUser) return;
-    setSavingRoles(true);
+    setSaving(true);
     try {
-      await userService.updateUserRoles(selectedUser.id, editingRoles);
+      const hasAddress = editingProfile.addressStreet || editingProfile.addressCity || editingProfile.addressState || editingProfile.addressZip;
+      await Promise.all([
+        userService.updateUserProfile(selectedUser.id, {
+          firstName: editingProfile.firstName,
+          lastName: editingProfile.lastName,
+          phoneNumber: editingProfile.phoneNumber,
+          communicationPreference: editingProfile.communicationPreference,
+          address: hasAddress
+            ? { street: editingProfile.addressStreet, city: editingProfile.addressCity, state: editingProfile.addressState, zip: editingProfile.addressZip }
+            : undefined,
+        }),
+        userService.updateUserRoles(selectedUser.id, editingRoles),
+      ]);
       await loadUsers();
       setDialogOpen(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to update roles');
+      setError(err.message || 'Failed to update user');
     } finally {
-      setSavingRoles(false);
+      setSaving(false);
     }
   };
 
@@ -341,15 +374,21 @@ export const AdminUsers: React.FC = () => {
             <DialogTitle>User Details</DialogTitle>
             <DialogContent>
               <Box sx={{ pt: 2 }}>
-                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
-                  <Box>
-                    <Typography variant="subtitle2" color="text.secondary">First Name</Typography>
-                    <Typography variant="body1">{selectedUser.firstName}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle2" color="text.secondary">Last Name</Typography>
-                    <Typography variant="body1">{selectedUser.lastName}</Typography>
-                  </Box>
+                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="First Name"
+                    value={editingProfile.firstName}
+                    onChange={(e) => setEditingProfile({ ...editingProfile, firstName: e.target.value })}
+                  />
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Last Name"
+                    value={editingProfile.lastName}
+                    onChange={(e) => setEditingProfile({ ...editingProfile, lastName: e.target.value })}
+                  />
                 </Box>
 
                 <Typography variant="subtitle2" color="text.secondary">
@@ -359,32 +398,58 @@ export const AdminUsers: React.FC = () => {
                   {selectedUser.email}
                 </Typography>
 
-                <Typography variant="subtitle2" color="text.secondary">
-                  Phone Number
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                  {selectedUser.phoneNumber}
-                </Typography>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Phone Number"
+                  value={editingProfile.phoneNumber}
+                  onChange={(e) => setEditingProfile({ ...editingProfile, phoneNumber: e.target.value })}
+                  sx={{ mb: 2 }}
+                />
 
-                {selectedUser.address && (selectedUser.address.street || selectedUser.address.city) && (
-                  <>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Address
-                    </Typography>
-                    <Typography variant="body1" sx={{ mb: 2 }}>
-                      {[selectedUser.address.street, selectedUser.address.city, selectedUser.address.state, selectedUser.address.zip]
-                        .filter(Boolean)
-                        .join(', ')}
-                    </Typography>
-                  </>
-                )}
+                <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+                  <InputLabel>Communication Preference</InputLabel>
+                  <Select
+                    value={editingProfile.communicationPreference}
+                    label="Communication Preference"
+                    onChange={(e) => setEditingProfile({ ...editingProfile, communicationPreference: e.target.value as CommunicationPreference })}
+                  >
+                    <MenuItem value="email">Email</MenuItem>
+                    <MenuItem value="sms">SMS</MenuItem>
+                  </Select>
+                </FormControl>
 
-                <Typography variant="subtitle2" color="text.secondary">
-                  Communication Preference
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                  {selectedUser.communicationPreference}
-                </Typography>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Street"
+                  value={editingProfile.addressStreet}
+                  onChange={(e) => setEditingProfile({ ...editingProfile, addressStreet: e.target.value })}
+                  sx={{ mb: 1 }}
+                />
+                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="City"
+                    value={editingProfile.addressCity}
+                    onChange={(e) => setEditingProfile({ ...editingProfile, addressCity: e.target.value })}
+                  />
+                  <TextField
+                    size="small"
+                    sx={{ width: 90 }}
+                    label="State"
+                    value={editingProfile.addressState}
+                    onChange={(e) => setEditingProfile({ ...editingProfile, addressState: e.target.value })}
+                  />
+                  <TextField
+                    size="small"
+                    sx={{ width: 110 }}
+                    label="ZIP"
+                    value={editingProfile.addressZip}
+                    onChange={(e) => setEditingProfile({ ...editingProfile, addressZip: e.target.value })}
+                  />
+                </Box>
 
                 <Typography variant="subtitle2" color="text.secondary">
                   Status
@@ -489,6 +554,7 @@ export const AdminUsers: React.FC = () => {
                   <Button
                     color="error"
                     onClick={() => handleApproveUser(selectedUser, false)}
+                    disabled={saving}
                   >
                     Reject
                   </Button>
@@ -496,19 +562,20 @@ export const AdminUsers: React.FC = () => {
                     variant="contained"
                     color="success"
                     onClick={() => handleApproveUser(selectedUser, true)}
+                    disabled={saving}
                   >
                     Approve
                   </Button>
                 </>
               )}
               <Box sx={{ flex: 1 }} />
-              <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button onClick={() => setDialogOpen(false)} disabled={saving}>Cancel</Button>
               <Button
                 variant="contained"
-                onClick={handleSaveRoles}
-                disabled={savingRoles}
+                onClick={handleSave}
+                disabled={saving || !editingProfile.firstName.trim() || !editingProfile.lastName.trim()}
               >
-                {savingRoles ? 'Saving...' : 'Save Roles'}
+                {saving ? 'Saving...' : 'Save'}
               </Button>
             </DialogActions>
           </>
