@@ -26,6 +26,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import FlagIcon from '@mui/icons-material/Flag';
+import DeleteIcon from '@mui/icons-material/Delete';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import { assessmentService } from '../services/assessment.service';
 import { eventService } from '../services/event.service';
@@ -45,6 +46,8 @@ export const AssessmentDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [reassessing, setReassessing] = useState(false);
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
 
@@ -151,8 +154,23 @@ export const AssessmentDetail: React.FC = () => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!assessment) return;
+    try {
+      setDeleting(true);
+      await assessmentService.deleteAssessment(assessment.id);
+      navigate('/assessments');
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete assessment');
+      setDeleteDialogOpen(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const isAdmin = user?.roles.includes('administrator');
   const canEdit =
-    user?.roles.includes('administrator') ||
+    isAdmin ||
     user?.roles.includes('assessor') ||
     user?.id === assessment?.assessorId;
 
@@ -197,6 +215,16 @@ export const AssessmentDetail: React.FC = () => {
             <Button variant="contained" startIcon={<EditIcon />} onClick={() => setEditDialogOpen(true)}>
               Reassess
             </Button>
+            {isAdmin && (
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                Delete
+              </Button>
+            )}
           </Box>
         )}
       </Box>
@@ -364,6 +392,23 @@ export const AssessmentDetail: React.FC = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Delete Assessment?</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Permanently delete <strong>{assessment?.placeName}</strong>? This cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>
+            Cancel
+          </Button>
+          <Button variant="contained" color="error" onClick={handleDelete} disabled={deleting}>
+            {deleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Reassess Assessment</DialogTitle>

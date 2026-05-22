@@ -158,6 +158,31 @@ export const getAssessment = onCall({ cors: true }, async (request: any) => {
   return { assessment: assessmentDoc.data() };
 });
 
+export const deleteAssessment = onCall({ cors: true }, async (request: any) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const userDoc = await db.collection('users').doc(request.auth.uid).get();
+  const user = userDoc.data() as User;
+  if (!user?.roles.includes('administrator')) {
+    throw new HttpsError('permission-denied', 'Only administrators can delete assessments');
+  }
+
+  const { assessmentId } = request.data;
+  if (!assessmentId) {
+    throw new HttpsError('invalid-argument', 'Missing required field: assessmentId');
+  }
+
+  const ref = db.collection('assessments').doc(assessmentId);
+  if (!(await ref.get()).exists) {
+    throw new HttpsError('not-found', 'Assessment not found');
+  }
+
+  await ref.delete();
+  return { success: true };
+});
+
 export const listAssessments = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');

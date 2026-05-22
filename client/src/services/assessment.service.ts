@@ -27,6 +27,12 @@ export const assessmentService = {
     await reassessmentFn({ assessmentId, updates, flagForReview });
   },
 
+  // Delete assessment (admin only)
+  async deleteAssessment(assessmentId: string): Promise<void> {
+    const fn = httpsCallable(functions, 'deleteAssessment');
+    await fn({ assessmentId });
+  },
+
   // Get assessment by ID
   async getAssessment(assessmentId: string): Promise<Assessment> {
     const getAssessmentFn = httpsCallable(functions, 'getAssessment');

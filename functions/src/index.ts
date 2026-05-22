@@ -43,6 +43,7 @@ export const listCenters = centerFunctions.listCenters;
 export const createAssessment = assessmentFunctions.createAssessment;
 export const updateAssessment = assessmentFunctions.updateAssessment;
 export const reassessment = assessmentFunctions.reassessment;
+export const deleteAssessment = assessmentFunctions.deleteAssessment;
 export const getAssessment = assessmentFunctions.getAssessment;
 export const listAssessments = assessmentFunctions.listAssessments;
 
