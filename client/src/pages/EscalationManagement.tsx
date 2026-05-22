@@ -24,6 +24,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { escalationService } from '../services/escalation.service';
+import { messageService } from '../services/message.service';
 import { userService } from '../services/user.service';
 import type { Escalation, EscalationStatus, User } from '../types';
 
@@ -39,7 +40,9 @@ export const EscalationManagement: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [selectedEscalation, setSelectedEscalation] = useState<Escalation | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<'resolve' | 'reject'>('resolve');
   const [resolution, setResolution] = useState('');
+  const [responseMessage, setResponseMessage] = useState('');
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
@@ -102,18 +105,52 @@ export const EscalationManagement: React.FC = () => {
     }
   };
 
+  const sendResponseMessage = async (escalation: Escalation, content: string) => {
+    await messageService.sendMessage(
+      `escalation-${escalation.id}`,
+      [escalation.createdBy],
+      content,
+      'inApp'
+    );
+  };
+
   const handleResolve = async () => {
     if (!selectedEscalation || !resolution.trim()) return;
 
     try {
       setUpdating(true);
       await escalationService.resolveEscalation(selectedEscalation.id, resolution);
+      if (responseMessage.trim()) {
+        await sendResponseMessage(selectedEscalation, responseMessage.trim());
+      }
       setDialogOpen(false);
       setSelectedEscalation(null);
       setResolution('');
+      setResponseMessage('');
       await loadData();
     } catch (err: any) {
       setError(err.message || 'Failed to resolve escalation');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!selectedEscalation) return;
+
+    try {
+      setUpdating(true);
+      await escalationService.updateEscalationStatus(selectedEscalation.id, 'rejected');
+      if (responseMessage.trim()) {
+        await sendResponseMessage(selectedEscalation, responseMessage.trim());
+      }
+      setDialogOpen(false);
+      setSelectedEscalation(null);
+      setResolution('');
+      setResponseMessage('');
+      await loadData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to reject escalation');
     } finally {
       setUpdating(false);
     }
@@ -160,9 +197,11 @@ export const EscalationManagement: React.FC = () => {
     }
   };
 
-  const openResolveDialog = (escalation: Escalation) => {
+  const openDialog = (escalation: Escalation, mode: 'resolve' | 'reject') => {
     setSelectedEscalation(escalation);
+    setDialogMode(mode);
     setResolution('');
+    setResponseMessage('');
     setDialogOpen(true);
   };
 
@@ -332,7 +371,7 @@ export const EscalationManagement: React.FC = () => {
                       variant="contained"
                       color="success"
                       disabled={updating}
-                      onClick={() => openResolveDialog(escalation)}
+                      onClick={() => openDialog(escalation, 'resolve')}
                     >
                       Resolve
                     </Button>
@@ -341,7 +380,7 @@ export const EscalationManagement: React.FC = () => {
                       variant="outlined"
                       color="error"
                       disabled={updating}
-                      onClick={() => handleStatusUpdate(escalation, 'rejected')}
+                      onClick={() => openDialog(escalation, 'reject')}
                     >
                       Reject
                     </Button>
@@ -354,7 +393,7 @@ export const EscalationManagement: React.FC = () => {
       </Paper>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Resolve Escalation</DialogTitle>
+        <DialogTitle>{dialogMode === 'resolve' ? 'Resolve Escalation' : 'Reject Escalation'}</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
             {selectedEscalation && (
@@ -367,14 +406,26 @@ export const EscalationManagement: React.FC = () => {
                 </Typography>
               </>
             )}
+            {dialogMode === 'resolve' && (
+              <TextField
+                fullWidth
+                multiline
+                rows={3}
+                label="Resolution"
+                placeholder="Describe how this escalation was resolved..."
+                value={resolution}
+                onChange={(e) => setResolution(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+            )}
             <TextField
               fullWidth
               multiline
-              rows={4}
-              label="Resolution"
-              placeholder="Describe how this escalation was resolved..."
-              value={resolution}
-              onChange={(e) => setResolution(e.target.value)}
+              rows={3}
+              label="Message to submitter (optional)"
+              placeholder="Send a message to the person who submitted this escalation..."
+              value={responseMessage}
+              onChange={(e) => setResponseMessage(e.target.value)}
             />
           </Box>
         </DialogContent>
@@ -384,11 +435,11 @@ export const EscalationManagement: React.FC = () => {
           </Button>
           <Button
             variant="contained"
-            color="success"
-            onClick={handleResolve}
-            disabled={updating || !resolution.trim()}
+            color={dialogMode === 'resolve' ? 'success' : 'error'}
+            onClick={dialogMode === 'resolve' ? handleResolve : handleReject}
+            disabled={updating || (dialogMode === 'resolve' && !resolution.trim())}
           >
-            Resolve
+            {dialogMode === 'resolve' ? 'Resolve' : 'Reject'}
           </Button>
         </DialogActions>
       </Dialog>
