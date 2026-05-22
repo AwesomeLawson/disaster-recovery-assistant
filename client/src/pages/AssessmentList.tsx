@@ -164,7 +164,7 @@ export const AssessmentList: React.FC = () => {
                           variant="outlined"
                           sx={{ mr: 1 }}
                         />
-                        {assessment.photoUrls.length > 0 && (
+                        {(assessment.photoUrls?.length ?? 0) > 0 && (
                           <Chip
                             label={`${assessment.photoUrls.length} photos`}
                             size="small"
