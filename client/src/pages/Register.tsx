@@ -29,7 +29,7 @@ import { authService } from '../services/auth.service';
 import { userService } from '../services/user.service';
 import { eventService } from '../services/event.service';
 import { useAuth } from '../context/AuthContext';
-import type { UserRole, CommunicationPreference, AvailabilityRange, Event } from '../types';
+import type { UserRole, CommunicationPreference, AvailabilityRange, Event, TshirtSize } from '../types';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -48,10 +48,12 @@ export const Register: React.FC = () => {
   const [availability, setAvailability] = useState<{ start: string; end: string }[]>([]);
   const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
   const [communicationPreference, setCommunicationPreference] = useState<CommunicationPreference>('email');
+  const [tshirtSize, setTshirtSize] = useState<TshirtSize | ''>('');
   const [requestedRoles, setRequestedRoles] = useState<UserRole[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<'google' | 'facebook' | null>(null);
+  const [preFilledNotice, setPreFilledNotice] = useState(false);
 
   const [events, setEvents] = useState<Event[]>([]);
   const [organizations, setOrganizations] = useState<string[]>([]);
@@ -61,13 +63,29 @@ export const Register: React.FC = () => {
     userService.listOrganizations().then(setOrganizations).catch(() => {});
   }, []);
 
-  const availableRoles: { value: UserRole; label: string }[] = [
-    { value: 'assessor', label: 'Assessor' },
-    { value: 'fieldCoordinator', label: 'Field Coordinator' },
-    { value: 'baseCampHost', label: 'Base Camp Host' },
-    { value: 'workGroupLead', label: 'Work Group Lead' },
-    { value: 'volunteer', label: 'Volunteer' },
+  const availableRoles: { value: UserRole; label: string; description: string }[] = [
+    { value: 'assessor', label: 'Assessor', description: 'Initial evaluation of damage and determination of needs' },
+    { value: 'fieldCoordinator', label: 'Field Coordinator', description: 'Receives assessments, sets job priority, assigns teams, and verifies completion' },
+    { value: 'baseCampHost', label: 'Basecamp Host', description: 'Coordinates the base camp schedule, housing, meals, and incoming/outgoing groups' },
+    { value: 'workGroupLead', label: 'Team Leader', description: 'Point of contact coordinating travel, logistics, and supervision of on-site work' },
+    { value: 'volunteer', label: 'Volunteer', description: 'Helps with field work, donations management, base camp support, and other needs' },
+    { value: 'secChaplain', label: 'SEC/Chaplain', description: 'Provides spiritual and emotional care support for the team, survivors, and community' },
   ];
+
+  const handleEmailBlur = async () => {
+    if (!email.trim()) return;
+    try {
+      const found = await userService.lookupPreApprovedUser(email);
+      if (found) {
+        if (!firstName) setFirstName(found.firstName);
+        if (!lastName) setLastName(found.lastName);
+        if (!phoneNumber) setPhoneNumber(found.phoneNumber);
+        setPreFilledNotice(true);
+      }
+    } catch {
+      // silently ignore lookup failures
+    }
+  };
 
   const handleRoleToggle = (role: UserRole) => {
     setRequestedRoles((prev) =>
@@ -149,6 +167,7 @@ export const Register: React.FC = () => {
         eventIds: selectedEventIds.length ? selectedEventIds : undefined,
         communicationPreference,
         requestedRoles,
+        tshirtSize: tshirtSize || undefined,
       });
       await refreshUser();
       navigate('/sign-legal-release');
@@ -191,6 +210,11 @@ export const Register: React.FC = () => {
           </Typography>
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          {preFilledNotice && (
+            <Alert severity="info" sx={{ mb: 2 }} onClose={() => setPreFilledNotice(false)}>
+              We found your information on file — fields have been pre-filled. Please review and update as needed.
+            </Alert>
+          )}
 
           <Box sx={{ mt: 2 }}>
             <Button
@@ -221,7 +245,7 @@ export const Register: React.FC = () => {
             </Box>
 
             {/* Contact */}
-            <TextField margin="normal" required fullWidth label="Email Address" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <TextField margin="normal" required fullWidth label="Email Address" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={handleEmailBlur} />
             <TextField margin="normal" required fullWidth label="Phone Number" autoComplete="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
 
             {/* Organization */}
@@ -256,6 +280,20 @@ export const Register: React.FC = () => {
               <Select value={communicationPreference} label="Communication Preference" onChange={(e) => setCommunicationPreference(e.target.value as CommunicationPreference)}>
                 <MenuItem value="email">Email</MenuItem>
                 <MenuItem value="sms">SMS</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* T-shirt size */}
+            <FormControl fullWidth margin="normal">
+              <InputLabel>T-Shirt Size (optional)</InputLabel>
+              <Select value={tshirtSize} label="T-Shirt Size (optional)" onChange={(e) => setTshirtSize(e.target.value as TshirtSize | '')}>
+                <MenuItem value=""><em>Prefer not to say</em></MenuItem>
+                <MenuItem value="S">Small</MenuItem>
+                <MenuItem value="M">Medium</MenuItem>
+                <MenuItem value="L">Large</MenuItem>
+                <MenuItem value="XL">Extra Large</MenuItem>
+                <MenuItem value="2XL">2X</MenuItem>
+                <MenuItem value="3XL">3X</MenuItem>
               </Select>
             </FormControl>
 
@@ -312,8 +350,20 @@ export const Register: React.FC = () => {
                 {availableRoles.map((role) => (
                   <FormControlLabel
                     key={role.value}
-                    control={<Checkbox checked={requestedRoles.includes(role.value)} onChange={() => handleRoleToggle(role.value)} />}
-                    label={role.label}
+                    control={
+                      <Checkbox
+                        checked={requestedRoles.includes(role.value)}
+                        onChange={() => handleRoleToggle(role.value)}
+                        sx={{ mt: '2px', alignSelf: 'flex-start' }}
+                      />
+                    }
+                    label={
+                      <Box sx={{ pt: '9px', pb: 1 }}>
+                        <Typography variant="body2" fontWeight={500}>{role.label}</Typography>
+                        <Typography variant="caption" color="text.secondary">{role.description}</Typography>
+                      </Box>
+                    }
+                    sx={{ alignItems: 'flex-start', mb: 0 }}
                   />
                 ))}
               </FormGroup>

@@ -25,7 +25,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useAuth } from '../context/AuthContext';
 import { userService } from '../services/user.service';
 import { eventService } from '../services/event.service';
-import type { UserRole, CommunicationPreference, AvailabilityRange, Event } from '../types';
+import { userEventDataService } from '../services/userEventData.service';
+import type { UserRole, CommunicationPreference, Event, TshirtSize } from '../types';
 
 export const CompleteProfile: React.FC = () => {
   const navigate = useNavigate();
@@ -38,13 +39,15 @@ export const CompleteProfile: React.FC = () => {
   const [addressState, setAddressState] = useState('');
   const [addressZip, setAddressZip] = useState('');
   const [organization, setOrganization] = useState('');
-  const [availability, setAvailability] = useState<{ start: string; end: string }[]>([]);
   const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
+  const [eventAvailability, setEventAvailability] = useState<Record<string, { start: string; end: string }[]>>({});
   const [communicationPreference, setCommunicationPreference] = useState<CommunicationPreference>('email');
+  const [tshirtSize, setTshirtSize] = useState<TshirtSize | ''>('');
   const [requestedRoles, setRequestedRoles] = useState<UserRole[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [profileSubmitted, setProfileSubmitted] = useState(false);
+  const [preFilledNotice, setPreFilledNotice] = useState(false);
 
   const [events, setEvents] = useState<Event[]>([]);
   const [organizations, setOrganizations] = useState<string[]>([]);
@@ -62,12 +65,25 @@ export const CompleteProfile: React.FC = () => {
     if (!firebaseUser) navigate('/login');
   }, [firebaseUser, navigate]);
 
+  useEffect(() => {
+    if (!firebaseUser?.email) return;
+    userService.lookupPreApprovedUser(firebaseUser.email).then((found) => {
+      if (found) {
+        setFirstName((prev) => prev || found.firstName);
+        setLastName((prev) => prev || found.lastName);
+        setPhoneNumber((prev) => prev || found.phoneNumber);
+        setPreFilledNotice(true);
+      }
+    }).catch(() => {});
+  }, [firebaseUser?.email]);
+
   const availableRoles: { value: UserRole; label: string }[] = [
     { value: 'assessor', label: 'Assessor' },
     { value: 'fieldCoordinator', label: 'Field Coordinator' },
-    { value: 'baseCampHost', label: 'Base Camp Host' },
-    { value: 'workGroupLead', label: 'Work Group Lead' },
+    { value: 'baseCampHost', label: 'Basecamp Host' },
+    { value: 'workGroupLead', label: 'Team Leader' },
     { value: 'volunteer', label: 'Volunteer' },
+    { value: 'secChaplain', label: 'SEC/Chaplain' },
   ];
 
   const handleRoleToggle = (role: UserRole) => {
@@ -77,21 +93,29 @@ export const CompleteProfile: React.FC = () => {
   };
 
   const handleEventToggle = (eventId: string) => {
-    setSelectedEventIds((prev) =>
-      prev.includes(eventId) ? prev.filter((id) => id !== eventId) : [...prev, eventId]
-    );
+    setSelectedEventIds((prev) => {
+      if (prev.includes(eventId)) {
+        setEventAvailability((ea) => { const next = { ...ea }; delete next[eventId]; return next; });
+        return prev.filter((id) => id !== eventId);
+      }
+      setEventAvailability((ea) => ({ ...ea, [eventId]: [] }));
+      return [...prev, eventId];
+    });
   };
 
-  const addAvailabilityRange = () => {
-    setAvailability((prev) => [...prev, { start: '', end: '' }]);
+  const addEventRange = (eventId: string) => {
+    setEventAvailability((ea) => ({ ...ea, [eventId]: [...(ea[eventId] ?? []), { start: '', end: '' }] }));
   };
 
-  const removeAvailabilityRange = (index: number) => {
-    setAvailability((prev) => prev.filter((_, i) => i !== index));
+  const removeEventRange = (eventId: string, index: number) => {
+    setEventAvailability((ea) => ({ ...ea, [eventId]: (ea[eventId] ?? []).filter((_, i) => i !== index) }));
   };
 
-  const updateAvailabilityRange = (index: number, field: 'start' | 'end', value: string) => {
-    setAvailability((prev) => prev.map((r, i) => i === index ? { ...r, [field]: value } : r));
+  const updateEventRange = (eventId: string, index: number, field: 'start' | 'end', value: string) => {
+    setEventAvailability((ea) => ({
+      ...ea,
+      [eventId]: (ea[eventId] ?? []).map((r, i) => i === index ? { ...r, [field]: value } : r),
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -114,14 +138,17 @@ export const CompleteProfile: React.FC = () => {
       setError('Please enter your phone number');
       return;
     }
-    for (const range of availability) {
-      if (!range.start || !range.end) {
-        setError('Please complete all availability date ranges or remove incomplete ones');
-        return;
-      }
-      if (range.start > range.end) {
-        setError('Availability end date must be after start date');
-        return;
+    for (const eventId of selectedEventIds) {
+      const ranges = eventAvailability[eventId] ?? [];
+      for (const range of ranges) {
+        if (!range.start || !range.end) {
+          setError('Please complete all availability date ranges or remove incomplete ones');
+          return;
+        }
+        if (range.start > range.end) {
+          setError('Availability end date must be after start date');
+          return;
+        }
       }
     }
 
@@ -133,11 +160,6 @@ export const CompleteProfile: React.FC = () => {
       ? { street: addressStreet, city: addressCity, state: addressState, zip: addressZip }
       : undefined;
 
-    const availabilityRanges: AvailabilityRange[] = availability.map((r) => ({
-      start: new Date(r.start).getTime(),
-      end: new Date(r.end).getTime(),
-    }));
-
     try {
       await userService.registerUser({
         email: firebaseUser.email || '',
@@ -146,11 +168,26 @@ export const CompleteProfile: React.FC = () => {
         phoneNumber,
         address,
         organization: organization.trim() || undefined,
-        availability: availabilityRanges.length ? availabilityRanges : undefined,
         eventIds: selectedEventIds.length ? selectedEventIds : undefined,
         communicationPreference,
         requestedRoles,
+        tshirtSize: tshirtSize || undefined,
       });
+
+      // Save per-event availability records
+      const availabilityEntries = selectedEventIds
+        .map((eventId) => ({ eventId, ranges: eventAvailability[eventId] ?? [] }))
+        .filter(({ ranges }) => ranges.length > 0);
+
+      await Promise.all(
+        availabilityEntries.map(({ eventId, ranges }) =>
+          userEventDataService.setAvailability(
+            eventId,
+            ranges.map((r) => ({ start: new Date(r.start).getTime(), end: new Date(r.end).getTime() }))
+          )
+        )
+      );
+
       await refreshUser();
       navigate('/sign-legal-release');
     } catch (err: any) {
@@ -177,6 +214,11 @@ export const CompleteProfile: React.FC = () => {
           </Typography>
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          {preFilledNotice && (
+            <Alert severity="info" sx={{ mb: 2 }} onClose={() => setPreFilledNotice(false)}>
+              We found your information on file — fields have been pre-filled. Please review and update as needed.
+            </Alert>
+          )}
 
           <Box sx={{ mb: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
             <Typography variant="body2" color="text.secondary">
@@ -225,51 +267,69 @@ export const CompleteProfile: React.FC = () => {
               </Select>
             </FormControl>
 
+            {/* T-shirt size */}
+            <FormControl fullWidth margin="normal">
+              <InputLabel>T-Shirt Size (optional)</InputLabel>
+              <Select value={tshirtSize} label="T-Shirt Size (optional)" onChange={(e) => setTshirtSize(e.target.value as TshirtSize | '')}>
+                <MenuItem value=""><em>Prefer not to say</em></MenuItem>
+                <MenuItem value="S">Small</MenuItem>
+                <MenuItem value="M">Medium</MenuItem>
+                <MenuItem value="L">Large</MenuItem>
+                <MenuItem value="XL">Extra Large</MenuItem>
+                <MenuItem value="2XL">2X</MenuItem>
+                <MenuItem value="3XL">3X</MenuItem>
+              </Select>
+            </FormControl>
+
             <Divider sx={{ my: 2 }} />
 
-            {/* Events */}
+            {/* Events + per-event availability */}
             {events.length > 0 && (
-              <FormControl component="fieldset" sx={{ mb: 2, width: '100%' }}>
-                <FormLabel component="legend">Events I'm Responding To (optional)</FormLabel>
-                <FormGroup>
-                  {events.map((ev) => (
-                    <FormControlLabel
-                      key={ev.id}
-                      control={<Checkbox checked={selectedEventIds.includes(ev.id)} onChange={() => handleEventToggle(ev.id)} />}
-                      label={`${ev.name}${ev.description ? ` — ${ev.description}` : ''}`}
-                    />
-                  ))}
-                </FormGroup>
-              </FormControl>
-            )}
-
-            {/* Availability */}
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <FormLabel sx={{ flex: 1 }}>Availability (optional)</FormLabel>
-                <Button size="small" startIcon={<AddIcon />} onClick={addAvailabilityRange}>
-                  Add Date Range
-                </Button>
+              <Box sx={{ mb: 2 }}>
+                <FormLabel component="legend" sx={{ mb: 1 }}>Events I'm Responding To (optional)</FormLabel>
+                {events.map((ev) => {
+                  const checked = selectedEventIds.includes(ev.id);
+                  const ranges = eventAvailability[ev.id] ?? [];
+                  return (
+                    <Box key={ev.id} sx={{ mb: checked ? 1.5 : 0.5 }}>
+                      <FormControlLabel
+                        control={<Checkbox checked={checked} onChange={() => handleEventToggle(ev.id)} />}
+                        label={`${ev.name}${ev.description ? ` — ${ev.description}` : ''}`}
+                      />
+                      {checked && (
+                        <Box sx={{ ml: 4, pl: 1, borderLeft: '2px solid', borderColor: 'primary.light' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+                              My available dates for this event (optional)
+                            </Typography>
+                            <Button size="small" startIcon={<AddIcon />} onClick={() => addEventRange(ev.id)}>
+                              Add Dates
+                            </Button>
+                          </Box>
+                          {ranges.map((range, i) => (
+                            <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
+                              <TextField size="small" type="date" label="From" InputLabelProps={{ shrink: true }}
+                                value={range.start} onChange={(e) => updateEventRange(ev.id, i, 'start', e.target.value)} sx={{ flex: 1 }} />
+                              <TextField size="small" type="date" label="To" InputLabelProps={{ shrink: true }}
+                                inputProps={{ min: range.start }}
+                                value={range.end} onChange={(e) => updateEventRange(ev.id, i, 'end', e.target.value)} sx={{ flex: 1 }} />
+                              <IconButton size="small" onClick={() => removeEventRange(ev.id, i)}>
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Box>
+                          ))}
+                          {ranges.length === 0 && (
+                            <Typography variant="caption" color="text.secondary">
+                              No dates added — you can add them later from your dashboard.
+                            </Typography>
+                          )}
+                        </Box>
+                      )}
+                    </Box>
+                  );
+                })}
               </Box>
-              {availability.map((range, i) => (
-                <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
-                  <TextField
-                    size="small" type="date" label="From" InputLabelProps={{ shrink: true }}
-                    value={range.start} onChange={(e) => updateAvailabilityRange(i, 'start', e.target.value)}
-                    sx={{ flex: 1 }}
-                  />
-                  <TextField
-                    size="small" type="date" label="To" InputLabelProps={{ shrink: true }}
-                    inputProps={{ min: range.start }}
-                    value={range.end} onChange={(e) => updateAvailabilityRange(i, 'end', e.target.value)}
-                    sx={{ flex: 1 }}
-                  />
-                  <IconButton size="small" onClick={() => removeAvailabilityRange(i)}>
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-              ))}
-            </Box>
+            )}
 
             {/* Roles */}
             <FormControl component="fieldset" sx={{ mt: 1 }}>
