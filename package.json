@@ -3,6 +3,7 @@
     "@azure/data-tables": "^13.3.0",
     "@azure/functions": "^1.2.3",
     "@playwright/test": "^1.58.2",
+    "@types/google.maps": "^3.64.1",
     "dotenv": "^16.5.0",
     "firebase": "^12.3.0"
   },

@@ -38,6 +38,8 @@ const AutocompleteField: React.FC<Props> = ({
   const placesLib = useMapsLibrary('places');
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const onPlaceSelectRef = useRef(onPlaceSelect);
+  onPlaceSelectRef.current = onPlaceSelect;
 
   useEffect(() => {
     if (!placesLib || !inputRef.current) return;
@@ -50,7 +52,7 @@ const AutocompleteField: React.FC<Props> = ({
     const listener = autocompleteRef.current.addListener('place_changed', () => {
       const place = autocompleteRef.current!.getPlace();
       if (place.formatted_address && place.geometry?.location) {
-        onPlaceSelect({
+        onPlaceSelectRef.current({
           address: place.formatted_address,
           latitude: place.geometry.location.lat(),
           longitude: place.geometry.location.lng(),

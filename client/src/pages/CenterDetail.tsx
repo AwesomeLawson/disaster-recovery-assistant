@@ -22,19 +22,19 @@ import {
   ListItemAvatar,
   Avatar,
   Autocomplete,
-  ListItemSecondaryAction,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import EventIcon from '@mui/icons-material/Event';
-import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import { centerService } from '../services/center.service';
 import { eventService } from '../services/event.service';
 import { userService } from '../services/user.service';
 import { assessmentService } from '../services/assessment.service';
 import { workgroupService } from '../services/workgroup.service';
+import { AddressAutocomplete } from '../components/AddressAutocomplete';
 import type { Center, Event, User, Assessment, Workgroup } from '../types';
 
 export const CenterDetail: React.FC = () => {
@@ -55,8 +55,8 @@ export const CenterDetail: React.FC = () => {
   const [editForm, setEditForm] = useState({
     name: '',
     address: '',
-    latitude: '',
-    longitude: '',
+    latitude: undefined as number | undefined,
+    longitude: undefined as number | undefined,
   });
 
   const [addLeadDialogOpen, setAddLeadDialogOpen] = useState(false);
@@ -80,8 +80,8 @@ export const CenterDetail: React.FC = () => {
       setEditForm({
         name: centerData.name,
         address: centerData.address,
-        latitude: centerData.latitude?.toString() || '',
-        longitude: centerData.longitude?.toString() || '',
+        latitude: centerData.latitude,
+        longitude: centerData.longitude,
       });
 
       const [allEventsData, usersData, assessmentsData, workgroupsData] = await Promise.all([
@@ -124,8 +124,8 @@ export const CenterDetail: React.FC = () => {
       await centerService.updateCenter(center.id, {
         name: editForm.name,
         address: editForm.address,
-        latitude: editForm.latitude ? parseFloat(editForm.latitude) : undefined,
-        longitude: editForm.longitude ? parseFloat(editForm.longitude) : undefined,
+        latitude: editForm.latitude,
+        longitude: editForm.longitude,
       });
       setEditDialogOpen(false);
       await loadCenter();
@@ -165,20 +165,6 @@ export const CenterDetail: React.FC = () => {
       await loadCenter();
     } catch (err: any) {
       setError(err.message || 'Failed to add event');
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  const handleRemoveEvent = async (eventId: string) => {
-    if (!center) return;
-
-    try {
-      setUpdating(true);
-      await eventService.removeCenterFromEvent(eventId, center.id);
-      await loadCenter();
-    } catch (err: any) {
-      setError(err.message || 'Failed to remove event');
     } finally {
       setUpdating(false);
     }
@@ -351,16 +337,6 @@ export const CenterDetail: React.FC = () => {
                         </Box>
                       }
                     />
-                    <ListItemSecondaryAction>
-                      <IconButton
-                        edge="end"
-                        onClick={() => handleRemoveEvent(event.id)}
-                        disabled={updating}
-                        size="small"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </ListItemSecondaryAction>
                   </ListItem>
                 ))}
               </List>
@@ -368,13 +344,25 @@ export const CenterDetail: React.FC = () => {
           </Paper>
 
           <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Assessments ({assessments.length})
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">Cases ({assessments.length})</Typography>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={() => {
+                  const params = new URLSearchParams({ centerId: center.id });
+                  if (events[0]) params.set('eventId', events[0].id);
+                  navigate(`/assessments/create?${params.toString()}`);
+                }}
+              >
+                Open Case
+              </Button>
+            </Box>
             <Divider sx={{ mb: 2 }} />
 
             {assessments.length === 0 ? (
-              <Typography color="text.secondary">No assessments at this center</Typography>
+              <Typography color="text.secondary">No cases at this center</Typography>
             ) : (
               <List>
                 {assessments.map((assessment) => (
@@ -393,15 +381,17 @@ export const CenterDetail: React.FC = () => {
                     onClick={() => navigate(`/assessments/${assessment.id}`)}
                   >
                     <ListItemText
-                      primary={assessment.placeName}
+                      primary={assessment.survivorName}
                       secondary={assessment.address}
                     />
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Chip
-                        label={assessment.severity}
-                        size="small"
-                        color={getSeverityColor(assessment.severity) as any}
-                      />
+                      {assessment.severity && (
+                        <Chip
+                          label={assessment.severity}
+                          size="small"
+                          color={getSeverityColor(assessment.severity) as any}
+                        />
+                      )}
                       {assessment.flaggedForReview && (
                         <Chip label="Flagged" size="small" color="warning" />
                       )}
@@ -498,35 +488,23 @@ export const CenterDetail: React.FC = () => {
               onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
               sx={{ mb: 2 }}
             />
-            <TextField
-              fullWidth
-              label="Address"
-              value={editForm.address}
-              onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-              sx={{ mb: 2 }}
-            />
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 6 }}>
-                <TextField
-                  fullWidth
-                  label="Latitude (optional)"
-                  type="number"
-                  value={editForm.latitude}
-                  onChange={(e) => setEditForm({ ...editForm, latitude: e.target.value })}
-                  inputProps={{ step: 'any' }}
-                />
-              </Grid>
-              <Grid size={{ xs: 6 }}>
-                <TextField
-                  fullWidth
-                  label="Longitude (optional)"
-                  type="number"
-                  value={editForm.longitude}
-                  onChange={(e) => setEditForm({ ...editForm, longitude: e.target.value })}
-                  inputProps={{ step: 'any' }}
-                />
-              </Grid>
-            </Grid>
+            <Box sx={{ mb: 2 }}>
+              <AddressAutocomplete
+                required
+                value={editForm.address}
+                onChange={(address) =>
+                  setEditForm({ ...editForm, address, latitude: undefined, longitude: undefined })
+                }
+                onPlaceSelect={({ address, latitude, longitude }) =>
+                  setEditForm({ ...editForm, address, latitude, longitude })
+                }
+                coordinates={
+                  editForm.latitude != null && editForm.longitude != null
+                    ? { latitude: editForm.latitude, longitude: editForm.longitude }
+                    : null
+                }
+              />
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions>

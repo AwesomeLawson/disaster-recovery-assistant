@@ -20,6 +20,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import { centerService } from '../services/center.service';
 import { eventService } from '../services/event.service';
+import { AddressAutocomplete } from '../components/AddressAutocomplete';
 import type { Center, Event } from '../types';
 
 export const CenterManagement: React.FC = () => {
@@ -32,6 +33,8 @@ export const CenterManagement: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     address: '',
+    latitude: undefined as number | undefined,
+    longitude: undefined as number | undefined,
   });
 
   useEffect(() => {
@@ -59,9 +62,11 @@ export const CenterManagement: React.FC = () => {
       await centerService.createCenter({
         name: formData.name,
         address: formData.address,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
       });
       setOpenDialog(false);
-      setFormData({ name: '', address: '' });
+      setFormData({ name: '', address: '', latitude: undefined, longitude: undefined });
       await loadData();
     } catch (err: any) {
       setError(err.message || 'Failed to create center');
@@ -167,16 +172,23 @@ export const CenterManagement: React.FC = () => {
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             sx={{ mb: 2, mt: 1 }}
           />
-          <TextField
-            margin="dense"
-            label="Address"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={formData.address}
-            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            sx={{ mb: 2 }}
-          />
+          <Box sx={{ mb: 2 }}>
+            <AddressAutocomplete
+              required
+              value={formData.address}
+              onChange={(address) =>
+                setFormData({ ...formData, address, latitude: undefined, longitude: undefined })
+              }
+              onPlaceSelect={({ address, latitude, longitude }) =>
+                setFormData({ ...formData, address, latitude, longitude })
+              }
+              coordinates={
+                formData.latitude != null && formData.longitude != null
+                  ? { latitude: formData.latitude, longitude: formData.longitude }
+                  : null
+              }
+            />
+          </Box>
           <Typography variant="caption" color="text.secondary">
             You can associate this center with events after creation from the center details page.
           </Typography>
