@@ -22,8 +22,8 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
-import { assessmentService } from '../services/assessment.service';
-import type { Assessment, AssessmentSeverity, HomeType, FEMAStatus } from '../types';
+import { workOrderService } from '../services/workOrder.service';
+import type { WorkOrder, AssessmentSeverity, HomeType, FEMAStatus } from '../types';
 
 function YNToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -40,10 +40,10 @@ function YNToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) 
 }
 
 export const FieldAssessment: React.FC = () => {
-  const { id: assessmentId } = useParams<{ id: string }>();
+  const { id: workOrderId } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [assessment, setAssessment] = useState<Assessment | null>(null);
+  const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -85,10 +85,10 @@ export const FieldAssessment: React.FC = () => {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!assessmentId) return;
-    assessmentService.getAssessment(assessmentId)
+    if (!workOrderId) return;
+    workOrderService.getWorkOrder(workOrderId)
       .then((a) => {
-        setAssessment(a);
+        setWorkOrder(a);
         // Pre-populate from existing data if re-assessing
         if (a.placeName) setPlaceName(a.placeName);
         else if (a.survivorName) setPlaceName(`${a.survivorName} Residence`);
@@ -114,9 +114,9 @@ export const FieldAssessment: React.FC = () => {
         if (a.accessConcerns) setAccessConcerns(a.accessConcerns);
         if (a.photoUrls?.length) setExistingPhotoUrls(a.photoUrls);
       })
-      .catch((err) => setError(err.message || 'Failed to load case'))
+      .catch((err) => setError(err.message || 'Failed to load work order'))
       .finally(() => setLoading(false));
-  }, [assessmentId]);
+  }, [workOrderId]);
 
   const addPhotos = (files: FileList) => {
     const fileArr = Array.from(files);
@@ -144,12 +144,12 @@ export const FieldAssessment: React.FC = () => {
     try {
       let uploadedUrls: string[] = [];
       if (newPhotoFiles.length > 0) {
-        uploadedUrls = await assessmentService.uploadPhotos(newPhotoFiles, assessmentId!);
+        uploadedUrls = await workOrderService.uploadPhotos(newPhotoFiles, workOrderId!);
       }
       const allPhotoUrls = [...existingPhotoUrls, ...uploadedUrls];
 
       const payload: Record<string, any> = {
-        assessmentId: assessmentId!,
+        workOrderId: workOrderId!,
         damages,
         needs,
         affectedPeople: parseInt(affectedPeople),
@@ -174,8 +174,8 @@ export const FieldAssessment: React.FC = () => {
       if (accessConcerns) payload.accessConcerns = accessConcerns;
       if (allPhotoUrls.length > 0) payload.photoUrls = allPhotoUrls;
 
-      await assessmentService.completeFieldAssessment(payload as any);
-      navigate(`/assessments/${assessmentId}`);
+      await workOrderService.completeFieldAssessment(payload as any);
+      navigate(`/work-orders/${workOrderId}`);
     } catch (err: any) {
       setError(err.message || 'Failed to save field assessment');
     } finally {
@@ -192,21 +192,21 @@ export const FieldAssessment: React.FC = () => {
   }
 
   const totalPhotos = existingPhotoUrls.length + newPhotoFiles.length;
-  const isReassessment = assessment?.status === 'assessed';
+  const isReassessment = workOrder?.status === 'assessed';
 
   return (
     <Container maxWidth="md" sx={{ py: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 1 }}>
-        <IconButton onClick={() => navigate(`/assessments/${assessmentId}`)}>
+        <IconButton onClick={() => navigate(`/work-orders/${workOrderId}`)}>
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flexGrow: 1 }}>
           <Typography variant="h5">
             {isReassessment ? 'Update Field Assessment' : 'Complete Field Assessment'}
           </Typography>
-          {assessment && (
+          {workOrder && (
             <Typography variant="body2" color="text.secondary">
-              {assessment.survivorName} — {assessment.address}
+              {workOrder.survivorName} — {workOrder.address}
             </Typography>
           )}
         </Box>
@@ -451,7 +451,7 @@ export const FieldAssessment: React.FC = () => {
       </Paper>
 
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-        <Button variant="outlined" onClick={() => navigate(`/assessments/${assessmentId}`)} disabled={submitting}>
+        <Button variant="outlined" onClick={() => navigate(`/work-orders/${workOrderId}`)} disabled={submitting}>
           Cancel
         </Button>
         <Button variant="contained" onClick={handleSubmit} disabled={submitting}>

@@ -31,16 +31,16 @@ import AddIcon from '@mui/icons-material/Add';
 import { eventService } from '../services/event.service';
 import { centerService } from '../services/center.service';
 import { userService } from '../services/user.service';
-import { assessmentService } from '../services/assessment.service';
-import { AssessmentMap } from '../components/AssessmentMap';
-import type { Event, Center, User, Assessment } from '../types';
+import { workOrderService } from '../services/workOrder.service';
+import { WorkOrderMap } from '../components/WorkOrderMap';
+import type { Event, Center, User, WorkOrder } from '../types';
 
 export const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
   const [centers, setCenters] = useState<Center[]>([]);
-  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [, setUsers] = useState<User[]>([]);
   const [members, setMembers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -97,9 +97,9 @@ export const EventDetail: React.FC = () => {
       setLoading(false);
     }
 
-    // Load assessments separately so a failure here doesn't block the event from rendering
-    assessmentService.listAssessments({ eventId: id })
-      .then(setAssessments)
+    // Load work orders separately so a failure here doesn't block the event from rendering
+    workOrderService.listWorkOrders({ eventId: id })
+      .then(setWorkOrders)
       .catch(() => {});
   };
 
@@ -314,22 +314,22 @@ export const EventDetail: React.FC = () => {
           </Paper>
         </Grid>
 
-        {/* Case Map - full width */}
+        {/* Work Order Map - full width */}
         <Grid size={{ xs: 12 }}>
           <Paper sx={{ p: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">Case Map ({assessments.length})</Typography>
+              <Typography variant="h6">Work Order Map ({workOrders.length})</Typography>
               <Button
                 variant="contained"
                 size="small"
                 startIcon={<AddIcon />}
-                onClick={() => navigate(`/assessments/create?eventId=${event.id}`)}
+                onClick={() => navigate(`/work-orders/create?eventId=${event.id}`)}
               >
-                Open Case
+                Open Work Order
               </Button>
             </Box>
             <Divider sx={{ mb: 2 }} />
-            <AssessmentMap assessments={assessments} centers={centers} />
+            <WorkOrderMap workOrders={workOrders} centers={centers} />
           </Paper>
         </Grid>
       </Grid>

@@ -5,7 +5,7 @@ import type { HomeownerRelease } from '../types';
 
 export const homeownerReleaseService = {
   async createHomeownerRelease(data: {
-    assessmentId: string;
+    workOrderId: string;
     homeownerName: string;
     phoneNumber: string;
     propertyAddress: string;
@@ -29,8 +29,8 @@ export const homeownerReleaseService = {
     return (result.data as any).release;
   },
 
-  async uploadSignature(file: File, assessmentId: string, signatureType: 'homeowner' | 'coOwner' | 'frrWitness'): Promise<string> {
-    const path = `homeowner-signatures/${assessmentId}/${signatureType}_${Date.now()}.png`;
+  async uploadSignature(file: File, workOrderId: string, signatureType: 'homeowner' | 'coOwner' | 'frrWitness'): Promise<string> {
+    const path = `homeowner-signatures/${workOrderId}/${signatureType}_${Date.now()}.png`;
     const storageRef = ref(storage, path);
     await uploadBytes(storageRef, file);
     return getDownloadURL(storageRef);

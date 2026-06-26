@@ -30,7 +30,7 @@ export interface ContactNote {
 
 export type AssessmentSeverity = 'low' | 'medium' | 'high' | 'critical';
 
-export type CaseStatus = 'intake' | 'awaitingAssessment' | 'assessed' | 'assigned' | 'inProgress' | 'completed';
+export type WorkOrderStatus = 'intake' | 'awaitingAssessment' | 'assessed' | 'assigned' | 'inProgress' | 'completed';
 
 export type EscalationType = 'assessor' | 'administrative' | 'thirdParty';
 
@@ -103,9 +103,9 @@ export interface Center {
 export type HomeType = 'mobile_modular' | 'stick_built' | 'block' | 'multi_family';
 export type FEMAStatus = 'yes' | 'no' | 'na';
 
-export interface Assessment {
+export interface WorkOrder {
   id: string;
-  status: CaseStatus;
+  status: WorkOrderStatus;
 
   // Intake fields (captured first)
   survivorName: string;
@@ -120,7 +120,7 @@ export interface Assessment {
   descriptionOfNeed: string;
   source?: string;
   intakeVolunteerName?: string;
-  caseNumber?: string;
+  workOrderNumber?: string;
 
   centerId: string;
   eventId?: string;
@@ -165,7 +165,7 @@ export interface Assessment {
 
 export interface HomeownerRelease {
   id: string;
-  assessmentId: string;
+  workOrderId: string;
   createdBy: string;
   homeownerName: string;
   phoneNumber: string;
@@ -196,7 +196,7 @@ export interface Workgroup {
   eventId?: string;
   leadUserId: string;
   volunteerUserIds: string[];
-  assessmentId: string;
+  workOrderId: string;
   taskDescription: string;
   taskStatus: WorkgroupTaskStatus;
   progressNotes: ProgressNote[];
@@ -208,7 +208,7 @@ export interface Workgroup {
 
 export interface Escalation {
   id: string;
-  assessmentId?: string;
+  workOrderId?: string;
   workgroupId: string;
   centerId: string;
   eventId?: string;
@@ -266,7 +266,7 @@ export interface LegalRelease {
   signatureImageUrl?: string;
   signedDigitally: boolean;
   signedAt?: number;
-  assessmentId?: string;
+  workOrderId?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -294,7 +294,7 @@ export interface RegisterFormData {
   tshirtSize?: TshirtSize;
 }
 
-export interface AssessmentFormData {
+export interface WorkOrderFormData {
   survivorName: string;
   survivorPhone: string;
   altContact?: string;
@@ -305,13 +305,13 @@ export interface AssessmentFormData {
   tempAddress?: string;
   descriptionOfNeed: string;
   source?: string;
-  caseNumber?: string;
+  workOrderNumber?: string;
   centerId: string;
   eventId?: string;
 }
 
 export interface FieldAssessmentFormData {
-  assessmentId: string;
+  workOrderId: string;
   placeName?: string;
   damages?: string;
   needs?: string;
@@ -342,7 +342,7 @@ export interface WorkgroupFormData {
   eventId?: string;
   leadUserId: string;
   volunteerUserIds?: string[];
-  assessmentId: string;
+  workOrderId: string;
   taskDescription: string;
 }
 
@@ -352,5 +352,5 @@ export interface EscalationFormData {
   eventId?: string;
   type: EscalationType;
   reason: string;
-  assessmentId?: string;
+  workOrderId?: string;
 }

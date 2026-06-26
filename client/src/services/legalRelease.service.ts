@@ -12,7 +12,7 @@ export const legalReleaseService = {
       documentUrl?: string;
       signatureImageUrl?: string;
       signedDigitally?: boolean;
-      assessmentId?: string;
+      workOrderId?: string;
     }
   ): Promise<LegalRelease> {
     const createLegalReleaseFn = httpsCallable(functions, 'createLegalRelease');

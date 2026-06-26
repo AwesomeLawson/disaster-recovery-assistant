@@ -28,7 +28,7 @@ export interface ContactNote {
 
 export type AssessmentSeverity = 'low' | 'medium' | 'high' | 'critical';
 
-export type CaseStatus = 'intake' | 'awaitingAssessment' | 'assessed' | 'assigned' | 'inProgress' | 'completed';
+export type WorkOrderStatus = 'intake' | 'awaitingAssessment' | 'assessed' | 'assigned' | 'inProgress' | 'completed';
 
 export type HomeType = 'mobile_modular' | 'stick_built' | 'block' | 'multi_family';
 export type FEMAStatus = 'yes' | 'no' | 'na';
@@ -97,9 +97,9 @@ export interface Center {
   updatedAt: number;
 }
 
-export interface Assessment {
+export interface WorkOrder {
   id: string;
-  status: CaseStatus;
+  status: WorkOrderStatus;
 
   // Intake fields (captured first — survivor contact + initial description)
   survivorName: string;
@@ -114,7 +114,7 @@ export interface Assessment {
   descriptionOfNeed: string;
   source?: string;
   intakeVolunteerName?: string;
-  caseNumber?: string;
+  workOrderNumber?: string;
 
   centerId: string;
   eventId?: string;
@@ -158,7 +158,7 @@ export interface Assessment {
 
 export interface HomeownerRelease {
   id: string;
-  assessmentId: string;
+  workOrderId: string;
   createdBy: string;
   homeownerName: string;
   phoneNumber: string;
@@ -183,7 +183,7 @@ export interface Workgroup {
   eventId?: string; // Optional - which event this workgroup is for
   leadUserId: string;
   volunteerUserIds: string[];
-  assessmentId: string;
+  workOrderId: string;
   taskDescription: string;
   taskStatus: WorkgroupTaskStatus;
   progressNotes: string[];
@@ -195,7 +195,7 @@ export interface Workgroup {
 
 export interface Escalation {
   id: string;
-  assessmentId?: string;
+  workOrderId?: string;
   workgroupId: string;
   centerId: string;
   eventId?: string;
@@ -253,7 +253,7 @@ export interface LegalRelease {
   signatureImageUrl?: string;
   signedDigitally: boolean;
   signedAt?: number;
-  assessmentId?: string;
+  workOrderId?: string;
   createdAt: number;
   updatedAt: number;
 }

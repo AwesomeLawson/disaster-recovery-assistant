@@ -37,10 +37,10 @@ import { workgroupService } from '../services/workgroup.service';
 import { eventService } from '../services/event.service';
 import { centerService } from '../services/center.service';
 import { userService } from '../services/user.service';
-import { assessmentService } from '../services/assessment.service';
+import { workOrderService } from '../services/workOrder.service';
 import { escalationService } from '../services/escalation.service';
 import { useAuth } from '../context/AuthContext';
-import type { Workgroup, WorkgroupTaskStatus, Event, Center, User, Assessment, EscalationFormData } from '../types';
+import type { Workgroup, WorkgroupTaskStatus, Event, Center, User, WorkOrder, EscalationFormData } from '../types';
 
 export const WorkgroupDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -49,7 +49,7 @@ export const WorkgroupDetail: React.FC = () => {
   const [workgroup, setWorkgroup] = useState<Workgroup | null>(null);
   const [event, setEvent] = useState<Event | null>(null);
   const [center, setCenter] = useState<Center | null>(null);
-  const [assessment, setAssessment] = useState<Assessment | null>(null);
+  const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
   const [lead, setLead] = useState<User | null>(null);
   const [volunteers, setVolunteers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -83,16 +83,16 @@ export const WorkgroupDetail: React.FC = () => {
       setWorkgroup(data);
       setNewStatus(data.taskStatus);
 
-      const [eventData, centerData, assessmentData, allUsersData] = await Promise.all([
+      const [eventData, centerData, workOrderData, allUsersData] = await Promise.all([
         data.eventId ? eventService.getEvent(data.eventId) : Promise.resolve(null),
         centerService.getCenter(data.centerId),
-        assessmentService.getAssessment(data.assessmentId),
+        workOrderService.getWorkOrder(data.workOrderId),
         userService.listUsers(),
       ]);
 
       setEvent(eventData);
       setCenter(centerData);
-      setAssessment(assessmentData);
+      setWorkOrder(workOrderData);
       setAllUsers(allUsersData);
 
       const usersById: Record<string, User> = {};
@@ -166,7 +166,7 @@ export const WorkgroupDetail: React.FC = () => {
         eventId: workgroup.eventId,
         type: escalationType,
         reason: escalationReason,
-        assessmentId: workgroup.assessmentId,
+        workOrderId: workgroup.workOrderId,
       };
       await escalationService.createEscalation(escalationData);
 
@@ -300,14 +300,14 @@ export const WorkgroupDetail: React.FC = () => {
             </Typography>
 
             <Typography variant="subtitle2" color="text.secondary">
-              Related Assessment
+              Related Work Order
             </Typography>
             <Typography
               variant="body1"
               sx={{ mb: 2, cursor: 'pointer', color: 'primary.main' }}
-              onClick={() => navigate(`/assessments/${workgroup.assessmentId}`)}
+              onClick={() => navigate(`/work-orders/${workgroup.workOrderId}`)}
             >
-              {assessment?.survivorName || assessment?.placeName || workgroup.assessmentId}
+              {workOrder?.survivorName || workOrder?.placeName || workgroup.workOrderId}
             </Typography>
           </Paper>
 

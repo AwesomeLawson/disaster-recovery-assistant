@@ -32,10 +32,10 @@ import AddIcon from '@mui/icons-material/Add';
 import { centerService } from '../services/center.service';
 import { eventService } from '../services/event.service';
 import { userService } from '../services/user.service';
-import { assessmentService } from '../services/assessment.service';
+import { workOrderService } from '../services/workOrder.service';
 import { workgroupService } from '../services/workgroup.service';
 import { AddressAutocomplete } from '../components/AddressAutocomplete';
-import type { Center, Event, User, Assessment, Workgroup } from '../types';
+import type { Center, Event, User, WorkOrder, Workgroup } from '../types';
 
 export const CenterDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -44,7 +44,7 @@ export const CenterDetail: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [leads, setLeads] = useState<User[]>([]);
-  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [workgroups, setWorkgroups] = useState<Workgroup[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,16 +84,16 @@ export const CenterDetail: React.FC = () => {
         longitude: centerData.longitude,
       });
 
-      const [allEventsData, usersData, assessmentsData, workgroupsData] = await Promise.all([
+      const [allEventsData, usersData, workOrdersData, workgroupsData] = await Promise.all([
         eventService.listEvents(),
         userService.listUsers(),
-        assessmentService.listAssessments({ centerId: id }),
+        workOrderService.listWorkOrders({ centerId: id }),
         workgroupService.listWorkgroups({ centerId: id }),
       ]);
 
       setAllEvents(allEventsData);
       setAllUsers(usersData);
-      setAssessments(assessmentsData);
+      setWorkOrders(workOrdersData);
       setWorkgroups(workgroupsData);
 
       // Get events associated with this center
@@ -345,7 +345,7 @@ export const CenterDetail: React.FC = () => {
 
           <Paper sx={{ p: 3, mb: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">Cases ({assessments.length})</Typography>
+              <Typography variant="h6">Work Orders ({workOrders.length})</Typography>
               <Button
                 variant="contained"
                 size="small"
@@ -353,21 +353,21 @@ export const CenterDetail: React.FC = () => {
                 onClick={() => {
                   const params = new URLSearchParams({ centerId: center.id });
                   if (events[0]) params.set('eventId', events[0].id);
-                  navigate(`/assessments/create?${params.toString()}`);
+                  navigate(`/work-orders/create?${params.toString()}`);
                 }}
               >
-                Open Case
+                Open Work Order
               </Button>
             </Box>
             <Divider sx={{ mb: 2 }} />
 
-            {assessments.length === 0 ? (
-              <Typography color="text.secondary">No cases at this center</Typography>
+            {workOrders.length === 0 ? (
+              <Typography color="text.secondary">No work orders at this center</Typography>
             ) : (
               <List>
-                {assessments.map((assessment) => (
+                {workOrders.map((workOrder) => (
                   <ListItem
-                    key={assessment.id}
+                    key={workOrder.id}
                     sx={{
                       border: '1px solid',
                       borderColor: 'grey.300',
@@ -378,21 +378,21 @@ export const CenterDetail: React.FC = () => {
                         bgcolor: 'grey.50',
                       },
                     }}
-                    onClick={() => navigate(`/assessments/${assessment.id}`)}
+                    onClick={() => navigate(`/work-orders/${workOrder.id}`)}
                   >
                     <ListItemText
-                      primary={assessment.survivorName}
-                      secondary={assessment.address}
+                      primary={workOrder.survivorName}
+                      secondary={workOrder.address}
                     />
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                      {assessment.severity && (
+                      {workOrder.severity && (
                         <Chip
-                          label={assessment.severity}
+                          label={workOrder.severity}
                           size="small"
-                          color={getSeverityColor(assessment.severity) as any}
+                          color={getSeverityColor(workOrder.severity) as any}
                         />
                       )}
-                      {assessment.flaggedForReview && (
+                      {workOrder.flaggedForReview && (
                         <Chip label="Flagged" size="small" color="warning" />
                       )}
                     </Box>

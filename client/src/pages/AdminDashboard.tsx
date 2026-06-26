@@ -27,7 +27,7 @@ import { useAuth } from '../context/AuthContext';
 import { userService } from '../services/user.service';
 import { eventService } from '../services/event.service';
 import { centerService } from '../services/center.service';
-import { assessmentService } from '../services/assessment.service';
+import { workOrderService } from '../services/workOrder.service';
 import type { User } from '../types';
 
 const today = new Date().toISOString().split('T')[0];
@@ -36,7 +36,7 @@ export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [pendingUsers, setPendingUsers] = useState<User[]>([]);
-  const [stats, setStats] = useState({ events: 0, centers: 0, cases: 0 });
+  const [stats, setStats] = useState({ events: 0, centers: 0, workOrders: 0 });
   const [error, setError] = useState('');
   const [approving, setApproving] = useState<string | null>(null);
   const [bgCheckDates, setBgCheckDates] = useState<Record<string, string>>({});
@@ -52,12 +52,12 @@ export const AdminDashboard: React.FC = () => {
       const pending = users.filter((u) => u.roleApprovalStatus === 'pending');
       setPendingUsers(pending);
 
-      const [events, centers, assessments] = await Promise.all([
+      const [events, centers, workOrders] = await Promise.all([
         eventService.listEvents(),
         centerService.listCenters(),
-        assessmentService.listAssessments(),
+        workOrderService.listWorkOrders(),
       ]);
-      setStats({ events: events.length, centers: centers.length, cases: assessments.length });
+      setStats({ events: events.length, centers: centers.length, workOrders: workOrders.length });
     } catch (err: any) {
       setError(err.message || 'Failed to load dashboard data');
     }
@@ -142,12 +142,12 @@ export const AdminDashboard: React.FC = () => {
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <AssessmentIcon color="primary" sx={{ mr: 1 }} />
-                <Typography variant="h6">Cases</Typography>
+                <Typography variant="h6">Work Orders</Typography>
               </Box>
-              <Typography variant="h3">{stats.cases}</Typography>
+              <Typography variant="h3">{stats.workOrders}</Typography>
             </CardContent>
             <CardActions>
-              <Button size="small" onClick={() => navigate('/assessments')}>View All</Button>
+              <Button size="small" onClick={() => navigate('/work-orders')}>View All</Button>
             </CardActions>
           </Card>
         </Grid>

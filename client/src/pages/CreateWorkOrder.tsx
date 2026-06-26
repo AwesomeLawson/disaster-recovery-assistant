@@ -15,13 +15,13 @@ import {
   Grid,
   Divider,
 } from '@mui/material';
-import { assessmentService } from '../services/assessment.service';
+import { workOrderService } from '../services/workOrder.service';
 import { centerService } from '../services/center.service';
 import { eventService } from '../services/event.service';
 import { AddressAutocomplete } from '../components/AddressAutocomplete';
 import type { Center, Event } from '../types';
 
-export const CreateAssessment: React.FC = () => {
+export const CreateWorkOrder: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [centers, setCenters] = useState<Center[]>([]);
@@ -39,7 +39,7 @@ export const CreateAssessment: React.FC = () => {
     tempAddress: '',
     descriptionOfNeed: '',
     source: '',
-    caseNumber: '',
+    workOrderNumber: '',
     centerId: searchParams.get('centerId') ?? '',
     eventId: searchParams.get('eventId') ?? '',
   });
@@ -71,13 +71,13 @@ export const CreateAssessment: React.FC = () => {
       if (formData.longitude !== undefined) payload.longitude = formData.longitude;
       if (formData.tempAddress) payload.tempAddress = formData.tempAddress;
       if (formData.source) payload.source = formData.source;
-      if (formData.caseNumber) payload.caseNumber = formData.caseNumber;
+      if (formData.workOrderNumber) payload.workOrderNumber = formData.workOrderNumber;
       if (formData.eventId) payload.eventId = formData.eventId;
 
-      const assessment = await assessmentService.createAssessment(payload as any);
-      navigate(`/assessments/${assessment.id}`);
+      const workOrder = await workOrderService.createWorkOrder(payload as any);
+      navigate(`/work-orders/${workOrder.id}`);
     } catch (err: any) {
-      setError(err.message || 'Failed to open case');
+      setError(err.message || 'Failed to open work order');
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,7 @@ export const CreateAssessment: React.FC = () => {
   return (
     <Container maxWidth="md">
       <Paper sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom>Open New Case</Typography>
+        <Typography variant="h4" gutterBottom>Open New Work Order</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           Capture the survivor's contact information and initial description of need. An assessor will complete the field assessment on-site.
         </Typography>
@@ -202,9 +202,9 @@ export const CreateAssessment: React.FC = () => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label="Case Number (optional)"
-                value={formData.caseNumber}
-                onChange={(e) => setFormData({ ...formData, caseNumber: e.target.value })}
+                label="Work Order Number (optional)"
+                value={formData.workOrderNumber}
+                onChange={(e) => setFormData({ ...formData, workOrderNumber: e.target.value })}
               />
             </Grid>
 
@@ -246,9 +246,9 @@ export const CreateAssessment: React.FC = () => {
 
             <Grid size={{ xs: 12 }}>
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
-                <Button variant="outlined" onClick={() => navigate('/assessments')}>Cancel</Button>
+                <Button variant="outlined" onClick={() => navigate('/work-orders')}>Cancel</Button>
                 <Button type="submit" variant="contained" disabled={loading}>
-                  {loading ? 'Opening...' : 'Open Case'}
+                  {loading ? 'Opening...' : 'Open Work Order'}
                 </Button>
               </Box>
             </Grid>

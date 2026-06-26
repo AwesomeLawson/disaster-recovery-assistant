@@ -1,7 +1,7 @@
 {
   "indexes": [
     {
-      "collectionGroup": "assessments",
+      "collectionGroup": "workOrders",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "centerId", "order": "ASCENDING" },
@@ -9,7 +9,7 @@
       ]
     },
     {
-      "collectionGroup": "assessments",
+      "collectionGroup": "workOrders",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "eventId", "order": "ASCENDING" },
@@ -17,7 +17,7 @@
       ]
     },
     {
-      "collectionGroup": "assessments",
+      "collectionGroup": "workOrders",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "flaggedForReview", "order": "ASCENDING" },

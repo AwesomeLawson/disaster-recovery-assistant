@@ -16,12 +16,12 @@ import {
   ToggleButton,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { assessmentService } from '../services/assessment.service';
+import { workOrderService } from '../services/workOrder.service';
 import { AddressAutocomplete } from '../components/AddressAutocomplete';
 import type { FEMAStatus } from '../types';
 
 export const EditIntake: React.FC = () => {
-  const { id: assessmentId } = useParams<{ id: string }>();
+  const { id: workOrderId } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -38,13 +38,13 @@ export const EditIntake: React.FC = () => {
   const [tempAddress, setTempAddress] = useState('');
   const [descriptionOfNeed, setDescriptionOfNeed] = useState('');
   const [source, setSource] = useState('');
-  const [caseNumber, setCaseNumber] = useState('');
+  const [workOrderNumber, setWorkOrderNumber] = useState('');
   const [registeredForFEMA, setRegisteredForFEMA] = useState<FEMAStatus | ''>('');
   const [hasHOInsurance, setHasHOInsurance] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!assessmentId) return;
-    assessmentService.getAssessment(assessmentId)
+    if (!workOrderId) return;
+    workOrderService.getWorkOrder(workOrderId)
       .then((a) => {
         setSurvivorName(a.survivorName ?? '');
         setSurvivorPhone(a.survivorPhone ?? '');
@@ -56,13 +56,13 @@ export const EditIntake: React.FC = () => {
         setTempAddress(a.tempAddress ?? '');
         setDescriptionOfNeed(a.descriptionOfNeed ?? '');
         setSource(a.source ?? '');
-        setCaseNumber(a.caseNumber ?? '');
+        setWorkOrderNumber(a.workOrderNumber ?? '');
         if (a.registeredForFEMA) setRegisteredForFEMA(a.registeredForFEMA);
         if (a.hasHOInsurance != null) setHasHOInsurance(a.hasHOInsurance);
       })
-      .catch((err) => setError(err.message || 'Failed to load case'))
+      .catch((err) => setError(err.message || 'Failed to load work order'))
       .finally(() => setLoading(false));
-  }, [assessmentId]);
+  }, [workOrderId]);
 
   const handleSave = async () => {
     if (!survivorName || !survivorPhone || !address || !descriptionOfNeed) {
@@ -84,12 +84,12 @@ export const EditIntake: React.FC = () => {
       if (longitude !== undefined) updates.longitude = longitude;
       if (tempAddress) updates.tempAddress = tempAddress; else updates.tempAddress = null;
       if (source) updates.source = source; else updates.source = null;
-      if (caseNumber) updates.caseNumber = caseNumber; else updates.caseNumber = null;
+      if (workOrderNumber) updates.workOrderNumber = workOrderNumber; else updates.workOrderNumber = null;
       if (registeredForFEMA) updates.registeredForFEMA = registeredForFEMA;
       if (hasHOInsurance != null) updates.hasHOInsurance = hasHOInsurance;
 
-      await assessmentService.updateAssessment(assessmentId!, updates);
-      navigate(`/assessments/${assessmentId}`);
+      await workOrderService.updateWorkOrder(workOrderId!, updates);
+      navigate(`/work-orders/${workOrderId}`);
     } catch (err: any) {
       setError(err.message || 'Failed to save');
     } finally {
@@ -108,7 +108,7 @@ export const EditIntake: React.FC = () => {
   return (
     <Container maxWidth="md" sx={{ py: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 1 }}>
-        <IconButton onClick={() => navigate(`/assessments/${assessmentId}`)}>
+        <IconButton onClick={() => navigate(`/work-orders/${workOrderId}`)}>
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h5" sx={{ flexGrow: 1 }}>Edit Intake Information</Typography>
@@ -175,8 +175,8 @@ export const EditIntake: React.FC = () => {
               onChange={(e) => setSource(e.target.value)} placeholder="e.g. Phone, Walk-in, Referral" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField fullWidth label="Case Number (optional)" value={caseNumber}
-              onChange={(e) => setCaseNumber(e.target.value)} />
+            <TextField fullWidth label="Work Order Number (optional)" value={workOrderNumber}
+              onChange={(e) => setWorkOrderNumber(e.target.value)} />
           </Grid>
           <Grid size={{ xs: 12 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -203,7 +203,7 @@ export const EditIntake: React.FC = () => {
       </Paper>
 
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-        <Button variant="outlined" onClick={() => navigate(`/assessments/${assessmentId}`)} disabled={saving}>
+        <Button variant="outlined" onClick={() => navigate(`/work-orders/${workOrderId}`)} disabled={saving}>
           Cancel
         </Button>
         <Button variant="contained" onClick={handleSave} disabled={saving}>

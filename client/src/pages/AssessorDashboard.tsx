@@ -17,12 +17,12 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import { useAuth } from '../context/AuthContext';
-import { assessmentService } from '../services/assessment.service';
+import { workOrderService } from '../services/workOrder.service';
 import { centerService } from '../services/center.service';
-import { AssessmentMap } from '../components/AssessmentMap';
-import type { Assessment, Center, CaseStatus } from '../types';
+import { WorkOrderMap } from '../components/WorkOrderMap';
+import type { WorkOrder, Center, WorkOrderStatus } from '../types';
 
-const STATUS_LABELS: Record<CaseStatus, string> = {
+const STATUS_LABELS: Record<WorkOrderStatus, string> = {
   intake: 'Intake',
   awaitingAssessment: 'Awaiting Assessment',
   assessed: 'Assessed',
@@ -31,7 +31,7 @@ const STATUS_LABELS: Record<CaseStatus, string> = {
   completed: 'Completed',
 };
 
-const STATUS_COLORS: Record<CaseStatus, 'default' | 'info' | 'warning' | 'success' | 'primary' | 'secondary' | 'error'> = {
+const STATUS_COLORS: Record<WorkOrderStatus, 'default' | 'info' | 'warning' | 'success' | 'primary' | 'secondary' | 'error'> = {
   intake: 'default',
   awaitingAssessment: 'info',
   assessed: 'warning',
@@ -43,8 +43,8 @@ const STATUS_COLORS: Record<CaseStatus, 'default' | 'info' | 'warning' | 'succes
 export const AssessorDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [myAssessments, setMyAssessments] = useState<Assessment[]>([]);
-  const [eventAssessments, setEventAssessments] = useState<Assessment[]>([]);
+  const [myWorkOrders, setMyWorkOrders] = useState<WorkOrder[]>([]);
+  const [eventWorkOrders, setEventWorkOrders] = useState<WorkOrder[]>([]);
   const [eventCenters, setEventCenters] = useState<Center[]>([]);
   const [error, setError] = useState('');
 
@@ -54,25 +54,25 @@ export const AssessorDashboard: React.FC = () => {
 
   const loadDashboardData = async () => {
     try {
-      const allAssessments = await assessmentService.listAssessments();
-      const mine = allAssessments.filter((a) => a.assessorId === user?.id);
-      setMyAssessments(mine);
+      const allWorkOrders = await workOrderService.listWorkOrders();
+      const mine = allWorkOrders.filter((a) => a.assessorId === user?.id);
+      setMyWorkOrders(mine);
 
       const eventIds: string[] = user?.eventIds ?? [];
       if (eventIds.length > 0) {
-        const [assessmentsByEvent, centersByEvent] = await Promise.all([
-          Promise.all(eventIds.map((eid) => assessmentService.listAssessments({ eventId: eid }))),
+        const [workOrdersByEvent, centersByEvent] = await Promise.all([
+          Promise.all(eventIds.map((eid) => workOrderService.listWorkOrders({ eventId: eid }))),
           Promise.all(eventIds.map((eid) => centerService.listCenters(eid))),
         ]);
 
         const seen = new Set<string>();
-        const combined: Assessment[] = [];
-        for (const batch of assessmentsByEvent) {
+        const combined: WorkOrder[] = [];
+        for (const batch of workOrdersByEvent) {
           for (const a of batch) {
             if (!seen.has(a.id)) { seen.add(a.id); combined.push(a); }
           }
         }
-        setEventAssessments(combined);
+        setEventWorkOrders(combined);
 
         const seenCenters = new Set<string>();
         const combinedCenters: Center[] = [];
@@ -88,7 +88,7 @@ export const AssessorDashboard: React.FC = () => {
     }
   };
 
-  const awaitingAssessment = myAssessments.filter((a) => a.status === 'awaitingAssessment');
+  const awaitingAssessment = myWorkOrders.filter((a) => a.status === 'awaitingAssessment');
 
   return (
     <Container maxWidth="lg">
@@ -114,7 +114,7 @@ export const AssessorDashboard: React.FC = () => {
                 <AssignmentIcon color="primary" sx={{ mr: 1 }} />
                 <Typography variant="h6">Assigned to Me</Typography>
               </Box>
-              <Typography variant="h3">{myAssessments.length}</Typography>
+              <Typography variant="h3">{myWorkOrders.length}</Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -134,7 +134,7 @@ export const AssessorDashboard: React.FC = () => {
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Card sx={{ bgcolor: 'primary.main', color: 'white' }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>Open New Case</Typography>
+              <Typography variant="h6" gutterBottom>Open New Work Order</Typography>
               <Typography variant="body2">Submit a new intake for a survivor</Typography>
             </CardContent>
             <CardActions>
@@ -143,24 +143,24 @@ export const AssessorDashboard: React.FC = () => {
                 variant="contained"
                 color="secondary"
                 startIcon={<AddIcon />}
-                onClick={() => navigate('/assessments/create')}
+                onClick={() => navigate('/work-orders/create')}
               >
-                Open New Case
+                Open New Work Order
               </Button>
             </CardActions>
           </Card>
         </Grid>
 
-        {/* My Cases */}
+        {/* My Work Orders */}
         <Grid size={{ xs: 12 }}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>My Cases</Typography>
+            <Typography variant="h6" gutterBottom>My Work Orders</Typography>
             <Divider sx={{ mb: 2 }} />
-            {myAssessments.length === 0 ? (
-              <Typography color="text.secondary">No cases assigned to you yet</Typography>
+            {myWorkOrders.length === 0 ? (
+              <Typography color="text.secondary">No work orders assigned to you yet</Typography>
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                {myAssessments.map((a) => (
+                {myWorkOrders.map((a) => (
                   <Box
                     key={a.id}
                     sx={{
@@ -188,7 +188,7 @@ export const AssessorDashboard: React.FC = () => {
                         <Button
                           size="small"
                           variant="contained"
-                          onClick={() => navigate(`/assessments/${a.id}/field-assessment`)}
+                          onClick={() => navigate(`/work-orders/${a.id}/field-assessment`)}
                         >
                           Start Field Assessment
                         </Button>
@@ -196,7 +196,7 @@ export const AssessorDashboard: React.FC = () => {
                       <Button
                         size="small"
                         variant="outlined"
-                        onClick={() => navigate(`/assessments/${a.id}`)}
+                        onClick={() => navigate(`/work-orders/${a.id}`)}
                       >
                         View
                       </Button>
@@ -249,7 +249,7 @@ export const AssessorDashboard: React.FC = () => {
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>My Event Map</Typography>
               <Divider sx={{ mb: 2 }} />
-              <AssessmentMap assessments={eventAssessments} centers={eventCenters} />
+              <WorkOrderMap workOrders={eventWorkOrders} centers={eventCenters} />
             </Paper>
           </Grid>
         )}

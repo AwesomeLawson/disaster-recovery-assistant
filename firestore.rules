@@ -32,7 +32,7 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    match /assessments/{assessmentId} {
+    match /workOrders/{workOrderId} {
       allow read: if isAuthenticated();
       allow create: if isAssessor();
       allow update: if isAssessor() || isAdmin();

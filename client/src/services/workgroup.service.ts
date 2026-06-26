@@ -39,7 +39,7 @@ export const workgroupService = {
   async listWorkgroups(filters?: {
     centerId?: string;
     groupId?: string;
-    assessmentId?: string;
+    workOrderId?: string;
     limit?: number;
   }): Promise<Workgroup[]> {
     const listWorkgroupsFn = httpsCallable(functions, 'listWorkgroups');

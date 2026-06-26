@@ -24,9 +24,9 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AddIcon from '@mui/icons-material/Add';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { useAuth } from '../context/AuthContext';
-import { assessmentService } from '../services/assessment.service';
+import { workOrderService } from '../services/workOrder.service';
 import { workgroupService } from '../services/workgroup.service';
-import type { Assessment, Workgroup } from '../types';
+import type { WorkOrder, Workgroup } from '../types';
 
 const SEVERITY_ORDER: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
 const SEVERITY_COLOR: Record<string, 'error' | 'warning' | 'info' | 'default'> = {
@@ -48,7 +48,7 @@ function statusColor(status: string): 'primary' | 'warning' | 'error' | 'default
 export const FieldCoordinatorDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [workgroups, setWorkgroups] = useState<Workgroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -60,11 +60,11 @@ export const FieldCoordinatorDashboard: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [assessmentsData, workgroupsData] = await Promise.all([
-        assessmentService.listAssessments(),
+      const [workOrdersData, workgroupsData] = await Promise.all([
+        workOrderService.listWorkOrders(),
         workgroupService.listWorkgroups(),
       ]);
-      setAssessments(assessmentsData);
+      setWorkOrders(workOrdersData);
       setWorkgroups(workgroupsData);
     } catch (err: any) {
       setError(err.message || 'Failed to load dashboard data');
@@ -73,15 +73,15 @@ export const FieldCoordinatorDashboard: React.FC = () => {
     }
   };
 
-  const assignedAssessmentIds = new Set(workgroups.map((w) => w.assessmentId));
-  const sortedAssessments = [...assessments].sort(
+  const assignedWorkOrderIds = new Set(workgroups.map((w) => w.workOrderId));
+  const sortedWorkOrders = [...workOrders].sort(
     (a, b) => (SEVERITY_ORDER[a.severity ?? 'low'] ?? 3) - (SEVERITY_ORDER[b.severity ?? 'low'] ?? 3)
   );
   const activeWorkgroups = workgroups.filter(
     (w) => w.taskStatus !== 'completed'
   );
   const completedWorkgroups = workgroups.filter((w) => w.taskStatus === 'completed');
-  const flaggedCount = assessments.filter((a) => a.flaggedForReview).length;
+  const flaggedCount = workOrders.filter((a) => a.flaggedForReview).length;
 
   if (loading) {
     return (
@@ -115,12 +115,12 @@ export const FieldCoordinatorDashboard: React.FC = () => {
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <AssignmentIcon color="primary" sx={{ mr: 1 }} />
-                <Typography variant="subtitle2" color="text.secondary">Assessments</Typography>
+                <Typography variant="subtitle2" color="text.secondary">Work Orders</Typography>
               </Box>
-              <Typography variant="h3">{assessments.length}</Typography>
+              <Typography variant="h3">{workOrders.length}</Typography>
             </CardContent>
             <CardActions>
-              <Button size="small" onClick={() => navigate('/assessments')}>View All</Button>
+              <Button size="small" onClick={() => navigate('/work-orders')}>View All</Button>
             </CardActions>
           </Card>
         </Grid>
@@ -135,7 +135,7 @@ export const FieldCoordinatorDashboard: React.FC = () => {
               <Typography variant="h3">{flaggedCount}</Typography>
             </CardContent>
             <CardActions>
-              <Button size="small" onClick={() => navigate('/assessments')}>Review</Button>
+              <Button size="small" onClick={() => navigate('/work-orders')}>Review</Button>
             </CardActions>
           </Card>
         </Grid>
@@ -197,12 +197,12 @@ export const FieldCoordinatorDashboard: React.FC = () => {
               <Typography variant="caption" color="text.secondary">sorted by severity</Typography>
             </Box>
             <Divider sx={{ mb: 2 }} />
-            {sortedAssessments.length === 0 ? (
-              <Typography color="text.secondary">No assessments yet</Typography>
+            {sortedWorkOrders.length === 0 ? (
+              <Typography color="text.secondary">No work orders yet</Typography>
             ) : (
               <List disablePadding>
-                {sortedAssessments.map((a) => {
-                  const assigned = assignedAssessmentIds.has(a.id);
+                {sortedWorkOrders.map((a) => {
+                  const assigned = assignedWorkOrderIds.has(a.id);
                   return (
                     <ListItem
                       key={a.id}
@@ -215,7 +215,7 @@ export const FieldCoordinatorDashboard: React.FC = () => {
                         '&:hover': { bgcolor: 'grey.50' },
                         gap: 1,
                       }}
-                      onClick={() => navigate(`/assessments/${a.id}`)}
+                      onClick={() => navigate(`/work-orders/${a.id}`)}
                     >
                       <ListItemText
                         primary={
@@ -246,7 +246,7 @@ export const FieldCoordinatorDashboard: React.FC = () => {
                             startIcon={<AddIcon />}
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/workgroups/create?assessmentId=${a.id}`);
+                              navigate(`/workgroups/create?workOrderId=${a.id}`);
                             }}
                           >
                             Assign Team

@@ -19,7 +19,7 @@ export const createHomeownerRelease = onCall({ cors: true }, async (request: any
   await requireAllowedRole(request.auth.uid);
 
   const {
-    assessmentId,
+    workOrderId,
     homeownerName,
     phoneNumber,
     propertyAddress,
@@ -33,20 +33,20 @@ export const createHomeownerRelease = onCall({ cors: true }, async (request: any
     frrWitnessSignatureUrl,
   } = request.data;
 
-  if (!assessmentId || !homeownerName || !phoneNumber || !propertyAddress || !propertyCityStateZip || !frrRepName || !frrPhone || !homeownerSignatureUrl || !frrWitnessSignatureUrl) {
+  if (!workOrderId || !homeownerName || !phoneNumber || !propertyAddress || !propertyCityStateZip || !frrRepName || !frrPhone || !homeownerSignatureUrl || !frrWitnessSignatureUrl) {
     throw new HttpsError('invalid-argument', 'Missing required fields');
   }
 
-  const assessmentRef = db.collection('assessments').doc(assessmentId);
-  const assessmentDoc = await assessmentRef.get();
-  if (!assessmentDoc.exists) throw new HttpsError('not-found', 'Assessment not found');
+  const workOrderRef = db.collection('workOrders').doc(workOrderId);
+  const workOrderDoc = await workOrderRef.get();
+  if (!workOrderDoc.exists) throw new HttpsError('not-found', 'Work order not found');
 
   const releaseRef = db.collection('homeownerReleases').doc();
   const now = Date.now();
 
   const release: HomeownerRelease = {
     id: releaseRef.id,
-    assessmentId,
+    workOrderId,
     createdBy: request.auth.uid,
     homeownerName,
     phoneNumber,
@@ -66,7 +66,7 @@ export const createHomeownerRelease = onCall({ cors: true }, async (request: any
   if (coOwnerSignatureUrl) release.coOwnerSignatureUrl = coOwnerSignatureUrl;
 
   await releaseRef.set(release);
-  await assessmentRef.update({ homeownerReleaseId: releaseRef.id, updatedAt: now });
+  await workOrderRef.update({ homeownerReleaseId: releaseRef.id, updatedAt: now });
 
   return { success: true, releaseId: releaseRef.id, release };
 });

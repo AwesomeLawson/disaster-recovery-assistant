@@ -12,9 +12,9 @@ import { EventManagement } from './pages/EventManagement';
 import { EventDetail } from './pages/EventDetail';
 import { CenterManagement } from './pages/CenterManagement';
 import { CenterDetail } from './pages/CenterDetail';
-import { AssessmentList } from './pages/AssessmentList';
-import { AssessmentDetail } from './pages/AssessmentDetail';
-import { CreateAssessment } from './pages/CreateAssessment';
+import { WorkOrderList } from './pages/WorkOrderList';
+import { WorkOrderDetail } from './pages/WorkOrderDetail';
+import { CreateWorkOrder } from './pages/CreateWorkOrder';
 import { EditIntake } from './pages/EditIntake';
 import { FieldAssessment } from './pages/FieldAssessment';
 import { WorkgroupManagement } from './pages/WorkgroupManagement';
@@ -165,33 +165,33 @@ function App() {
                 }
               />
 
-              {/* Case management routes */}
+              {/* Work order management routes */}
               <Route
-                path="assessments"
+                path="work-orders"
                 element={
                   <PrivateRoute requireRoles={['assessor', 'administrator', 'workGroupLead', 'fieldCoordinator']}>
-                    <AssessmentList />
+                    <WorkOrderList />
                   </PrivateRoute>
                 }
               />
               <Route
-                path="assessments/create"
+                path="work-orders/create"
                 element={
                   <PrivateRoute requireRoles={['assessor', 'administrator', 'fieldCoordinator']}>
-                    <CreateAssessment />
+                    <CreateWorkOrder />
                   </PrivateRoute>
                 }
               />
               <Route
-                path="assessments/:id"
+                path="work-orders/:id"
                 element={
                   <PrivateRoute requireRoles={['assessor', 'administrator', 'workGroupLead', 'fieldCoordinator']}>
-                    <AssessmentDetail />
+                    <WorkOrderDetail />
                   </PrivateRoute>
                 }
               />
               <Route
-                path="assessments/:id/edit-intake"
+                path="work-orders/:id/edit-intake"
                 element={
                   <PrivateRoute requireRoles={['assessor', 'administrator', 'fieldCoordinator']}>
                     <EditIntake />
@@ -199,7 +199,7 @@ function App() {
                 }
               />
               <Route
-                path="assessments/:id/field-assessment"
+                path="work-orders/:id/field-assessment"
                 element={
                   <PrivateRoute requireRoles={['assessor', 'administrator', 'fieldCoordinator']}>
                     <FieldAssessment />
@@ -207,7 +207,7 @@ function App() {
                 }
               />
               <Route
-                path="assessments/:id/homeowner-release"
+                path="work-orders/:id/homeowner-release"
                 element={
                   <PrivateRoute requireRoles={['assessor', 'administrator', 'fieldCoordinator']}>
                     <SignHomeownerRelease />

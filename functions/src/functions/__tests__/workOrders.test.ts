@@ -12,7 +12,7 @@ jest.mock('firebase-admin', () => ({
   initializeApp: jest.fn(),
 }));
 
-import * as functions from '../assessments';
+import * as functions from '../workOrders';
 
 describe('Assessment Management Functions', () => {
   let wrapped: any;
@@ -44,7 +44,7 @@ describe('Assessment Management Functions', () => {
         return { doc: mockDoc };
       });
 
-      wrapped = testEnv.wrap(functions.createAssessment);
+      wrapped = testEnv.wrap(functions.createWorkOrder);
 
       const data = {
         placeName: 'John Doe Residence',
@@ -81,7 +81,7 @@ describe('Assessment Management Functions', () => {
     });
 
     it('should reject creation without authentication', async () => {
-      wrapped = testEnv.wrap(functions.createAssessment);
+      wrapped = testEnv.wrap(functions.createWorkOrder);
 
       const data = {
         placeName: 'Test Place',
@@ -106,7 +106,7 @@ describe('Assessment Management Functions', () => {
       const mockDoc = jest.fn(() => ({ get: mockGet }));
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.createAssessment);
+      wrapped = testEnv.wrap(functions.createWorkOrder);
 
       const data = {
         placeName: 'Test Place',
@@ -135,7 +135,7 @@ describe('Assessment Management Functions', () => {
       const mockDoc = jest.fn(() => ({ get: mockGet }));
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.createAssessment);
+      wrapped = testEnv.wrap(functions.createWorkOrder);
 
       const data = {
         placeName: 'Test Place',
@@ -166,7 +166,7 @@ describe('Assessment Management Functions', () => {
       const mockDoc = jest.fn(() => ({ get: mockGet, update: mockUpdate }));
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.updateAssessment);
+      wrapped = testEnv.wrap(functions.updateWorkOrder);
 
       const data = {
         assessmentId: 'assessment123',
@@ -198,7 +198,7 @@ describe('Assessment Management Functions', () => {
       const mockDoc = jest.fn(() => ({ get: mockGet, update: mockUpdate }));
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.updateAssessment);
+      wrapped = testEnv.wrap(functions.updateWorkOrder);
 
       const data = {
         assessmentId: 'assessment123',
@@ -228,7 +228,7 @@ describe('Assessment Management Functions', () => {
       const mockDoc = jest.fn(() => ({ get: mockGet }));
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.updateAssessment);
+      wrapped = testEnv.wrap(functions.updateWorkOrder);
 
       const data = {
         assessmentId: 'assessment123',
@@ -250,7 +250,7 @@ describe('Assessment Management Functions', () => {
       const mockDoc = jest.fn(() => ({ get: mockGet }));
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.updateAssessment);
+      wrapped = testEnv.wrap(functions.updateWorkOrder);
 
       const data = {
         assessmentId: 'nonexistent',
@@ -371,7 +371,7 @@ describe('Assessment Management Functions', () => {
       const mockDoc = jest.fn(() => ({ get: mockGet }));
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.getAssessment);
+      wrapped = testEnv.wrap(functions.getWorkOrder);
 
       const data = { assessmentId: 'assessment123' };
       const context = { auth: { uid: 'user123', token: {} } };
@@ -389,7 +389,7 @@ describe('Assessment Management Functions', () => {
       const mockDoc = jest.fn(() => ({ get: mockGet }));
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.getAssessment);
+      wrapped = testEnv.wrap(functions.getWorkOrder);
 
       const data = { assessmentId: 'nonexistent' };
       const context = { auth: { uid: 'user123', token: {} } };
@@ -398,7 +398,7 @@ describe('Assessment Management Functions', () => {
     });
 
     it('should reject without authentication', async () => {
-      wrapped = testEnv.wrap(functions.getAssessment);
+      wrapped = testEnv.wrap(functions.getWorkOrder);
 
       const data = { assessmentId: 'assessment123' };
 
@@ -422,7 +422,7 @@ describe('Assessment Management Functions', () => {
       const mockWhere: any = jest.fn(() => ({ orderBy: mockOrderBy }));
       mockFirestore.collection = jest.fn(() => ({ where: mockWhere, orderBy: mockOrderBy }));
 
-      wrapped = testEnv.wrap(functions.listAssessments);
+      wrapped = testEnv.wrap(functions.listWorkOrders);
 
       const data = { centerId: 'center123', limit: 100 };
       const context = { auth: { uid: 'user123', token: {} } };
@@ -447,7 +447,7 @@ describe('Assessment Management Functions', () => {
       const mockWhere: any = jest.fn(() => ({ where: mockWhere, orderBy: mockOrderBy }));
       mockFirestore.collection = jest.fn(() => ({ where: mockWhere, orderBy: mockOrderBy }));
 
-      wrapped = testEnv.wrap(functions.listAssessments);
+      wrapped = testEnv.wrap(functions.listWorkOrders);
 
       const data = { flaggedForReview: true, limit: 100 };
       const context = { auth: { uid: 'user123', token: {} } };
@@ -458,7 +458,7 @@ describe('Assessment Management Functions', () => {
     });
 
     it('should reject without authentication', async () => {
-      wrapped = testEnv.wrap(functions.listAssessments);
+      wrapped = testEnv.wrap(functions.listWorkOrders);
 
       await expect(wrapped({}, {})).rejects.toThrow('User must be authenticated');
     });

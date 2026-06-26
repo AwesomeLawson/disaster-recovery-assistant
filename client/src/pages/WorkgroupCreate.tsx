@@ -22,21 +22,21 @@ import { workgroupService } from '../services/workgroup.service';
 import { eventService } from '../services/event.service';
 import { centerService } from '../services/center.service';
 import { userService } from '../services/user.service';
-import { assessmentService } from '../services/assessment.service';
+import { workOrderService } from '../services/workOrder.service';
 import { useAuth } from '../context/AuthContext';
-import type { Event, Center, User, Assessment, WorkgroupFormData } from '../types';
+import type { Event, Center, User, WorkOrder, WorkgroupFormData } from '../types';
 
 export const WorkgroupCreate: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const preselectedAssessmentId = searchParams.get('assessmentId');
+  const preselectedWorkOrderId = searchParams.get('workOrderId');
 
   const [events, setEvents] = useState<Event[]>([]);
   const [centers, setCenters] = useState<Center[]>([]);
   const [filteredCenters, setFilteredCenters] = useState<Center[]>([]);
-  const [assessments, setAssessments] = useState<Assessment[]>([]);
-  const [filteredAssessments, setFilteredAssessments] = useState<Assessment[]>([]);
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+  const [filteredWorkOrders, setFilteredWorkOrders] = useState<WorkOrder[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [availableVolunteers, setAvailableWorkers] = useState<User[]>([]);
 
@@ -50,7 +50,7 @@ export const WorkgroupCreate: React.FC = () => {
     eventId: '',
     leadUserId: '',
     volunteerUserIds: [],
-    assessmentId: '',
+    workOrderId: '',
     taskDescription: '',
   });
 
@@ -66,7 +66,7 @@ export const WorkgroupCreate: React.FC = () => {
       setFilteredCenters(eventCenters);
 
       if (!eventCenters.find((c) => c.id === formData.centerId)) {
-        setFormData((prev) => ({ ...prev, centerId: '', assessmentId: '' }));
+        setFormData((prev) => ({ ...prev, centerId: '', workOrderId: '' }));
       }
     } else {
       // Show all centers when no event is selected
@@ -76,19 +76,19 @@ export const WorkgroupCreate: React.FC = () => {
 
   useEffect(() => {
     if (formData.centerId) {
-      const centerAssessments = assessments.filter((a) => a.centerId === formData.centerId);
-      setFilteredAssessments(centerAssessments);
+      const centerWorkOrders = workOrders.filter((a) => a.centerId === formData.centerId);
+      setFilteredWorkOrders(centerWorkOrders);
 
-      if (!centerAssessments.find((a) => a.id === formData.assessmentId)) {
-        setFormData((prev) => ({ ...prev, assessmentId: '' }));
+      if (!centerWorkOrders.find((a) => a.id === formData.workOrderId)) {
+        setFormData((prev) => ({ ...prev, workOrderId: '' }));
       }
     } else if (formData.eventId) {
-      const eventAssessments = assessments.filter((a) => a.eventId === formData.eventId);
-      setFilteredAssessments(eventAssessments);
+      const eventWorkOrders = workOrders.filter((a) => a.eventId === formData.eventId);
+      setFilteredWorkOrders(eventWorkOrders);
     } else {
-      setFilteredAssessments(assessments);
+      setFilteredWorkOrders(workOrders);
     }
-  }, [formData.centerId, formData.eventId, assessments]);
+  }, [formData.centerId, formData.eventId, workOrders]);
 
   useEffect(() => {
     const workers = users.filter(
@@ -102,16 +102,16 @@ export const WorkgroupCreate: React.FC = () => {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const [eventsData, centersData, assessmentsData, usersData] = await Promise.all([
+      const [eventsData, centersData, workOrdersData, usersData] = await Promise.all([
         eventService.listEvents(),
         centerService.listCenters(),
-        assessmentService.listAssessments(),
+        workOrderService.listWorkOrders(),
         userService.listUsers(),
       ]);
 
       setEvents(eventsData);
       setCenters(centersData);
-      setAssessments(assessmentsData);
+      setWorkOrders(workOrdersData);
       setUsers(usersData);
 
       // Set current user as lead if they are a workGroupLead
@@ -119,16 +119,16 @@ export const WorkgroupCreate: React.FC = () => {
         setFormData((prev) => ({ ...prev, leadUserId: user.id }));
       }
 
-      // Handle preselected assessment
-      if (preselectedAssessmentId) {
-        const assessment = assessmentsData.find((a: Assessment) => a.id === preselectedAssessmentId);
-        if (assessment) {
+      // Handle preselected work order
+      if (preselectedWorkOrderId) {
+        const workOrder = workOrdersData.find((a: WorkOrder) => a.id === preselectedWorkOrderId);
+        if (workOrder) {
           setFormData((prev) => ({
             ...prev,
-            assessmentId: assessment.id,
-            eventId: assessment.eventId || '',
-            centerId: assessment.centerId,
-            name: `Workgroup for ${assessment.survivorName}`,
+            workOrderId: workOrder.id,
+            eventId: workOrder.eventId || '',
+            centerId: workOrder.centerId,
+            name: `Workgroup for ${workOrder.survivorName}`,
           }));
         }
       }
@@ -150,8 +150,8 @@ export const WorkgroupCreate: React.FC = () => {
       setError('Center is required');
       return;
     }
-    if (!formData.assessmentId) {
-      setError('Assessment is required');
+    if (!formData.workOrderId) {
+      setError('Work order is required');
       return;
     }
     if (!formData.leadUserId) {
@@ -258,15 +258,15 @@ export const WorkgroupCreate: React.FC = () => {
 
             <Grid size={{ xs: 12 }}>
               <FormControl fullWidth required>
-                <InputLabel>Assessment</InputLabel>
+                <InputLabel>Work Order</InputLabel>
                 <Select
-                  value={formData.assessmentId}
-                  label="Assessment"
-                  onChange={(e) => setFormData({ ...formData, assessmentId: e.target.value })}
+                  value={formData.workOrderId}
+                  label="Work Order"
+                  onChange={(e) => setFormData({ ...formData, workOrderId: e.target.value })}
                 >
-                  {filteredAssessments.map((assessment) => (
-                    <MenuItem key={assessment.id} value={assessment.id}>
-                      {assessment.survivorName} — {assessment.address}{assessment.severity ? ` (${assessment.severity})` : ''}
+                  {filteredWorkOrders.map((workOrder) => (
+                    <MenuItem key={workOrder.id} value={workOrder.id}>
+                      {workOrder.survivorName} — {workOrder.address}{workOrder.severity ? ` (${workOrder.severity})` : ''}
                     </MenuItem>
                   ))}
                 </Select>

@@ -9,7 +9,7 @@ export const createEscalation = onCall({ cors: true }, async (request: any) => {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { workgroupId, centerId, eventId, type, reason, assessmentId } = request.data;
+  const { workgroupId, centerId, eventId, type, reason, workOrderId } = request.data;
 
   if (!workgroupId || !centerId || !type || !reason) {
     throw new HttpsError(
@@ -39,7 +39,7 @@ export const createEscalation = onCall({ cors: true }, async (request: any) => {
     updatedAt: Date.now(),
   };
 
-  if (assessmentId) escalation.assessmentId = assessmentId;
+  if (workOrderId) escalation.workOrderId = workOrderId;
   if (eventId) escalation.eventId = eventId;
 
   await escalationRef.set(escalation);

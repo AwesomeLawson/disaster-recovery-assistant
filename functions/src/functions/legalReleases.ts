@@ -15,7 +15,7 @@ export const createLegalRelease = onCall({ cors: true }, async (request: any) =>
     console.log('Auth UID:', request.auth.uid);
     console.log('Request data:', JSON.stringify(request.data));
 
-    const { userId, releaseType, documentUrl, signatureImageUrl, signedDigitally, assessmentId } = request.data;
+    const { userId, releaseType, documentUrl, signatureImageUrl, signedDigitally, workOrderId } = request.data;
 
     if (!userId || !releaseType) {
       throw new HttpsError('invalid-argument', 'Missing required fields: userId, releaseType');
@@ -46,7 +46,7 @@ export const createLegalRelease = onCall({ cors: true }, async (request: any) =>
     // Only add optional fields if they have values (Firestore doesn't accept undefined)
     if (documentUrl) release.documentUrl = documentUrl;
     if (signatureImageUrl) release.signatureImageUrl = signatureImageUrl;
-    if (assessmentId) release.assessmentId = assessmentId;
+    if (workOrderId) release.workOrderId = workOrderId;
 
     console.log('Setting release document:', releaseRef.id);
     await releaseRef.set(release);

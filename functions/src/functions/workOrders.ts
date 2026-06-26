@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
-import { Assessment, User } from '../types';
+import { WorkOrder, User } from '../types';
 
 const db = admin.firestore();
 
@@ -13,7 +13,7 @@ const requireRole = async (uid: string, roles: string[]): Promise<User> => {
   return user;
 };
 
-export const createAssessment = onCall({ cors: true }, async (request: any) => {
+export const createWorkOrder = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -23,7 +23,7 @@ export const createAssessment = onCall({ cors: true }, async (request: any) => {
   const {
     survivorName, survivorPhone, altContact, altContactPhone,
     address, latitude, longitude, tempAddress,
-    descriptionOfNeed, source, caseNumber,
+    descriptionOfNeed, source, workOrderNumber,
     centerId, eventId,
   } = request.data;
 
@@ -34,10 +34,10 @@ export const createAssessment = onCall({ cors: true }, async (request: any) => {
     );
   }
 
-  const assessmentRef = db.collection('assessments').doc();
+  const workOrderRef = db.collection('workOrders').doc();
   const now = Date.now();
-  const assessment: Assessment = {
-    id: assessmentRef.id,
+  const workOrder: WorkOrder = {
+    id: workOrderRef.id,
     status: 'intake',
     survivorName,
     survivorPhone,
@@ -52,39 +52,39 @@ export const createAssessment = onCall({ cors: true }, async (request: any) => {
     updatedAt: now,
   };
 
-  if (altContact) assessment.altContact = altContact;
-  if (altContactPhone) assessment.altContactPhone = altContactPhone;
-  if (latitude !== undefined) assessment.latitude = latitude;
-  if (longitude !== undefined) assessment.longitude = longitude;
-  if (tempAddress) assessment.tempAddress = tempAddress;
-  if (source) assessment.source = source;
-  if (caseNumber) assessment.caseNumber = caseNumber;
-  if (eventId) assessment.eventId = eventId;
+  if (altContact) workOrder.altContact = altContact;
+  if (altContactPhone) workOrder.altContactPhone = altContactPhone;
+  if (latitude !== undefined) workOrder.latitude = latitude;
+  if (longitude !== undefined) workOrder.longitude = longitude;
+  if (tempAddress) workOrder.tempAddress = tempAddress;
+  if (source) workOrder.source = source;
+  if (workOrderNumber) workOrder.workOrderNumber = workOrderNumber;
+  if (eventId) workOrder.eventId = eventId;
 
-  await assessmentRef.set(assessment);
+  await workOrderRef.set(workOrder);
 
-  return { success: true, assessmentId: assessmentRef.id, assessment };
+  return { success: true, workOrderId: workOrderRef.id, workOrder };
 });
 
-export const updateAssessment = onCall({ cors: true }, async (request: any) => {
+export const updateWorkOrder = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { assessmentId, updates } = request.data;
+  const { workOrderId, updates } = request.data;
 
-  if (!assessmentId || !updates) {
-    throw new HttpsError('invalid-argument', 'Missing required fields: assessmentId, updates');
+  if (!workOrderId || !updates) {
+    throw new HttpsError('invalid-argument', 'Missing required fields: workOrderId, updates');
   }
 
-  const assessmentRef = db.collection('assessments').doc(assessmentId);
-  const assessmentDoc = await assessmentRef.get();
+  const workOrderRef = db.collection('workOrders').doc(workOrderId);
+  const workOrderDoc = await workOrderRef.get();
 
-  if (!assessmentDoc.exists) {
-    throw new HttpsError('not-found', 'Assessment not found');
+  if (!workOrderDoc.exists) {
+    throw new HttpsError('not-found', 'Work order not found');
   }
 
-  const assessment = assessmentDoc.data() as Assessment;
+  const workOrder = workOrderDoc.data() as WorkOrder;
 
   const userDoc = await db.collection('users').doc(request.auth.uid).get();
   const user = userDoc.data() as User;
@@ -92,7 +92,7 @@ export const updateAssessment = onCall({ cors: true }, async (request: any) => {
   const isAdmin = user?.roles.includes('administrator');
   const isFieldCoordinator = user?.roles.includes('fieldCoordinator');
   const isAssessor = user?.roles.includes('assessor');
-  const isOwner = assessment.assessorId === request.auth.uid;
+  const isOwner = workOrder.assessorId === request.auth.uid;
 
   if (!isAdmin && !isFieldCoordinator && !(isAssessor && isOwner)) {
     throw new HttpsError('permission-denied', 'Permission denied');
@@ -102,7 +102,7 @@ export const updateAssessment = onCall({ cors: true }, async (request: any) => {
   delete updates.createdAt;
   delete updates.assessorId;
 
-  await assessmentRef.update({
+  await workOrderRef.update({
     ...updates,
     updatedAt: Date.now(),
   });
@@ -117,28 +117,28 @@ export const reassessment = onCall({ cors: true }, async (request: any) => {
 
   await requireRole(request.auth.uid, ['administrator', 'fieldCoordinator', 'assessor']);
 
-  const { assessmentId, updates, flagForReview } = request.data;
+  const { workOrderId, updates, flagForReview } = request.data;
 
-  if (!assessmentId || !updates) {
-    throw new HttpsError('invalid-argument', 'Missing required fields: assessmentId, updates');
+  if (!workOrderId || !updates) {
+    throw new HttpsError('invalid-argument', 'Missing required fields: workOrderId, updates');
   }
 
-  const assessmentRef = db.collection('assessments').doc(assessmentId);
-  const assessmentDoc = await assessmentRef.get();
+  const workOrderRef = db.collection('workOrders').doc(workOrderId);
+  const workOrderDoc = await workOrderRef.get();
 
-  if (!assessmentDoc.exists) {
-    throw new HttpsError('not-found', 'Assessment not found');
+  if (!workOrderDoc.exists) {
+    throw new HttpsError('not-found', 'Work order not found');
   }
 
-  const assessment = assessmentDoc.data() as Assessment;
+  const workOrder = workOrderDoc.data() as WorkOrder;
 
   delete updates.id;
   delete updates.createdAt;
   delete updates.assessorId;
 
-  await assessmentRef.update({
+  await workOrderRef.update({
     ...updates,
-    reassessmentCount: assessment.reassessmentCount + 1,
+    reassessmentCount: workOrder.reassessmentCount + 1,
     flaggedForReview: flagForReview || false,
     updatedAt: Date.now(),
   });
@@ -153,15 +153,15 @@ export const completeFieldAssessment = onCall({ cors: true }, async (request: an
 
   await requireRole(request.auth.uid, ['administrator', 'fieldCoordinator', 'assessor']);
 
-  const { assessmentId, ...fields } = request.data;
+  const { workOrderId, ...fields } = request.data;
 
-  if (!assessmentId) {
-    throw new HttpsError('invalid-argument', 'Missing required field: assessmentId');
+  if (!workOrderId) {
+    throw new HttpsError('invalid-argument', 'Missing required field: workOrderId');
   }
 
-  const assessmentRef = db.collection('assessments').doc(assessmentId);
-  if (!(await assessmentRef.get()).exists) {
-    throw new HttpsError('not-found', 'Assessment not found');
+  const workOrderRef = db.collection('workOrders').doc(workOrderId);
+  if (!(await workOrderRef.get()).exists) {
+    throw new HttpsError('not-found', 'Work order not found');
   }
 
   const allowedFields = [
@@ -177,32 +177,32 @@ export const completeFieldAssessment = onCall({ cors: true }, async (request: an
     if (fields[key] !== undefined) updates[key] = fields[key];
   }
 
-  await assessmentRef.update(updates);
+  await workOrderRef.update(updates);
 
   return { success: true };
 });
 
-export const getAssessment = onCall({ cors: true }, async (request: any) => {
+export const getWorkOrder = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { assessmentId } = request.data;
+  const { workOrderId } = request.data;
 
-  if (!assessmentId) {
-    throw new HttpsError('invalid-argument', 'Missing required field: assessmentId');
+  if (!workOrderId) {
+    throw new HttpsError('invalid-argument', 'Missing required field: workOrderId');
   }
 
-  const assessmentDoc = await db.collection('assessments').doc(assessmentId).get();
+  const workOrderDoc = await db.collection('workOrders').doc(workOrderId).get();
 
-  if (!assessmentDoc.exists) {
-    throw new HttpsError('not-found', 'Assessment not found');
+  if (!workOrderDoc.exists) {
+    throw new HttpsError('not-found', 'Work order not found');
   }
 
-  return { assessment: assessmentDoc.data() };
+  return { workOrder: workOrderDoc.data() };
 });
 
-export const deleteAssessment = onCall({ cors: true }, async (request: any) => {
+export const deleteWorkOrder = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -210,17 +210,17 @@ export const deleteAssessment = onCall({ cors: true }, async (request: any) => {
   const userDoc = await db.collection('users').doc(request.auth.uid).get();
   const user = userDoc.data() as User;
   if (!user?.roles.includes('administrator')) {
-    throw new HttpsError('permission-denied', 'Only administrators can delete assessments');
+    throw new HttpsError('permission-denied', 'Only administrators can delete work orders');
   }
 
-  const { assessmentId } = request.data;
-  if (!assessmentId) {
-    throw new HttpsError('invalid-argument', 'Missing required field: assessmentId');
+  const { workOrderId } = request.data;
+  if (!workOrderId) {
+    throw new HttpsError('invalid-argument', 'Missing required field: workOrderId');
   }
 
-  const ref = db.collection('assessments').doc(assessmentId);
+  const ref = db.collection('workOrders').doc(workOrderId);
   if (!(await ref.get()).exists) {
-    throw new HttpsError('not-found', 'Assessment not found');
+    throw new HttpsError('not-found', 'Work order not found');
   }
 
   await ref.delete();
@@ -234,9 +234,9 @@ export const assignAssessor = onCall({ cors: true }, async (request: any) => {
 
   await requireRole(request.auth.uid, ['administrator', 'fieldCoordinator']);
 
-  const { assessmentId, assessorId } = request.data;
-  if (!assessmentId || !assessorId) {
-    throw new HttpsError('invalid-argument', 'Missing required fields: assessmentId, assessorId');
+  const { workOrderId, assessorId } = request.data;
+  if (!workOrderId || !assessorId) {
+    throw new HttpsError('invalid-argument', 'Missing required fields: workOrderId, assessorId');
   }
 
   const assessorDoc = await db.collection('users').doc(assessorId).get();
@@ -245,12 +245,12 @@ export const assignAssessor = onCall({ cors: true }, async (request: any) => {
     throw new HttpsError('invalid-argument', 'Selected user does not have the assessor role');
   }
 
-  const assessmentRef = db.collection('assessments').doc(assessmentId);
-  if (!(await assessmentRef.get()).exists) {
-    throw new HttpsError('not-found', 'Assessment not found');
+  const workOrderRef = db.collection('workOrders').doc(workOrderId);
+  if (!(await workOrderRef.get()).exists) {
+    throw new HttpsError('not-found', 'Work order not found');
   }
 
-  await assessmentRef.update({
+  await workOrderRef.update({
     assessorId,
     status: 'awaitingAssessment',
     updatedAt: Date.now(),
@@ -259,14 +259,14 @@ export const assignAssessor = onCall({ cors: true }, async (request: any) => {
   return { success: true };
 });
 
-export const listAssessments = onCall({ cors: true }, async (request: any) => {
+export const listWorkOrders = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   const { centerId, eventId, flaggedForReview, limit = 100 } = request.data || {};
 
-  let query: admin.firestore.Query = db.collection('assessments');
+  let query: admin.firestore.Query = db.collection('workOrders');
 
   if (centerId) {
     query = query.where('centerId', '==', centerId);
@@ -281,7 +281,7 @@ export const listAssessments = onCall({ cors: true }, async (request: any) => {
   }
 
   const snapshot = await query.orderBy('createdAt', 'desc').limit(limit).get();
-  const assessments = snapshot.docs.map((doc) => doc.data());
+  const workOrders = snapshot.docs.map((doc) => doc.data());
 
-  return { assessments };
+  return { workOrders };
 });

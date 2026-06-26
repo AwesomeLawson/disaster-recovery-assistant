@@ -11,7 +11,7 @@ import {
 } from '@vis.gl/react-google-maps';
 import { Box, Typography, Alert } from '@mui/material';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
-import type { Assessment, Center } from '../types';
+import type { WorkOrder, Center } from '../types';
 
 const SEVERITY_COLORS: Record<string, string> = {
   critical: '#d32f2f',
@@ -23,19 +23,19 @@ const SEVERITY_COLORS: Record<string, string> = {
 const CENTER_COLOR = '#1565c0';
 
 interface Props {
-  assessments: Assessment[];
+  workOrders: WorkOrder[];
   centers?: Center[];
 }
 
 interface MapPinsProps extends Props {
-  selected: Assessment | null;
-  onSelect: (a: Assessment | null) => void;
+  selected: WorkOrder | null;
+  onSelect: (a: WorkOrder | null) => void;
   selectedCenter: Center | null;
   onSelectCenter: (c: Center | null) => void;
 }
 
 const MapPins: React.FC<MapPinsProps> = ({
-  assessments,
+  workOrders,
   centers = [],
   selected,
   onSelect,
@@ -46,13 +46,13 @@ const MapPins: React.FC<MapPinsProps> = ({
   const coreLib = useMapsLibrary('core');
   const navigate = useNavigate();
 
-  const mappedAssessments = assessments.filter((a) => a.latitude != null && a.longitude != null);
+  const mappedWorkOrders = workOrders.filter((a) => a.latitude != null && a.longitude != null);
   const mappedCenters = centers.filter((c) => c.latitude != null && c.longitude != null);
 
   useEffect(() => {
     if (!map || !coreLib) return;
     const allPoints = [
-      ...mappedAssessments.map((a) => ({ lat: a.latitude!, lng: a.longitude! })),
+      ...mappedWorkOrders.map((a) => ({ lat: a.latitude!, lng: a.longitude! })),
       ...mappedCenters.map((c) => ({ lat: c.latitude!, lng: c.longitude! })),
     ];
     if (allPoints.length === 0) return;
@@ -68,7 +68,7 @@ const MapPins: React.FC<MapPinsProps> = ({
 
   return (
     <>
-      {mappedAssessments.map((a) => (
+      {mappedWorkOrders.map((a) => (
         <AdvancedMarker
           key={a.id}
           position={{ lat: a.latitude!, lng: a.longitude! }}
@@ -177,7 +177,7 @@ const MapPins: React.FC<MapPinsProps> = ({
             )}
 
             <button
-              onClick={() => navigate(`/assessments/${selected.id}`)}
+              onClick={() => navigate(`/work-orders/${selected.id}`)}
               style={{
                 width: '100%',
                 padding: '7px 12px',
@@ -246,14 +246,14 @@ const MapPins: React.FC<MapPinsProps> = ({
   );
 };
 
-export const AssessmentMap: React.FC<Props> = ({ assessments, centers = [] }) => {
-  const [selected, setSelected] = useState<Assessment | null>(null);
+export const WorkOrderMap: React.FC<Props> = ({ workOrders, centers = [] }) => {
+  const [selected, setSelected] = useState<WorkOrder | null>(null);
   const [selectedCenter, setSelectedCenter] = useState<Center | null>(null);
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
 
-  const mappedAssessments = assessments.filter((a) => a.latitude != null && a.longitude != null);
+  const mappedWorkOrders = workOrders.filter((a) => a.latitude != null && a.longitude != null);
   const mappedCenters = centers.filter((c) => c.latitude != null && c.longitude != null);
-  const hasAnything = mappedAssessments.length > 0 || mappedCenters.length > 0;
+  const hasAnything = mappedWorkOrders.length > 0 || mappedCenters.length > 0;
 
   if (!apiKey) {
     return (
@@ -264,8 +264,8 @@ export const AssessmentMap: React.FC<Props> = ({ assessments, centers = [] }) =>
   }
 
   const firstPoint =
-    mappedAssessments[0]
-      ? { lat: mappedAssessments[0].latitude!, lng: mappedAssessments[0].longitude! }
+    mappedWorkOrders[0]
+      ? { lat: mappedWorkOrders[0].latitude!, lng: mappedWorkOrders[0].longitude! }
       : mappedCenters[0]
       ? { lat: mappedCenters[0].latitude!, lng: mappedCenters[0].longitude! }
       : { lat: 36.1627, lng: -86.7816 };
@@ -308,7 +308,7 @@ export const AssessmentMap: React.FC<Props> = ({ assessments, centers = [] }) =>
           <Typography variant="caption">Center</Typography>
         </Box>
         <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
-          {mappedAssessments.length}/{assessments.length} assessments
+          {mappedWorkOrders.length}/{workOrders.length} work orders
           {centers.length > 0 ? `, ${mappedCenters.length}/${centers.length} centers` : ''} plotted
         </Typography>
       </Box>
@@ -327,7 +327,7 @@ export const AssessmentMap: React.FC<Props> = ({ assessments, centers = [] }) =>
           }}
         >
           <Typography color="text.secondary">
-            No assessments or centers with GPS coordinates for this event
+            No work orders or centers with GPS coordinates for this event
           </Typography>
         </Box>
       ) : (
@@ -341,7 +341,7 @@ export const AssessmentMap: React.FC<Props> = ({ assessments, centers = [] }) =>
             disableDefaultUI={false}
           >
             <MapPins
-              assessments={assessments}
+              workOrders={workOrders}
               centers={centers}
               selected={selected}
               onSelect={setSelected}

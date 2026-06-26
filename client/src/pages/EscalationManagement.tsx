@@ -326,13 +326,13 @@ export const EscalationManagement: React.FC = () => {
                         View Workgroup
                       </Button>
                     )}
-                    {escalation.assessmentId && (
+                    {escalation.workOrderId && (
                       <Button
                         size="small"
                         variant="outlined"
-                        onClick={() => navigate(`/assessments/${escalation.assessmentId}`)}
+                        onClick={() => navigate(`/work-orders/${escalation.workOrderId}`)}
                       >
-                        View Assessment
+                        View Work Order
                       </Button>
                     )}
                   </Box>

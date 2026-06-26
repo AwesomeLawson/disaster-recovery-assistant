@@ -97,7 +97,7 @@ export const Layout: React.FC = () => {
       user.roles.includes('administrator') ||
       user.roles.includes('fieldCoordinator')
     ) {
-      items.push({ text: 'Cases', icon: <AssessmentIcon />, path: '/assessments' });
+      items.push({ text: 'Work Orders', icon: <AssessmentIcon />, path: '/work-orders' });
     }
 
     if (

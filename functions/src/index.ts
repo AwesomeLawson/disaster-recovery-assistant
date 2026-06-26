@@ -8,7 +8,7 @@ if (!admin.apps.length) {
 import * as userFunctions from './functions/users';
 import * as eventFunctions from './functions/events';
 import * as centerFunctions from './functions/centers';
-import * as assessmentFunctions from './functions/assessments';
+import * as workOrderFunctions from './functions/workOrders';
 import * as workgroupFunctions from './functions/workgroups';
 import * as escalationFunctions from './functions/escalations';
 import * as messageFunctions from './functions/messages';
@@ -46,15 +46,15 @@ export const updateCenter = centerFunctions.updateCenter;
 export const getCenter = centerFunctions.getCenter;
 export const listCenters = centerFunctions.listCenters;
 
-// Assessment / Case Management
-export const createAssessment = assessmentFunctions.createAssessment;
-export const updateAssessment = assessmentFunctions.updateAssessment;
-export const completeFieldAssessment = assessmentFunctions.completeFieldAssessment;
-export const reassessment = assessmentFunctions.reassessment;
-export const assignAssessor = assessmentFunctions.assignAssessor;
-export const deleteAssessment = assessmentFunctions.deleteAssessment;
-export const getAssessment = assessmentFunctions.getAssessment;
-export const listAssessments = assessmentFunctions.listAssessments;
+// Work Order Management
+export const createWorkOrder = workOrderFunctions.createWorkOrder;
+export const updateWorkOrder = workOrderFunctions.updateWorkOrder;
+export const completeFieldAssessment = workOrderFunctions.completeFieldAssessment;
+export const reassessment = workOrderFunctions.reassessment;
+export const assignAssessor = workOrderFunctions.assignAssessor;
+export const deleteWorkOrder = workOrderFunctions.deleteWorkOrder;
+export const getWorkOrder = workOrderFunctions.getWorkOrder;
+export const listWorkOrders = workOrderFunctions.listWorkOrders;
 
 // Workgroup Management
 export const createWorkgroup = workgroupFunctions.createWorkgroup;

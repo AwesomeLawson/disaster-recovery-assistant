@@ -13,17 +13,17 @@ import {
 } from '@mui/material';
 import { DigitalSignature } from '../components/DigitalSignature';
 import { homeownerReleaseService } from '../services/homeownerRelease.service';
-import { assessmentService } from '../services/assessment.service';
+import { workOrderService } from '../services/workOrder.service';
 import { useAuth } from '../context/AuthContext';
-import type { Assessment } from '../types';
+import type { WorkOrder } from '../types';
 
 export const SignHomeownerRelease: React.FC = () => {
-  const { id: assessmentId } = useParams<{ id: string }>();
+  const { id: workOrderId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [assessment, setAssessment] = useState<Assessment | null>(null);
-  const [loadingAssessment, setLoadingAssessment] = useState(true);
+  const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
+  const [loadingWorkOrder, setLoadingWorkOrder] = useState(true);
 
   const [homeownerName, setHomeownerName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -54,16 +54,16 @@ export const SignHomeownerRelease: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!assessmentId) return;
-    assessmentService.getAssessment(assessmentId).then((a) => {
-      setAssessment(a);
+    if (!workOrderId) return;
+    workOrderService.getWorkOrder(workOrderId).then((a) => {
+      setWorkOrder(a);
       setHomeownerName(a.survivorName || '');
       setPhoneNumber(a.survivorPhone || '');
       if (a.address) setCityStateZip(extractCityStateZip(a.address));
     }).catch(() => {
-      setError('Failed to load assessment');
-    }).finally(() => setLoadingAssessment(false));
-  }, [assessmentId]);
+      setError('Failed to load work order');
+    }).finally(() => setLoadingWorkOrder(false));
+  }, [workOrderId]);
 
   useEffect(() => {
     if (user) {
@@ -91,7 +91,7 @@ export const SignHomeownerRelease: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!canSubmit || !assessmentId) return;
+    if (!canSubmit || !workOrderId) return;
     setError('');
     setSubmitting(true);
     try {
@@ -101,21 +101,21 @@ export const SignHomeownerRelease: React.FC = () => {
       ]);
 
       const [homeownerUrl, frrUrl] = await Promise.all([
-        homeownerReleaseService.uploadSignature(homeownerFile, assessmentId, 'homeowner'),
-        homeownerReleaseService.uploadSignature(frrFile, assessmentId, 'frrWitness'),
+        homeownerReleaseService.uploadSignature(homeownerFile, workOrderId, 'homeowner'),
+        homeownerReleaseService.uploadSignature(frrFile, workOrderId, 'frrWitness'),
       ]);
 
       let coOwnerUrl: string | undefined;
       if (showCoOwner && coOwnerSig) {
         const coOwnerFile = await blobFromDataUrl(coOwnerSig, 'coowner.png');
-        coOwnerUrl = await homeownerReleaseService.uploadSignature(coOwnerFile, assessmentId, 'coOwner');
+        coOwnerUrl = await homeownerReleaseService.uploadSignature(coOwnerFile, workOrderId, 'coOwner');
       }
 
       await homeownerReleaseService.createHomeownerRelease({
-        assessmentId,
+        workOrderId,
         homeownerName: homeownerName.trim(),
         phoneNumber: phoneNumber.trim(),
-        propertyAddress: assessment?.address || '',
+        propertyAddress: workOrder?.address || '',
         propertyCityStateZip: cityStateZip.trim(),
         ...(showCoOwner ? { coOwnerName: coOwnerName.trim(), coOwnerPhone: coOwnerPhone.trim() } : {}),
         frrRepName: frrRepName.trim(),
@@ -125,7 +125,7 @@ export const SignHomeownerRelease: React.FC = () => {
         frrWitnessSignatureUrl: frrUrl,
       });
 
-      navigate(`/assessments/${assessmentId}`);
+      navigate(`/work-orders/${workOrderId}`);
     } catch (err: any) {
       setError(err.message || 'Failed to submit release');
     } finally {
@@ -133,7 +133,7 @@ export const SignHomeownerRelease: React.FC = () => {
     }
   };
 
-  if (loadingAssessment) {
+  if (loadingWorkOrder) {
     return (
       <Container maxWidth="md" sx={{ mt: 6, textAlign: 'center' }}>
         <CircularProgress />
@@ -200,7 +200,7 @@ export const SignHomeownerRelease: React.FC = () => {
           <TextField
             fullWidth
             label="Address of Property"
-            value={assessment?.address || ''}
+            value={workOrder?.address || ''}
             disabled
             sx={{ mb: 2 }}
           />
@@ -295,7 +295,7 @@ export const SignHomeownerRelease: React.FC = () => {
           <DigitalSignature onSignatureChange={setFrrWitnessSig} />
 
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 4 }}>
-            <Button variant="outlined" onClick={() => navigate(`/assessments/${assessmentId}`)} disabled={submitting}>
+            <Button variant="outlined" onClick={() => navigate(`/work-orders/${workOrderId}`)} disabled={submitting}>
               Cancel
             </Button>
             <Button variant="contained" onClick={handleSubmit} disabled={submitting || !canSubmit}>

@@ -30,15 +30,15 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PrintIcon from '@mui/icons-material/Print';
 import GavelIcon from '@mui/icons-material/Gavel';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import { assessmentService } from '../services/assessment.service';
+import { workOrderService } from '../services/workOrder.service';
 import { eventService } from '../services/event.service';
 import { centerService } from '../services/center.service';
 import { userService } from '../services/user.service';
 import { homeownerReleaseService } from '../services/homeownerRelease.service';
 import { useAuth } from '../context/AuthContext';
-import type { Assessment, CaseStatus, Event, Center, User, HomeownerRelease } from '../types';
+import type { WorkOrder, WorkOrderStatus, Event, Center, User, HomeownerRelease } from '../types';
 
-const STATUS_LABELS: Record<CaseStatus, string> = {
+const STATUS_LABELS: Record<WorkOrderStatus, string> = {
   intake: 'Intake',
   awaitingAssessment: 'Awaiting Assessment',
   assessed: 'Assessed',
@@ -47,7 +47,7 @@ const STATUS_LABELS: Record<CaseStatus, string> = {
   completed: 'Completed',
 };
 
-const STATUS_COLORS: Record<CaseStatus, 'default' | 'info' | 'warning' | 'success' | 'primary' | 'secondary' | 'error'> = {
+const STATUS_COLORS: Record<WorkOrderStatus, 'default' | 'info' | 'warning' | 'success' | 'primary' | 'secondary' | 'error'> = {
   intake: 'default',
   awaitingAssessment: 'info',
   assessed: 'warning',
@@ -72,11 +72,11 @@ const homeTypeLabel = (v?: string) =>
 const yn = (v?: boolean | null) => v == null ? '—' : v ? 'Yes' : 'No';
 const femaLabel = (v?: string) => v === 'yes' ? 'Yes' : v === 'no' ? 'No' : v === 'na' ? 'N/A' : '—';
 
-export const AssessmentDetail: React.FC = () => {
+export const WorkOrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [assessment, setAssessment] = useState<Assessment | null>(null);
+  const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
   const [event, setEvent] = useState<Event | null>(null);
   const [center, setCenter] = useState<Center | null>(null);
   const [assessor, setAssessor] = useState<User | null>(null);
@@ -94,14 +94,14 @@ export const AssessmentDetail: React.FC = () => {
   const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
-    if (id) loadAssessment();
+    if (id) loadWorkOrder();
   }, [id]);
 
-  const loadAssessment = async () => {
+  const loadWorkOrder = async () => {
     try {
       setLoading(true);
-      const data = await assessmentService.getAssessment(id!);
-      setAssessment(data);
+      const data = await workOrderService.getWorkOrder(id!);
+      setWorkOrder(data);
 
       const [eventData, centerData] = await Promise.all([
         data.eventId ? eventService.getEvent(data.eventId) : Promise.resolve(null),
@@ -118,32 +118,32 @@ export const AssessmentDetail: React.FC = () => {
           .then(setHomeownerRelease).catch(() => {});
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to load case');
+      setError(err.message || 'Failed to load work order');
     } finally {
       setLoading(false);
     }
   };
 
   const handleToggleFlag = async () => {
-    if (!assessment) return;
+    if (!workOrder) return;
     try {
-      await assessmentService.updateAssessment(assessment.id, {
-        flaggedForReview: !assessment.flaggedForReview,
+      await workOrderService.updateWorkOrder(workOrder.id, {
+        flaggedForReview: !workOrder.flaggedForReview,
       });
-      await loadAssessment();
+      await loadWorkOrder();
     } catch (err: any) {
       setError(err.message || 'Failed to update flag');
     }
   };
 
   const handleDelete = async () => {
-    if (!assessment) return;
+    if (!workOrder) return;
     try {
       setDeleting(true);
-      await assessmentService.deleteAssessment(assessment.id);
-      navigate('/assessments');
+      await workOrderService.deleteWorkOrder(workOrder.id);
+      navigate('/work-orders');
     } catch (err: any) {
-      setError(err.message || 'Failed to delete case');
+      setError(err.message || 'Failed to delete work order');
       setDeleteDialogOpen(false);
     } finally {
       setDeleting(false);
@@ -151,12 +151,12 @@ export const AssessmentDetail: React.FC = () => {
   };
 
   const handleViewRelease = async () => {
-    if (!assessment?.homeownerReleaseId) return;
+    if (!workOrder?.homeownerReleaseId) return;
     if (homeownerRelease) { setReleaseDialogOpen(true); return; }
     setReleaseLoading(true);
     setReleaseDialogOpen(true);
     try {
-      const release = await homeownerReleaseService.getHomeownerRelease(assessment.homeownerReleaseId);
+      const release = await homeownerReleaseService.getHomeownerRelease(workOrder.homeownerReleaseId);
       setHomeownerRelease(release);
     } catch {
       // error shown inline
@@ -166,7 +166,7 @@ export const AssessmentDetail: React.FC = () => {
   };
 
   const handleOpenAssignDialog = async () => {
-    setSelectedAssessorId(assessment?.assessorId ?? '');
+    setSelectedAssessorId(workOrder?.assessorId ?? '');
     setAssignDialogOpen(true);
     setAssessorsLoading(true);
     try {
@@ -180,12 +180,12 @@ export const AssessmentDetail: React.FC = () => {
   };
 
   const handleAssignAssessor = async () => {
-    if (!assessment || !selectedAssessorId) return;
+    if (!workOrder || !selectedAssessorId) return;
     setAssigning(true);
     try {
-      await assessmentService.assignAssessor(assessment.id, selectedAssessorId);
+      await workOrderService.assignAssessor(workOrder.id, selectedAssessorId);
       setAssignDialogOpen(false);
-      await loadAssessment();
+      await loadWorkOrder();
     } catch (err: any) {
       setError(err.message || 'Failed to assign assessor');
       setAssignDialogOpen(false);
@@ -238,15 +238,15 @@ ${sigImg(release.frrWitnessSignatureUrl, 'Signature of FRR Witness')}
   };
 
   if (loading) {
-    return <Container maxWidth="lg"><Typography>Loading case...</Typography></Container>;
+    return <Container maxWidth="lg"><Typography>Loading work order...</Typography></Container>;
   }
 
-  if (!assessment) {
+  if (!workOrder) {
     return (
       <Container maxWidth="lg">
-        <Alert severity="error">Case not found</Alert>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/assessments')} sx={{ mt: 2 }}>
-          Back to Cases
+        <Alert severity="error">Work order not found</Alert>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/work-orders')} sx={{ mt: 2 }}>
+          Back to Work Orders
         </Button>
       </Container>
     );
@@ -257,42 +257,42 @@ ${sigImg(release.frrWitnessSignatureUrl, 'Signature of FRR Witness')}
   const isAssessor = user?.roles.includes('assessor');
   const canManage = isAdmin || isFieldCoordinator || isAssessor;
   const canFieldAssess = isAdmin || isFieldCoordinator || isAssessor;
-  const status = assessment.status ?? 'intake';
+  const status = workOrder.status ?? 'intake';
   const isAssessed = status !== 'intake' && status !== 'awaitingAssessment';
 
   return (
     <Container maxWidth="lg">
       <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 3, gap: 2 }}>
-        <IconButton onClick={() => navigate('/assessments')} sx={{ mt: 0.5 }}>
+        <IconButton onClick={() => navigate('/work-orders')} sx={{ mt: 0.5 }}>
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flexGrow: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-            <Typography variant="h4">{assessment.survivorName}</Typography>
+            <Typography variant="h4">{workOrder.survivorName}</Typography>
             <Chip
               label={STATUS_LABELS[status]}
               color={STATUS_COLORS[status]}
               size="small"
             />
-            {assessment.flaggedForReview && (
+            {workOrder.flaggedForReview && (
               <Chip label="Flagged for Review" color="warning" size="small" />
             )}
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {assessment.address}
-            {assessment.caseNumber && ` · Case #${assessment.caseNumber}`}
+            {workOrder.address}
+            {workOrder.workOrderNumber && ` · Work Order #${workOrder.workOrderNumber}`}
           </Typography>
         </Box>
         {canManage && (
           <Box sx={{ display: 'flex', gap: 1, flexShrink: 0 }}>
             <Button
-              variant={assessment.flaggedForReview ? 'contained' : 'outlined'}
+              variant={workOrder.flaggedForReview ? 'contained' : 'outlined'}
               color="warning"
               startIcon={<FlagIcon />}
               size="small"
               onClick={handleToggleFlag}
             >
-              {assessment.flaggedForReview ? 'Flagged' : 'Flag'}
+              {workOrder.flaggedForReview ? 'Flagged' : 'Flag'}
             </Button>
             {isAdmin && (
               <Button
@@ -325,7 +325,7 @@ ${sigImg(release.frrWitnessSignatureUrl, 'Signature of FRR Witness')}
                   size="small"
                   startIcon={<EditIcon />}
                   variant="outlined"
-                  onClick={() => navigate(`/assessments/${assessment.id}/edit-intake`)}
+                  onClick={() => navigate(`/work-orders/${workOrder.id}/edit-intake`)}
                 >
                   Edit
                 </Button>
@@ -334,36 +334,36 @@ ${sigImg(release.frrWitnessSignatureUrl, 'Signature of FRR Witness')}
             <Divider sx={{ mb: 2 }} />
             <Grid container spacing={1}>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <InfoField label="Survivor Name" value={assessment.survivorName} />
-                <InfoField label="Phone" value={assessment.survivorPhone} />
-                {assessment.altContact && <InfoField label="Alt Contact" value={assessment.altContact} />}
-                {assessment.altContactPhone && <InfoField label="Alt Phone" value={assessment.altContactPhone} />}
+                <InfoField label="Survivor Name" value={workOrder.survivorName} />
+                <InfoField label="Phone" value={workOrder.survivorPhone} />
+                {workOrder.altContact && <InfoField label="Alt Contact" value={workOrder.altContact} />}
+                {workOrder.altContactPhone && <InfoField label="Alt Phone" value={workOrder.altContactPhone} />}
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <InfoField label="Property Address" value={assessment.address} />
-                {assessment.tempAddress && <InfoField label="Temp Address" value={assessment.tempAddress} />}
-                {assessment.county && <InfoField label="County" value={assessment.county} />}
+                <InfoField label="Property Address" value={workOrder.address} />
+                {workOrder.tempAddress && <InfoField label="Temp Address" value={workOrder.tempAddress} />}
+                {workOrder.county && <InfoField label="County" value={workOrder.county} />}
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <Box sx={{ mb: 1.5 }}>
                   <Typography variant="caption" color="text.secondary" display="block">Description of Need</Typography>
                   <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5, p: 1.5, bgcolor: 'grey.50', borderRadius: 1 }}>
-                    {assessment.descriptionOfNeed}
+                    {workOrder.descriptionOfNeed}
                   </Typography>
                 </Box>
               </Grid>
-              {(assessment.source || assessment.intakeVolunteerName) && (
+              {(workOrder.source || workOrder.intakeVolunteerName) && (
                 <Grid size={{ xs: 12 }}>
                   <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                    <InfoField label="Source" value={assessment.source} />
-                    <InfoField label="Intake Volunteer" value={assessment.intakeVolunteerName} />
+                    <InfoField label="Source" value={workOrder.source} />
+                    <InfoField label="Intake Volunteer" value={workOrder.intakeVolunteerName} />
                   </Box>
                 </Grid>
               )}
               <Grid size={{ xs: 12 }}>
                 <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                  <InfoField label="Registered for FEMA" value={femaLabel(assessment.registeredForFEMA)} />
-                  <InfoField label="Has H/O Insurance" value={assessment.hasHOInsurance != null ? yn(assessment.hasHOInsurance) : undefined} />
+                  <InfoField label="Registered for FEMA" value={femaLabel(workOrder.registeredForFEMA)} />
+                  <InfoField label="Has H/O Insurance" value={workOrder.hasHOInsurance != null ? yn(workOrder.hasHOInsurance) : undefined} />
                 </Box>
               </Grid>
             </Grid>
@@ -378,7 +378,7 @@ ${sigImg(release.frrWitnessSignatureUrl, 'Signature of FRR Witness')}
                   size="small"
                   startIcon={<EditIcon />}
                   variant="outlined"
-                  onClick={() => navigate(`/assessments/${assessment.id}/field-assessment`)}
+                  onClick={() => navigate(`/work-orders/${workOrder.id}/field-assessment`)}
                 >
                   Update
                 </Button>
@@ -395,7 +395,7 @@ ${sigImg(release.frrWitnessSignatureUrl, 'Signature of FRR Witness')}
                 {canFieldAssess && (
                   <Button
                     variant="contained"
-                    onClick={() => navigate(`/assessments/${assessment.id}/field-assessment`)}
+                    onClick={() => navigate(`/work-orders/${workOrder.id}/field-assessment`)}
                   >
                     Complete Field Assessment
                   </Button>
@@ -403,20 +403,20 @@ ${sigImg(release.frrWitnessSignatureUrl, 'Signature of FRR Witness')}
               </Box>
             ) : (
               <Grid container spacing={1}>
-                {assessment.placeName && (
+                {workOrder.placeName && (
                   <Grid size={{ xs: 12 }}>
-                    <InfoField label="Property / Place Name" value={assessment.placeName} />
+                    <InfoField label="Property / Place Name" value={workOrder.placeName} />
                   </Grid>
                 )}
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <Box sx={{ mb: 1.5 }}>
                     <Typography variant="caption" color="text.secondary" display="block">Severity</Typography>
                     <Chip
-                      label={assessment.severity?.toUpperCase() ?? '—'}
+                      label={workOrder.severity?.toUpperCase() ?? '—'}
                       color={
-                        assessment.severity === 'critical' ? 'error' :
-                        assessment.severity === 'high' ? 'warning' :
-                        assessment.severity === 'medium' ? 'info' : 'default'
+                        workOrder.severity === 'critical' ? 'error' :
+                        workOrder.severity === 'high' ? 'warning' :
+                        workOrder.severity === 'medium' ? 'info' : 'default'
                       }
                       size="small"
                       sx={{ mt: 0.5 }}
@@ -424,13 +424,13 @@ ${sigImg(release.frrWitnessSignatureUrl, 'Signature of FRR Witness')}
                   </Box>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <InfoField label="People Affected" value={assessment.affectedPeople} />
+                  <InfoField label="People Affected" value={workOrder.affectedPeople} />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <Box sx={{ mb: 1.5 }}>
                     <Typography variant="caption" color="text.secondary" display="block">Damages</Typography>
                     <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5, p: 1.5, bgcolor: 'grey.50', borderRadius: 1 }}>
-                      {assessment.damages}
+                      {workOrder.damages}
                     </Typography>
                   </Box>
                 </Grid>
@@ -438,51 +438,51 @@ ${sigImg(release.frrWitnessSignatureUrl, 'Signature of FRR Witness')}
                   <Box sx={{ mb: 1.5 }}>
                     <Typography variant="caption" color="text.secondary" display="block">Needs</Typography>
                     <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5, p: 1.5, bgcolor: 'grey.50', borderRadius: 1 }}>
-                      {assessment.needs}
+                      {workOrder.needs}
                     </Typography>
                   </Box>
                 </Grid>
-                {assessment.accessConcerns && (
+                {workOrder.accessConcerns && (
                   <Grid size={{ xs: 12 }}>
-                    <InfoField label="Access Concerns" value={assessment.accessConcerns} />
+                    <InfoField label="Access Concerns" value={workOrder.accessConcerns} />
                   </Grid>
                 )}
                 <Grid size={{ xs: 12 }}>
                   <Divider sx={{ my: 1 }} />
                   <Typography variant="subtitle2" sx={{ mb: 1, mt: 1 }}>Occupancy &amp; Household</Typography>
                   <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                    <InfoField label="Currently Occupied" value={yn(assessment.currentlyOccupied)} />
-                    <InfoField label="# Occupants" value={assessment.numberOfOccupants} />
-                    <InfoField label="Under 18" value={assessment.householdUnder18} />
-                    <InfoField label="Ages 19–64" value={assessment.household19to64} />
-                    <InfoField label="Ages 65+" value={assessment.household65plus} />
+                    <InfoField label="Currently Occupied" value={yn(workOrder.currentlyOccupied)} />
+                    <InfoField label="# Occupants" value={workOrder.numberOfOccupants} />
+                    <InfoField label="Under 18" value={workOrder.householdUnder18} />
+                    <InfoField label="Ages 19–64" value={workOrder.household19to64} />
+                    <InfoField label="Ages 65+" value={workOrder.household65plus} />
                   </Box>
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <Divider sx={{ my: 1 }} />
                   <Typography variant="subtitle2" sx={{ mb: 1, mt: 1 }}>Property</Typography>
                   <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                    <InfoField label="Primary Residence" value={yn(assessment.isPrimaryResidence)} />
-                    <InfoField label="Habitable" value={yn(assessment.isHabitable)} />
-                    <InfoField label="Survivor Owns Property" value={yn(assessment.survivorOwnsProperty)} />
-                    <InfoField label="Home Type" value={homeTypeLabel(assessment.homeType)} />
-                    {assessment.ownerName && <InfoField label="Owner Name" value={assessment.ownerName} />}
-                    {assessment.ownerPhone && <InfoField label="Owner Phone" value={assessment.ownerPhone} />}
+                    <InfoField label="Primary Residence" value={yn(workOrder.isPrimaryResidence)} />
+                    <InfoField label="Habitable" value={yn(workOrder.isHabitable)} />
+                    <InfoField label="Survivor Owns Property" value={yn(workOrder.survivorOwnsProperty)} />
+                    <InfoField label="Home Type" value={homeTypeLabel(workOrder.homeType)} />
+                    {workOrder.ownerName && <InfoField label="Owner Name" value={workOrder.ownerName} />}
+                    {workOrder.ownerPhone && <InfoField label="Owner Phone" value={workOrder.ownerPhone} />}
                   </Box>
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <Divider sx={{ my: 1 }} />
                   <Typography variant="subtitle2" sx={{ mb: 1, mt: 1 }}>Insurance &amp; FEMA</Typography>
                   <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                    <InfoField label="Has H/O Insurance" value={yn(assessment.hasHOInsurance)} />
-                    {assessment.hasHOInsurance && <InfoField label="Insurance Contacted" value={yn(assessment.insuranceContacted)} />}
-                    <InfoField label="Registered for FEMA" value={femaLabel(assessment.registeredForFEMA)} />
+                    <InfoField label="Has H/O Insurance" value={yn(workOrder.hasHOInsurance)} />
+                    {workOrder.hasHOInsurance && <InfoField label="Insurance Contacted" value={yn(workOrder.insuranceContacted)} />}
+                    <InfoField label="Registered for FEMA" value={femaLabel(workOrder.registeredForFEMA)} />
                   </Box>
                 </Grid>
-                {assessment.reassessmentCount > 0 && (
+                {workOrder.reassessmentCount > 0 && (
                   <Grid size={{ xs: 12 }}>
                     <Typography variant="caption" color="text.secondary">
-                      Reassessment count: {assessment.reassessmentCount}
+                      Reassessment count: {workOrder.reassessmentCount}
                     </Typography>
                   </Grid>
                 )}
@@ -491,12 +491,12 @@ ${sigImg(release.frrWitnessSignatureUrl, 'Signature of FRR Witness')}
           </Paper>
 
           {/* Photos */}
-          {assessment.photoUrls?.length > 0 && (
+          {workOrder.photoUrls?.length > 0 && (
             <Paper sx={{ p: 3, mb: 3 }}>
-              <Typography variant="h6" gutterBottom>Photos ({assessment.photoUrls.length})</Typography>
+              <Typography variant="h6" gutterBottom>Photos ({workOrder.photoUrls.length})</Typography>
               <Divider sx={{ mb: 2 }} />
               <ImageList cols={3} gap={8}>
-                {assessment.photoUrls.map((url, index) => (
+                {workOrder.photoUrls.map((url, index) => (
                   <ImageListItem key={index}>
                     <img src={url} alt={`Photo ${index + 1}`} loading="lazy"
                       style={{ borderRadius: 4, cursor: 'pointer' }}
@@ -517,14 +517,14 @@ ${sigImg(release.frrWitnessSignatureUrl, 'Signature of FRR Witness')}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 1 }}>
               <Box>
                 <Typography variant="body2" fontWeight={600}>Homeowner Release</Typography>
-                {assessment.homeownerReleaseId && homeownerRelease?.signedAt && (
+                {workOrder.homeownerReleaseId && homeownerRelease?.signedAt && (
                   <Typography variant="caption" color="text.secondary">
                     Signed {new Date(homeownerRelease.signedAt).toLocaleString()}
                   </Typography>
                 )}
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {assessment.homeownerReleaseId ? (
+                {workOrder.homeownerReleaseId ? (
                   <>
                     <Chip label="Signed" color="success" size="small" />
                     <Button size="small" variant="outlined" onClick={handleViewRelease}>View</Button>
@@ -534,7 +534,7 @@ ${sigImg(release.frrWitnessSignatureUrl, 'Signature of FRR Witness')}
                     <Chip label="Not signed" color="default" size="small" />
                     {canManage && (
                       <Button size="small" variant="contained"
-                        onClick={() => navigate(`/assessments/${assessment.id}/homeowner-release`)}>
+                        onClick={() => navigate(`/work-orders/${workOrder.id}/homeowner-release`)}>
                         Sign
                       </Button>
                     )}
@@ -549,12 +549,12 @@ ${sigImg(release.frrWitnessSignatureUrl, 'Signature of FRR Witness')}
           <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>Assignment</Typography>
             <Divider sx={{ mb: 2 }} />
-            <InfoField label="Event" value={event?.name ?? (assessment.eventId ? assessment.eventId : 'No event assigned')} />
-            <InfoField label="Center" value={center?.name ?? assessment.centerId} />
+            <InfoField label="Event" value={event?.name ?? (workOrder.eventId ? workOrder.eventId : 'No event assigned')} />
+            <InfoField label="Center" value={center?.name ?? workOrder.centerId} />
             <Box sx={{ mb: 1.5 }}>
               <Typography variant="caption" color="text.secondary" display="block">Assessor</Typography>
               <Typography variant="body2">
-                {assessor ? `${assessor.firstName} ${assessor.lastName}` : assessment.assessorId ? assessment.assessorId : 'Unassigned'}
+                {assessor ? `${assessor.firstName} ${assessor.lastName}` : workOrder.assessorId ? workOrder.assessorId : 'Unassigned'}
               </Typography>
             </Box>
             {(isAdmin || isFieldCoordinator) && (
@@ -567,8 +567,8 @@ ${sigImg(release.frrWitnessSignatureUrl, 'Signature of FRR Witness')}
           <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>Timeline</Typography>
             <Divider sx={{ mb: 2 }} />
-            <InfoField label="Case Opened" value={new Date(assessment.createdAt).toLocaleString()} />
-            <InfoField label="Last Updated" value={new Date(assessment.updatedAt).toLocaleString()} />
+            <InfoField label="Work Order Opened" value={new Date(workOrder.createdAt).toLocaleString()} />
+            <InfoField label="Last Updated" value={new Date(workOrder.updatedAt).toLocaleString()} />
           </Paper>
         </Grid>
       </Grid>
@@ -693,10 +693,10 @@ ${sigImg(release.frrWitnessSignatureUrl, 'Signature of FRR Witness')}
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Delete Case?</DialogTitle>
+        <DialogTitle>Delete Work Order?</DialogTitle>
         <DialogContent>
           <Typography>
-            Permanently delete the case for <strong>{assessment.survivorName}</strong>? This cannot be undone.
+            Permanently delete the work order for <strong>{workOrder.survivorName}</strong>? This cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>
