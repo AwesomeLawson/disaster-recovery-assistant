@@ -30,6 +30,7 @@ import { VolunteerCalendar } from './pages/VolunteerCalendar';
 import { TrainingsLibrary } from './pages/TrainingsLibrary';
 import { LogHours } from './pages/LogHours';
 import { AdminImpact } from './pages/AdminImpact';
+import { ToolInventory } from './pages/ToolInventory';
 
 const theme = createTheme({
   palette: {
@@ -270,6 +271,16 @@ function App() {
                 element={
                   <PrivateRoute>
                     <TrainingsLibrary />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* Tool inventory - any authenticated user can view; write gating handled in-page */}
+              <Route
+                path="tools"
+                element={
+                  <PrivateRoute>
+                    <ToolInventory />
                   </PrivateRoute>
                 }
               />

@@ -19,6 +19,8 @@ import * as homeownerReleaseFunctions from './functions/homeownerReleases';
 import * as userEventDataFunctions from './functions/userEventData';
 import * as trainingFunctions from './functions/trainings';
 import * as volunteerHoursFunctions from './functions/volunteerHours';
+import * as toolFunctions from './functions/tools';
+import * as toolsAIFunctions from './functions/toolsAI';
 
 // User Management
 export const registerUser = userFunctions.registerUser;
@@ -115,6 +117,18 @@ export const logVolunteerHours = volunteerHoursFunctions.logVolunteerHours;
 export const listMyVolunteerHours = volunteerHoursFunctions.listMyVolunteerHours;
 export const listAllVolunteerHours = volunteerHoursFunctions.listAllVolunteerHours;
 export const getImpactStats = volunteerHoursFunctions.getImpactStats;
+
+// Tool Inventory
+export const createTool = toolFunctions.createTool;
+export const updateTool = toolFunctions.updateTool;
+export const deleteTool = toolFunctions.deleteTool;
+export const listTools = toolFunctions.listTools;
+export const checkOutTool = toolFunctions.checkOutTool;
+export const returnTool = toolFunctions.returnTool;
+export const listToolLendings = toolFunctions.listToolLendings;
+
+// AI Tool Suggestion
+export const suggestToolsFromPhoto = toolsAIFunctions.suggestToolsFromPhoto;
 
 // Trigger: Send welcome email when user is approved
 // Note: Firestore triggers will be configured separately

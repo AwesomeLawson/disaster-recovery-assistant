@@ -34,6 +34,7 @@ import BusinessIcon from '@mui/icons-material/Business';
 import SchoolIcon from '@mui/icons-material/School';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import InsightsIcon from '@mui/icons-material/Insights';
+import BuildIcon from '@mui/icons-material/Build';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth.service';
 import { SessionBanner, useBannerHeight } from './SessionBanner';
@@ -120,6 +121,14 @@ export const Layout: React.FC = () => {
       user.roles.includes('fieldCoordinator')
     ) {
       items.push({ text: 'Escalations', icon: <WarningIcon />, path: '/escalations' });
+    }
+
+    if (
+      user.roles.includes('administrator') ||
+      user.roles.includes('baseCampHost') ||
+      user.roles.includes('workGroupLead')
+    ) {
+      items.push({ text: 'Tools', icon: <BuildIcon />, path: '/tools' });
     }
 
     items.push({ text: 'Log Hours', icon: <AccessTimeIcon />, path: '/log-hours' });

@@ -21,6 +21,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.106.0",
     "@types/node": "^24.6.0",
     "@types/nodemailer": "^8.0.0",
     "cors": "^2.8.5",

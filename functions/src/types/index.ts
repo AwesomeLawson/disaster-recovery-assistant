@@ -288,3 +288,41 @@ export interface LegalRelease {
   createdAt: number;
   updatedAt: number;
 }
+
+export type ToolCondition = 'new' | 'good' | 'fair' | 'needs_repair' | 'broken';
+
+export interface Tool {
+  id: string;
+  baseCampId: string;
+  name: string;
+  description?: string;
+  category?: string;            // free-text: "chainsaw", "ladder", "hand tool", etc.
+  condition: ToolCondition;
+  quantity: number;             // most are 1, but bulk items (e.g. "10 work gloves") use this
+  photoUrl?: string;
+  photoPath?: string;           // storage path for delete
+  isLentOut: boolean;           // denormalized for quick UI; true when an active lending exists
+  currentLendingId?: string;    // points to active lending record if isLentOut
+  createdBy: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ToolLending {
+  id: string;
+  toolId: string;
+  baseCampId: string;
+  borrowerUserId?: string;       // optional — borrower may not be a registered user
+  borrowerName: string;          // always recorded for paper-trail
+  borrowerPhone?: string;
+  checkedOutBy: string;          // user id of base camp host
+  checkedOutByName: string;
+  checkedOutAt: number;
+  expectedReturnAt?: number;     // optional
+  returnedAt?: number;           // null until returned
+  returnedToUserId?: string;     // who confirmed the return
+  returnedToName?: string;
+  notes?: string;
+  createdAt: number;
+  updatedAt: number;
+}
