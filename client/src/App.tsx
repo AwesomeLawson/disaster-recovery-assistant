@@ -27,6 +27,7 @@ import { EscalationManagement } from './pages/EscalationManagement';
 import { UserProfile } from './pages/UserProfile';
 import { OrganizationManagement } from './pages/OrganizationManagement';
 import { VolunteerCalendar } from './pages/VolunteerCalendar';
+import { TrainingsLibrary } from './pages/TrainingsLibrary';
 
 const theme = createTheme({
   palette: {
@@ -257,6 +258,16 @@ function App() {
                 element={
                   <PrivateRoute requireRoles={['administrator', 'fieldCoordinator']}>
                     <VolunteerCalendar />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* Trainings library - available to all authenticated users */}
+              <Route
+                path="trainings"
+                element={
+                  <PrivateRoute>
+                    <TrainingsLibrary />
                   </PrivateRoute>
                 }
               />

@@ -17,6 +17,7 @@ import * as organizationFunctions from './functions/organizations';
 import * as preApprovedUserFunctions from './functions/preApprovedUsers';
 import * as homeownerReleaseFunctions from './functions/homeownerReleases';
 import * as userEventDataFunctions from './functions/userEventData';
+import * as trainingFunctions from './functions/trainings';
 
 // User Management
 export const registerUser = userFunctions.registerUser;
@@ -102,6 +103,11 @@ export const listMyEventData = userEventDataFunctions.listMyEventData;
 export const listUserEventData = userEventDataFunctions.listUserEventData;
 export const listAllEventData = userEventDataFunctions.listAllEventData;
 export const confirmUserEventDates = userEventDataFunctions.confirmUserEventDates;
+
+// Trainings
+export const createTraining = trainingFunctions.createTraining;
+export const listTrainings = trainingFunctions.listTrainings;
+export const deleteTraining = trainingFunctions.deleteTraining;
 
 // Trigger: Send welcome email when user is approved
 // Note: Firestore triggers will be configured separately

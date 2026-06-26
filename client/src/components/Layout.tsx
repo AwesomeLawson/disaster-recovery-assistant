@@ -31,6 +31,7 @@ import WarningIcon from '@mui/icons-material/Warning';
 import MessageIcon from '@mui/icons-material/Message';
 import EventIcon from '@mui/icons-material/Event';
 import BusinessIcon from '@mui/icons-material/Business';
+import SchoolIcon from '@mui/icons-material/School';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth.service';
 import { SessionBanner, useBannerHeight } from './SessionBanner';
@@ -118,6 +119,7 @@ export const Layout: React.FC = () => {
       items.push({ text: 'Escalations', icon: <WarningIcon />, path: '/escalations' });
     }
 
+    items.push({ text: 'Trainings', icon: <SchoolIcon />, path: '/trainings' });
     items.push({ text: 'Messages', icon: <MessageIcon />, path: '/messages' });
 
     return items;

@@ -261,6 +261,22 @@ export interface Message {
   createdAt: number;
 }
 
+export type TrainingCategory = 'chainsaw' | 'basic' | 'assessment' | 'spiritualEmotional' | 'other';
+
+export interface Training {
+  id: string;
+  title: string;
+  description?: string;
+  category: TrainingCategory;
+  fileUrl: string;             // download URL from Storage
+  filePath: string;            // storage path for deletes
+  fileSizeBytes: number;
+  uploadedBy: string;          // user id
+  uploadedByName: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface LegalRelease {
   id: string;
   userId: string;
