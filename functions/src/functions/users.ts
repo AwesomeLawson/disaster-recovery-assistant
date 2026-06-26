@@ -120,7 +120,7 @@ async function notifyUserOfApproval(user: User, approvedRoles: string[]): Promis
   const roleLabels: Record<string, string> = {
     assessor: 'Assessor',
     fieldCoordinator: 'Field Coordinator',
-    baseCampHost: 'Basecamp Host',
+    baseCampHost: 'Base Camp Host',
     workGroupLead: 'Team Leader',
     volunteer: 'Volunteer',
     secChaplain: 'SEC/Chaplain',

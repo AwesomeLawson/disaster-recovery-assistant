@@ -9,7 +9,7 @@ const ROLE_LABELS: Record<string, string> = {
   administrator: 'Administrator',
   assessor: 'Assessor',
   fieldCoordinator: 'Field Coordinator',
-  baseCampHost: 'Basecamp Host',
+  baseCampHost: 'Base Camp Host',
   workGroupLead: 'Team Leader',
   volunteer: 'Volunteer',
   secChaplain: 'SEC / Chaplain',

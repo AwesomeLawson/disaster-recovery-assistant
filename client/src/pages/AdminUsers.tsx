@@ -45,7 +45,7 @@ const ALL_ROLES: { value: UserRole; label: string }[] = [
   { value: 'administrator', label: 'Administrator' },
   { value: 'assessor', label: 'Assessor' },
   { value: 'fieldCoordinator', label: 'Field Coordinator' },
-  { value: 'baseCampHost', label: 'Basecamp Host' },
+  { value: 'baseCampHost', label: 'Base Camp Host' },
   { value: 'workGroupLead', label: 'Team Leader' },
   { value: 'volunteer', label: 'Volunteer' },
   { value: 'secChaplain', label: 'SEC/Chaplain' },
@@ -606,7 +606,7 @@ ${release.signatureImageUrl ? `<img src="${release.signatureImageUrl}" class="si
               <MenuItem value="administrator">Administrator</MenuItem>
               <MenuItem value="assessor">Assessor</MenuItem>
               <MenuItem value="fieldCoordinator">Field Coordinator</MenuItem>
-              <MenuItem value="baseCampHost">Basecamp Host</MenuItem>
+              <MenuItem value="baseCampHost">Base Camp Host</MenuItem>
               <MenuItem value="workGroupLead">Team Leader</MenuItem>
               <MenuItem value="volunteer">Volunteer</MenuItem>
               <MenuItem value="secChaplain">SEC/Chaplain</MenuItem>

@@ -66,7 +66,7 @@ export const Register: React.FC = () => {
   const availableRoles: { value: UserRole; label: string; description: string }[] = [
     { value: 'assessor', label: 'Assessor', description: 'Initial evaluation of damage and determination of needs' },
     { value: 'fieldCoordinator', label: 'Field Coordinator', description: 'Receives assessments, sets job priority, assigns teams, and verifies completion' },
-    { value: 'baseCampHost', label: 'Basecamp Host', description: 'Coordinates the base camp schedule, housing, meals, and incoming/outgoing groups' },
+    { value: 'baseCampHost', label: 'Base Camp Host', description: 'Coordinates the base camp schedule, housing, meals, and incoming/outgoing groups' },
     { value: 'workGroupLead', label: 'Team Leader', description: 'Point of contact coordinating travel, logistics, and supervision of on-site work' },
     { value: 'volunteer', label: 'Volunteer', description: 'Helps with field work, donations management, base camp support, and other needs' },
     { value: 'secChaplain', label: 'SEC/Chaplain', description: 'Provides spiritual and emotional care support for the team, survivors, and community' },

@@ -80,7 +80,7 @@ export const CompleteProfile: React.FC = () => {
   const availableRoles: { value: UserRole; label: string }[] = [
     { value: 'assessor', label: 'Assessor' },
     { value: 'fieldCoordinator', label: 'Field Coordinator' },
-    { value: 'baseCampHost', label: 'Basecamp Host' },
+    { value: 'baseCampHost', label: 'Base Camp Host' },
     { value: 'workGroupLead', label: 'Team Leader' },
     { value: 'volunteer', label: 'Volunteer' },
     { value: 'secChaplain', label: 'SEC/Chaplain' },
