@@ -2,61 +2,54 @@ import { httpsCallable } from 'firebase/functions';
 import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import type { Unsubscribe } from 'firebase/firestore';
 import { functions, db } from '../config/firebase';
-import type { Message, MessageType } from '../types';
+import type { Thread, Message } from '../types';
 
 export const messageService = {
-  // Send a message
-  async sendMessage(
-    threadId: string,
-    recipientIds: string[],
-    content: string,
-    type: MessageType
-  ): Promise<Message> {
-    const sendMessageFn = httpsCallable(functions, 'sendMessage');
-    const result = await sendMessageFn({ threadId, recipientIds, content, type });
-    return (result.data as any).message;
+  async getReachableContacts(): Promise<{ users: any[]; workgroups: any[] }> {
+    const fn = httpsCallable(functions, 'getReachableContacts');
+    const result = await fn({});
+    return result.data as { users: any[]; workgroups: any[] };
   },
 
-  // Send group message
-  async sendGroupMessage(
-    content: string,
-    type: MessageType,
-    options: {
-      groupId?: string;
-      centerId?: string;
-      workgroupId?: string;
-    }
-  ): Promise<Message> {
-    const sendGroupMessageFn = httpsCallable(functions, 'sendGroupMessage');
-    const result = await sendGroupMessageFn({ ...options, content, type });
-    return (result.data as any).message;
+  async getOrCreateDirectThread(otherUserId: string): Promise<Thread> {
+    const fn = httpsCallable(functions, 'getOrCreateDirectThread');
+    const result = await fn({ otherUserId });
+    return (result.data as any).thread as Thread;
   },
 
-  // Get messages for a thread
-  async getMessages(threadId: string, limit?: number): Promise<Message[]> {
-    const getMessagesFn = httpsCallable(functions, 'getMessages');
-    const result = await getMessagesFn({ threadId, limit });
-    return (result.data as any).messages;
+  async getOrCreateWorkgroupThread(workgroupId: string): Promise<Thread> {
+    const fn = httpsCallable(functions, 'getOrCreateWorkgroupThread');
+    const result = await fn({ workgroupId });
+    return (result.data as any).thread as Thread;
   },
 
-  // Subscribe to real-time messages for a thread
-  subscribeToMessages(
-    threadId: string,
-    callback: (messages: Message[]) => void
-  ): Unsubscribe {
-    const messagesRef = collection(db, 'messages');
+  async sendMessage(threadId: string, content: string): Promise<Message> {
+    const fn = httpsCallable(functions, 'sendMessage');
+    const result = await fn({ threadId, content });
+    return (result.data as any).message as Message;
+  },
+
+  subscribeToThreads(uid: string, callback: (threads: Thread[]) => void): Unsubscribe {
     const q = query(
-      messagesRef,
-      where('threadId', '==', threadId),
-      orderBy('createdAt', 'desc')
+      collection(db, 'threads'),
+      where('participantIds', 'array-contains', uid),
+      orderBy('lastMessageAt', 'desc')
     );
-
-    return onSnapshot(q, (snapshot) => {
-      const messages: Message[] = [];
-      snapshot.forEach((doc) => {
-        messages.push(doc.data() as Message);
-      });
-      callback(messages);
+    return onSnapshot(q, snap => {
+      callback(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Thread));
     });
+  },
+
+  subscribeToMessages(threadId: string, callback: (messages: Message[]) => void): Unsubscribe {
+    const q = query(
+      collection(db, 'messages'),
+      where('threadId', '==', threadId),
+      orderBy('createdAt', 'asc')
+    );
+    return onSnapshot(
+      q,
+      snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Message)),
+      err => console.error('subscribeToMessages error:', err)
+    );
   },
 };

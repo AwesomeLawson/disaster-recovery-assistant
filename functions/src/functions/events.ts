@@ -111,13 +111,6 @@ export const getEvent = onCall({ cors: true }, async (request: any) => {
 
 export const listEvents = onCall({ cors: true }, async (request: any) => {
   try {
-    console.log('listEvents called');
-    console.log('Auth:', request.auth ? `uid=${request.auth.uid}` : 'null');
-
-    if (!request.auth) {
-      throw new HttpsError('unauthenticated', 'User must be authenticated');
-    }
-
     let data = request.data;
     if (typeof data !== 'object' || data === null) {
       data = {};

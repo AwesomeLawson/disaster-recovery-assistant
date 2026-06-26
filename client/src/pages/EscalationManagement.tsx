@@ -24,7 +24,6 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { escalationService } from '../services/escalation.service';
-import { messageService } from '../services/message.service';
 import { userService } from '../services/user.service';
 import type { Escalation, EscalationStatus, User } from '../types';
 
@@ -105,24 +104,12 @@ export const EscalationManagement: React.FC = () => {
     }
   };
 
-  const sendResponseMessage = async (escalation: Escalation, content: string) => {
-    await messageService.sendMessage(
-      `escalation-${escalation.id}`,
-      [escalation.createdBy],
-      content,
-      'inApp'
-    );
-  };
-
   const handleResolve = async () => {
     if (!selectedEscalation || !resolution.trim()) return;
 
     try {
       setUpdating(true);
       await escalationService.resolveEscalation(selectedEscalation.id, resolution);
-      if (responseMessage.trim()) {
-        await sendResponseMessage(selectedEscalation, responseMessage.trim());
-      }
       setDialogOpen(false);
       setSelectedEscalation(null);
       setResolution('');
@@ -141,9 +128,6 @@ export const EscalationManagement: React.FC = () => {
     try {
       setUpdating(true);
       await escalationService.updateEscalationStatus(selectedEscalation.id, 'rejected');
-      if (responseMessage.trim()) {
-        await sendResponseMessage(selectedEscalation, responseMessage.trim());
-      }
       setDialogOpen(false);
       setSelectedEscalation(null);
       setResolution('');

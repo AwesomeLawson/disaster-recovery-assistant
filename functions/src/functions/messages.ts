@@ -1,130 +1,224 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
-import { Message } from '../types';
+import type { User, Workgroup, Thread, Message } from '../types';
 
 const db = admin.firestore();
 
-export const sendMessage = onCall({ cors: true }, async (request: any) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated');
+const directThreadId = (uid1: string, uid2: string) =>
+  `direct_${[uid1, uid2].sort().join('_')}`;
+
+const workgroupThreadId = (wgId: string) => `workgroup_${wgId}`;
+
+// Returns users and workgroups the caller is allowed to message, scoped by role/hierarchy
+export const getReachableContacts = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be authenticated');
+
+  const uid = request.auth.uid;
+  const userDoc = await db.collection('users').doc(uid).get();
+  if (!userDoc.exists) throw new HttpsError('not-found', 'User not found');
+
+  const currentUser = userDoc.data() as User;
+  const roles = currentUser.roles;
+  const isAdminOrFC = roles.includes('administrator') || roles.includes('fieldCoordinator');
+  const isWGL = roles.includes('workGroupLead');
+
+  const pickUser = (doc: admin.firestore.DocumentSnapshot) => {
+    if (!doc.exists || doc.id === uid) return null;
+    const d = doc.data() as User;
+    return { id: doc.id, firstName: d.firstName, lastName: d.lastName, email: d.email, roles: d.roles };
+  };
+
+  if (isAdminOrFC) {
+    const [usersSnap, workgroupsSnap] = await Promise.all([
+      db.collection('users').where('roleApprovalStatus', '==', 'approved').get(),
+      db.collection('workgroups').get(),
+    ]);
+    const users = usersSnap.docs.map(pickUser).filter(Boolean);
+    const workgroups = workgroupsSnap.docs.map(d => {
+      const wg = d.data() as Workgroup;
+      return { id: d.id, name: wg.name, volunteerUserIds: wg.volunteerUserIds };
+    });
+    return { users, workgroups };
   }
 
-  const { threadId, recipientIds, content, type } = request.data;
+  if (isWGL) {
+    const myWorkgroupsSnap = await db.collection('workgroups')
+      .where('leadUserId', '==', uid).get();
 
-  if (!threadId || !recipientIds || !content || !type) {
-    throw new HttpsError(
-      'invalid-argument',
-      'Missing required fields: threadId, recipientIds, content, type'
-    );
+    const memberIds = new Set<string>();
+    const workgroups: { id: string; name: string; volunteerUserIds: string[] }[] = [];
+
+    for (const doc of myWorkgroupsSnap.docs) {
+      const wg = doc.data() as Workgroup;
+      workgroups.push({ id: doc.id, name: wg.name, volunteerUserIds: wg.volunteerUserIds });
+      wg.volunteerUserIds.forEach(id => memberIds.add(id));
+    }
+
+    const [adminSnap, memberDocs] = await Promise.all([
+      db.collection('users')
+        .where('roles', 'array-contains-any', ['administrator', 'fieldCoordinator'])
+        .get(),
+      memberIds.size > 0
+        ? db.getAll(...[...memberIds].map(id => db.collection('users').doc(id)))
+        : Promise.resolve([] as admin.firestore.DocumentSnapshot[]),
+    ]);
+
+    const userMap = new Map<string, object>();
+    for (const doc of [...adminSnap.docs, ...memberDocs]) {
+      const u = pickUser(doc);
+      if (u) userMap.set(doc.id, u);
+    }
+
+    return { users: [...userMap.values()], workgroups };
   }
 
-  const messageRef = db.collection('messages').doc();
-  const message: Message = {
-    id: messageRef.id,
-    threadId,
-    senderId: request.auth.uid,
-    recipientIds,
-    content,
-    type,
+  // Volunteer / Assessor / SecChaplain:
+  // Can DM their workgroup lead(s) and peer members in shared workgroups.
+  // Can also participate in group threads for their workgroups.
+  const myWorkgroupsSnap = await db.collection('workgroups')
+    .where('volunteerUserIds', 'array-contains', uid).get();
+
+  const contactIds = new Set<string>();
+  const workgroups: { id: string; name: string; volunteerUserIds: string[] }[] = [];
+
+  for (const doc of myWorkgroupsSnap.docs) {
+    const wg = doc.data() as Workgroup;
+    workgroups.push({ id: doc.id, name: wg.name, volunteerUserIds: wg.volunteerUserIds });
+    contactIds.add(wg.leadUserId);
+    wg.volunteerUserIds.forEach(id => { if (id !== uid) contactIds.add(id); });
+  }
+
+  if (contactIds.size === 0) return { users: [], workgroups };
+
+  const contactDocs = await db.getAll(...[...contactIds].map(id => db.collection('users').doc(id)));
+  const users = contactDocs.map(pickUser).filter(Boolean);
+
+  return { users, workgroups };
+});
+
+// Gets or creates a 1:1 thread between the caller and another user
+export const getOrCreateDirectThread = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be authenticated');
+
+  const { otherUserId } = request.data;
+  if (!otherUserId) throw new HttpsError('invalid-argument', 'otherUserId required');
+
+  const uid = request.auth.uid;
+  const threadId = directThreadId(uid, otherUserId);
+  const threadRef = db.collection('threads').doc(threadId);
+  const threadDoc = await threadRef.get();
+
+  if (threadDoc.exists) return { thread: { id: threadId, ...threadDoc.data() } };
+
+  const [myDoc, otherDoc] = await Promise.all([
+    db.collection('users').doc(uid).get(),
+    db.collection('users').doc(otherUserId).get(),
+  ]);
+
+  if (!otherDoc.exists) throw new HttpsError('not-found', 'User not found');
+
+  const me = myDoc.data() as User;
+  const other = otherDoc.data() as User;
+
+  const thread: Thread = {
+    id: threadId,
+    type: 'direct',
+    participantIds: [uid, otherUserId],
+    participantNames: {
+      [uid]: `${me.firstName} ${me.lastName}`,
+      [otherUserId]: `${other.firstName} ${other.lastName}`,
+    },
+    title: `${other.firstName} ${other.lastName}`,
+    lastMessageAt: Date.now(),
+    lastMessagePreview: '',
     createdAt: Date.now(),
   };
 
-  await messageRef.set(message);
-
-  // TODO: Implement actual SMS/email sending based on user preferences
-  console.log(`Message sent: ${messageRef.id}`);
-
-  return { success: true, messageId: messageRef.id, message };
+  await threadRef.set(thread);
+  return { thread };
 });
 
-export const sendEventMessage = onCall({ cors: true }, async (request: any) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated');
-  }
+// Gets or creates a group thread for a workgroup (all members are participants)
+export const getOrCreateWorkgroupThread = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be authenticated');
 
-  const { eventId, centerId, workgroupId, content, type } = request.data;
+  const { workgroupId } = request.data;
+  if (!workgroupId) throw new HttpsError('invalid-argument', 'workgroupId required');
 
-  if (!content || !type) {
-    throw new HttpsError('invalid-argument', 'Missing required fields: content, type');
-  }
+  const threadId = workgroupThreadId(workgroupId);
+  const threadRef = db.collection('threads').doc(threadId);
+  const threadDoc = await threadRef.get();
 
-  if (!eventId && !centerId && !workgroupId) {
-    throw new HttpsError(
-      'invalid-argument',
-      'Must specify at least one of: eventId, centerId, workgroupId'
-    );
-  }
+  if (threadDoc.exists) return { thread: { id: threadId, ...threadDoc.data() } };
 
-  // Determine recipients based on event/center/workgroup
-  let recipientIds: string[] = [];
+  const wgDoc = await db.collection('workgroups').doc(workgroupId).get();
+  if (!wgDoc.exists) throw new HttpsError('not-found', 'Workgroup not found');
 
-  if (workgroupId) {
-    const workgroupDoc = await db.collection('workgroups').doc(workgroupId).get();
-    if (workgroupDoc.exists) {
-      const workgroup = workgroupDoc.data();
-      recipientIds = [workgroup!.leadUserId, ...workgroup!.volunteerUserIds];
-    }
-  } else if (centerId) {
-    const centerDoc = await db.collection('centers').doc(centerId).get();
-    if (centerDoc.exists) {
-      const center = centerDoc.data();
-      recipientIds = center!.leadUserIds;
-    }
-  } else if (eventId) {
-    const eventDoc = await db.collection('events').doc(eventId).get();
-    if (eventDoc.exists) {
-      const event = eventDoc.data();
-      recipientIds = event!.userIds;
+  const wg = wgDoc.data() as Workgroup;
+  const participantIds = [...new Set([wg.leadUserId, ...wg.volunteerUserIds])];
+
+  const userDocs = await db.getAll(...participantIds.map(id => db.collection('users').doc(id)));
+  const participantNames: Record<string, string> = {};
+  for (const doc of userDocs) {
+    if (doc.exists) {
+      const u = doc.data() as User;
+      participantNames[doc.id] = `${u.firstName} ${u.lastName}`;
     }
   }
 
-  if (recipientIds.length === 0) {
-    throw new HttpsError('not-found', 'No recipients found');
-  }
-
-  const threadId = workgroupId || centerId || eventId || '';
-
-  const messageRef = db.collection('messages').doc();
-  const message: Message = {
-    id: messageRef.id,
-    threadId,
-    senderId: request.auth.uid,
-    recipientIds,
-    content,
-    type,
-    eventId,
-    centerId,
+  const thread: Thread = {
+    id: threadId,
+    type: 'workgroup',
     workgroupId,
+    participantIds,
+    participantNames,
+    title: wg.name,
+    lastMessageAt: Date.now(),
+    lastMessagePreview: '',
     createdAt: Date.now(),
   };
 
-  await messageRef.set(message);
-
-  // TODO: Implement actual SMS/email sending based on user preferences
-  console.log(`Event message sent: ${messageRef.id}`);
-
-  return { success: true, messageId: messageRef.id, message };
+  await threadRef.set(thread);
+  return { thread };
 });
 
-export const getMessages = onCall({ cors: true }, async (request: any) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated');
+// Sends a message to a thread the caller belongs to
+export const sendMessage = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Must be authenticated');
+
+  const { threadId, content } = request.data;
+  if (!threadId || !content?.trim()) {
+    throw new HttpsError('invalid-argument', 'threadId and content are required');
   }
 
-  const { threadId, limit = 100 } = request.data;
+  const uid = request.auth.uid;
+  const threadDoc = await db.collection('threads').doc(threadId).get();
+  if (!threadDoc.exists) throw new HttpsError('not-found', 'Thread not found');
 
-  if (!threadId) {
-    throw new HttpsError('invalid-argument', 'Missing required field: threadId');
+  const thread = threadDoc.data() as Thread;
+  if (!thread.participantIds.includes(uid)) {
+    throw new HttpsError('permission-denied', 'Not a participant in this thread');
   }
 
-  const snapshot = await db
-    .collection('messages')
-    .where('threadId', '==', threadId)
-    .orderBy('createdAt', 'desc')
-    .limit(limit)
-    .get();
+  const msgRef = db.collection('messages').doc();
+  const trimmed = content.trim();
+  const message: Message = {
+    id: msgRef.id,
+    threadId,
+    senderId: uid,
+    senderName: thread.participantNames?.[uid] || 'Unknown',
+    content: trimmed,
+    participantIds: thread.participantIds,
+    createdAt: Date.now(),
+  };
 
-  const messages = snapshot.docs.map((doc) => doc.data());
+  await Promise.all([
+    msgRef.set(message),
+    db.collection('threads').doc(threadId).update({
+      lastMessageAt: message.createdAt,
+      lastMessagePreview: trimmed.substring(0, 100),
+    }),
+  ]);
 
-  return { messages };
+  return { message };
 });
