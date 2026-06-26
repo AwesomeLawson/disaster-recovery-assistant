@@ -21,6 +21,9 @@ import {
   Divider,
   IconButton,
   Autocomplete,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
@@ -30,7 +33,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import { useAuth } from '../context/AuthContext';
 import { userService } from '../services/user.service';
 import { authService } from '../services/auth.service';
-import type { CommunicationPreference, AvailabilityRange, UserCapability, TshirtSize } from '../types';
+import type { CommunicationPreference, AvailabilityRange, UserCapability, TshirtSize, TrainingKey } from '../types';
 
 const CAPABILITY_LABELS: Record<UserCapability, string> = {
   trainer: 'Trainer',
@@ -41,6 +44,15 @@ const CAPABILITY_LABELS: Record<UserCapability, string> = {
   heavyEquipment: 'Heavy Equipment',
   construction: 'Construction',
   adminBaseCampSupport: 'Admin/Base Camp Support',
+};
+
+const TRAINING_KEYS: TrainingKey[] = ['chainsaw', 'basic', 'assessment', 'spiritualEmotional'];
+
+const TRAINING_LABELS: Record<TrainingKey, string> = {
+  chainsaw: 'Chainsaw',
+  basic: 'Basic DRT',
+  assessment: 'Assessment',
+  spiritualEmotional: 'Spiritual & Emotional',
 };
 
 export const UserProfile: React.FC = () => {
@@ -64,6 +76,7 @@ export const UserProfile: React.FC = () => {
     tshirtSize: '' as TshirtSize | '',
   });
   const [editAvailability, setEditAvailability] = useState<{ start: string; end: string }[]>([]);
+  const [editTrainings, setEditTrainings] = useState<Partial<Record<TrainingKey, boolean>>>({});
   const [organizations, setOrganizations] = useState<string[]>([]);
 
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
@@ -97,6 +110,7 @@ export const UserProfile: React.FC = () => {
           end: new Date(r.end).toISOString().split('T')[0],
         }))
       );
+      setEditTrainings(user.trainings || {});
     }
   }, [user]);
 
@@ -120,6 +134,7 @@ export const UserProfile: React.FC = () => {
         organization: editForm.organization.trim() || undefined,
         availability: availabilityRanges.length ? availabilityRanges : undefined,
         tshirtSize: editForm.tshirtSize || undefined,
+        trainings: editTrainings,
       });
       await refreshUser();
       setEditDialogOpen(false);
@@ -406,6 +421,27 @@ export const UserProfile: React.FC = () => {
                 ))
               )}
             </Box>
+
+            <Typography variant="subtitle2" color="text.secondary">
+              Trainings
+            </Typography>
+            <Box>
+              {TRAINING_KEYS.every((k) => !user.trainings?.[k]) ? (
+                <Typography variant="body2" color="text.secondary">
+                  None completed
+                </Typography>
+              ) : (
+                TRAINING_KEYS.filter((k) => user.trainings?.[k]).map((k) => (
+                  <Chip
+                    key={k}
+                    label={TRAINING_LABELS[k]}
+                    size="small"
+                    color="success"
+                    sx={{ mr: 0.5, mb: 0.5 }}
+                  />
+                ))
+              )}
+            </Box>
           </Paper>
 
           <Paper sx={{ p: 3 }}>
@@ -548,6 +584,28 @@ export const UserProfile: React.FC = () => {
                 <MenuItem value="3XL">3X</MenuItem>
               </Select>
             </FormControl>
+
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                Trainings completed
+              </Typography>
+              <FormGroup>
+                {TRAINING_KEYS.map((k) => (
+                  <FormControlLabel
+                    key={k}
+                    control={
+                      <Checkbox
+                        checked={!!editTrainings[k]}
+                        onChange={(e) =>
+                          setEditTrainings((prev) => ({ ...prev, [k]: e.target.checked }))
+                        }
+                      />
+                    }
+                    label={TRAINING_LABELS[k]}
+                  />
+                ))}
+              </FormGroup>
+            </Box>
 
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>

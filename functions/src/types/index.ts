@@ -19,6 +19,8 @@ export type CommunicationPreference = 'email' | 'sms';
 
 export type TshirtSize = 'S' | 'M' | 'L' | 'XL' | '2XL' | '3XL';
 
+export type TrainingKey = 'chainsaw' | 'basic' | 'assessment' | 'spiritualEmotional';
+
 export interface ContactNote {
   text: string;
   authorId: string;
@@ -63,6 +65,7 @@ export interface User {
   organization?: string;
   availability?: AvailabilityRange[];
   tshirtSize?: TshirtSize;
+  trainings?: Partial<Record<TrainingKey, boolean>>;
   contacted?: boolean;
   contactNotes?: ContactNote[];
   legalReleaseId?: string;
