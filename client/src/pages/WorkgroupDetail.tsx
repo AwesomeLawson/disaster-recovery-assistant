@@ -307,7 +307,7 @@ export const WorkgroupDetail: React.FC = () => {
               sx={{ mb: 2, cursor: 'pointer', color: 'primary.main' }}
               onClick={() => navigate(`/assessments/${workgroup.assessmentId}`)}
             >
-              {assessment?.placeName || workgroup.assessmentId}
+              {assessment?.survivorName || assessment?.placeName || workgroup.assessmentId}
             </Typography>
           </Paper>
 

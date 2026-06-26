@@ -27,6 +27,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
+import AddIcon from '@mui/icons-material/Add';
 import { eventService } from '../services/event.service';
 import { centerService } from '../services/center.service';
 import { userService } from '../services/user.service';
@@ -313,14 +314,22 @@ export const EventDetail: React.FC = () => {
           </Paper>
         </Grid>
 
-        {/* Assessment Map - full width */}
+        {/* Case Map - full width */}
         <Grid size={{ xs: 12 }}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Assessment Map ({assessments.length})
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">Case Map ({assessments.length})</Typography>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={() => navigate(`/assessments/create?eventId=${event.id}`)}
+              >
+                Open Case
+              </Button>
+            </Box>
             <Divider sx={{ mb: 2 }} />
-            <AssessmentMap assessments={assessments} />
+            <AssessmentMap assessments={assessments} centers={centers} />
           </Paper>
         </Grid>
       </Grid>

@@ -5,6 +5,7 @@ import { AdminDashboard } from './AdminDashboard';
 import { AssessorDashboard } from './AssessorDashboard';
 import { WorkGroupLeadDashboard } from './WorkGroupLeadDashboard';
 import { WorkerDashboard } from './WorkerDashboard';
+import { FieldCoordinatorDashboard } from './FieldCoordinatorDashboard';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 
 export const Dashboard: React.FC = () => {
@@ -31,11 +32,13 @@ export const Dashboard: React.FC = () => {
   // Show dashboard based on primary role
   if (user.roles.includes('administrator')) {
     return <AdminDashboard />;
+  } else if (user.roles.includes('fieldCoordinator')) {
+    return <FieldCoordinatorDashboard />;
   } else if (user.roles.includes('assessor')) {
     return <AssessorDashboard />;
   } else if (user.roles.includes('workGroupLead')) {
     return <WorkGroupLeadDashboard />;
-  } else if (user.roles.includes('volunteer')) {
+  } else if (user.roles.includes('volunteer') || user.roles.includes('secChaplain') || user.roles.includes('baseCampHost')) {
     return <WorkerDashboard />;
   }
 

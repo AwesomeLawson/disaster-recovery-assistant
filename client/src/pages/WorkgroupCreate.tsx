@@ -128,7 +128,7 @@ export const WorkgroupCreate: React.FC = () => {
             assessmentId: assessment.id,
             eventId: assessment.eventId || '',
             centerId: assessment.centerId,
-            name: `Workgroup for ${assessment.placeName}`,
+            name: `Workgroup for ${assessment.survivorName}`,
           }));
         }
       }
@@ -266,7 +266,7 @@ export const WorkgroupCreate: React.FC = () => {
                 >
                   {filteredAssessments.map((assessment) => (
                     <MenuItem key={assessment.id} value={assessment.id}>
-                      {assessment.placeName} - {assessment.address} ({assessment.severity})
+                      {assessment.survivorName} — {assessment.address}{assessment.severity ? ` (${assessment.severity})` : ''}
                     </MenuItem>
                   ))}
                 </Select>

@@ -15,13 +15,18 @@ import { CenterDetail } from './pages/CenterDetail';
 import { AssessmentList } from './pages/AssessmentList';
 import { AssessmentDetail } from './pages/AssessmentDetail';
 import { CreateAssessment } from './pages/CreateAssessment';
+import { EditIntake } from './pages/EditIntake';
+import { FieldAssessment } from './pages/FieldAssessment';
 import { WorkgroupManagement } from './pages/WorkgroupManagement';
 import { WorkgroupDetail } from './pages/WorkgroupDetail';
 import { WorkgroupCreate } from './pages/WorkgroupCreate';
+import { SignHomeownerRelease } from './pages/SignHomeownerRelease';
 import { Messaging } from './pages/Messaging';
 import { AdminUsers } from './pages/AdminUsers';
 import { EscalationManagement } from './pages/EscalationManagement';
 import { UserProfile } from './pages/UserProfile';
+import { OrganizationManagement } from './pages/OrganizationManagement';
+import { VolunteerCalendar } from './pages/VolunteerCalendar';
 
 const theme = createTheme({
   palette: {
@@ -95,15 +100,8 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
 
-            {/* Legal release - requires authentication but not role approval */}
-            <Route
-              path="/sign-legal-release"
-              element={
-                <PrivateRoute>
-                  <SignLegalRelease />
-                </PrivateRoute>
-              }
-            />
+            {/* Legal release - public so it can be reviewed without signing in */}
+            <Route path="/sign-legal-release" element={<SignLegalRelease />} />
 
             {/* Protected routes - require authentication and role approval */}
             <Route
@@ -145,7 +143,7 @@ function App() {
               <Route
                 path="centers/:id"
                 element={
-                  <PrivateRoute requireRoles={['administrator']}>
+                  <PrivateRoute requireRoles={['administrator', 'assessor', 'fieldCoordinator']}>
                     <CenterDetail />
                   </PrivateRoute>
                 }
@@ -158,12 +156,20 @@ function App() {
                   </PrivateRoute>
                 }
               />
+              <Route
+                path="admin/organizations"
+                element={
+                  <PrivateRoute requireRoles={['administrator']}>
+                    <OrganizationManagement />
+                  </PrivateRoute>
+                }
+              />
 
-              {/* Assessor routes */}
+              {/* Case management routes */}
               <Route
                 path="assessments"
                 element={
-                  <PrivateRoute requireRoles={['assessor', 'administrator', 'workGroupLead']}>
+                  <PrivateRoute requireRoles={['assessor', 'administrator', 'workGroupLead', 'fieldCoordinator']}>
                     <AssessmentList />
                   </PrivateRoute>
                 }
@@ -171,7 +177,7 @@ function App() {
               <Route
                 path="assessments/create"
                 element={
-                  <PrivateRoute requireRoles={['assessor', 'administrator']}>
+                  <PrivateRoute requireRoles={['assessor', 'administrator', 'fieldCoordinator']}>
                     <CreateAssessment />
                   </PrivateRoute>
                 }
@@ -179,8 +185,32 @@ function App() {
               <Route
                 path="assessments/:id"
                 element={
-                  <PrivateRoute requireRoles={['assessor', 'administrator', 'workGroupLead']}>
+                  <PrivateRoute requireRoles={['assessor', 'administrator', 'workGroupLead', 'fieldCoordinator']}>
                     <AssessmentDetail />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="assessments/:id/edit-intake"
+                element={
+                  <PrivateRoute requireRoles={['assessor', 'administrator', 'fieldCoordinator']}>
+                    <EditIntake />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="assessments/:id/field-assessment"
+                element={
+                  <PrivateRoute requireRoles={['assessor', 'administrator', 'fieldCoordinator']}>
+                    <FieldAssessment />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="assessments/:id/homeowner-release"
+                element={
+                  <PrivateRoute requireRoles={['assessor', 'administrator', 'fieldCoordinator']}>
+                    <SignHomeownerRelease />
                   </PrivateRoute>
                 }
               />
@@ -189,7 +219,7 @@ function App() {
               <Route
                 path="workgroups"
                 element={
-                  <PrivateRoute requireRoles={['workGroupLead', 'volunteer', 'administrator']}>
+                  <PrivateRoute requireRoles={['workGroupLead', 'volunteer', 'administrator', 'fieldCoordinator', 'secChaplain']}>
                     <WorkgroupManagement />
                   </PrivateRoute>
                 }
@@ -197,7 +227,7 @@ function App() {
               <Route
                 path="workgroups/create"
                 element={
-                  <PrivateRoute requireRoles={['workGroupLead', 'administrator']}>
+                  <PrivateRoute requireRoles={['workGroupLead', 'administrator', 'fieldCoordinator']}>
                     <WorkgroupCreate />
                   </PrivateRoute>
                 }
@@ -205,7 +235,7 @@ function App() {
               <Route
                 path="workgroups/:id"
                 element={
-                  <PrivateRoute requireRoles={['workGroupLead', 'volunteer', 'administrator']}>
+                  <PrivateRoute requireRoles={['workGroupLead', 'volunteer', 'administrator', 'fieldCoordinator', 'secChaplain']}>
                     <WorkgroupDetail />
                   </PrivateRoute>
                 }
@@ -215,8 +245,18 @@ function App() {
               <Route
                 path="escalations"
                 element={
-                  <PrivateRoute requireRoles={['workGroupLead', 'administrator']}>
+                  <PrivateRoute requireRoles={['workGroupLead', 'administrator', 'fieldCoordinator']}>
                     <EscalationManagement />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* Volunteer Calendar */}
+              <Route
+                path="volunteer-calendar"
+                element={
+                  <PrivateRoute requireRoles={['administrator', 'fieldCoordinator']}>
+                    <VolunteerCalendar />
                   </PrivateRoute>
                 }
               />

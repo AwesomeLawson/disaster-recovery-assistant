@@ -11,7 +11,6 @@ import {
   Divider,
 } from '@mui/material';
 import GoogleIcon from '@mui/icons-material/Google';
-import FacebookIcon from '@mui/icons-material/Facebook';
 import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import HandymanIcon from '@mui/icons-material/Handyman';
 import FoodBankIcon from '@mui/icons-material/FoodBank';
@@ -32,7 +31,7 @@ export const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [socialLoading, setSocialLoading] = useState<'google' | 'facebook' | null>(null);
+  const [socialLoading, setSocialLoading] = useState<'google' | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,13 +47,11 @@ export const Login: React.FC = () => {
     }
   };
 
-  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
+  const handleSocialLogin = async (provider: 'google') => {
     setError('');
     setSocialLoading(provider);
     try {
-      const firebaseUser = provider === 'google'
-        ? await authService.loginWithGoogle()
-        : await authService.loginWithFacebook();
+      const firebaseUser = await authService.loginWithGoogle();
       try {
         await userService.getUser(firebaseUser.uid);
         navigate('/dashboard');
@@ -70,7 +67,7 @@ export const Login: React.FC = () => {
       if (err.code === 'auth/account-exists-with-different-credential') {
         setError('An account already exists with this email using a different sign-in method.');
       } else {
-        setError(err.message || `Failed to sign in with ${provider}`);
+        setError(err.message || 'Failed to sign in with Google');
       }
     } finally {
       setSocialLoading(null);
@@ -101,7 +98,7 @@ export const Login: React.FC = () => {
             Sharing the restorative love of God
           </Typography>
           <Typography variant="body1" sx={{ color: '#B8C8E8', mb: 4, lineHeight: 1.8 }}>
-            Faith Responding is a volunteer coordination platform for Faith Responders — a
+            Faith Responders is a volunteer coordination platform — a
             501(c)(3) nonprofit empowering congregations to provide disaster relief and
             recovery to families in need.
           </Typography>
@@ -151,13 +148,13 @@ export const Login: React.FC = () => {
 
           <Paper elevation={3} sx={{ p: 4 }}>
             <Typography component="h1" variant="h4" fontWeight={800} color="primary" gutterBottom>
-              Faith Responding
+              Faith Responders
             </Typography>
             <Typography component="h2" variant="h6" fontWeight={600} gutterBottom>
               Sign In
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Access the Faith Responding volunteer coordination platform.
+              Access the Faith Responders volunteer coordination platform.
             </Typography>
 
             {error && (
@@ -209,30 +206,12 @@ export const Login: React.FC = () => {
                 startIcon={<GoogleIcon />}
                 onClick={() => handleSocialLogin('google')}
                 disabled={loading || socialLoading !== null}
-                sx={{ mb: 1 }}
+                sx={{ mb: 2 }}
               >
                 {socialLoading === 'google' ? 'Signing in...' : 'Continue with Google'}
               </Button>
 
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<FacebookIcon />}
-                onClick={() => handleSocialLogin('facebook')}
-                disabled={loading || socialLoading !== null}
-                sx={{
-                  mb: 2,
-                  backgroundColor: '#1877F2',
-                  color: 'white',
-                  borderColor: '#1877F2',
-                  '&:hover': { backgroundColor: '#166FE5', borderColor: '#166FE5' },
-                  '&:disabled': { backgroundColor: '#1877F2', opacity: 0.7 },
-                }}
-              >
-                {socialLoading === 'facebook' ? 'Signing in...' : 'Continue with Facebook'}
-              </Button>
-
-              <Box sx={{ textAlign: 'center' }}>
+              <Box sx={{ textAlign: 'center', mt: 1 }}>
                 <Link component={RouterLink} to="/register" variant="body2">
                   Don't have an account? Sign Up
                 </Link>

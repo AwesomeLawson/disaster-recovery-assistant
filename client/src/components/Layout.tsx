@@ -18,7 +18,9 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
+  ListSubheader,
 } from '@mui/material';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AssessmentIcon from '@mui/icons-material/Assessment';
@@ -28,16 +30,30 @@ import WorkIcon from '@mui/icons-material/Work';
 import WarningIcon from '@mui/icons-material/Warning';
 import MessageIcon from '@mui/icons-material/Message';
 import EventIcon from '@mui/icons-material/Event';
+import BusinessIcon from '@mui/icons-material/Business';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth.service';
+import { SessionBanner, useBannerHeight } from './SessionBanner';
+import type { UserRole } from '../types';
 
 const drawerWidth = 240;
 
+const PREVIEW_ROLES: { value: UserRole; label: string }[] = [
+  { value: 'assessor', label: 'Assessor' },
+  { value: 'fieldCoordinator', label: 'Field Coordinator' },
+  { value: 'baseCampHost', label: 'Basecamp Host' },
+  { value: 'workGroupLead', label: 'Team Leader' },
+  { value: 'volunteer', label: 'Volunteer' },
+  { value: 'secChaplain', label: 'SEC / Chaplain' },
+];
+
 export const Layout: React.FC = () => {
   const navigate = useNavigate();
-  const { user, firebaseUser } = useAuth();
+  const { user, firebaseUser, realUser, previewRole, setPreviewRole } = useAuth();
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const bannerHeight = useBannerHeight();
+  const isAdmin = realUser?.roles.includes('administrator') ?? false;
 
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
@@ -71,25 +87,33 @@ export const Layout: React.FC = () => {
       items.push(
         { text: 'Events', icon: <EventIcon />, path: '/events' },
         { text: 'Centers', icon: <LocationCityIcon />, path: '/centers' },
-        { text: 'Users', icon: <GroupIcon />, path: '/admin/users' }
+        { text: 'Users', icon: <GroupIcon />, path: '/admin/users' },
+        { text: 'Organizations', icon: <BusinessIcon />, path: '/admin/organizations' }
       );
     }
 
-    if (user.roles.includes('assessor') || user.roles.includes('administrator')) {
-      items.push({ text: 'Assessments', icon: <AssessmentIcon />, path: '/assessments' });
+    if (
+      user.roles.includes('assessor') ||
+      user.roles.includes('administrator') ||
+      user.roles.includes('fieldCoordinator')
+    ) {
+      items.push({ text: 'Cases', icon: <AssessmentIcon />, path: '/assessments' });
     }
 
     if (
       user.roles.includes('workGroupLead') ||
       user.roles.includes('volunteer') ||
-      user.roles.includes('administrator')
+      user.roles.includes('administrator') ||
+      user.roles.includes('fieldCoordinator') ||
+      user.roles.includes('secChaplain')
     ) {
       items.push({ text: 'Workgroups', icon: <WorkIcon />, path: '/workgroups' });
     }
 
     if (
       user.roles.includes('workGroupLead') ||
-      user.roles.includes('administrator')
+      user.roles.includes('administrator') ||
+      user.roles.includes('fieldCoordinator')
     ) {
       items.push({ text: 'Escalations', icon: <WarningIcon />, path: '/escalations' });
     }
@@ -125,9 +149,10 @@ export const Layout: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex' }}>
+      <SessionBanner />
       <AppBar
         position="fixed"
-        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, top: bannerHeight }}
       >
         <Container maxWidth="xl" sx={{ pl: { sm: 1 } }}>
           <Toolbar disableGutters>
@@ -172,6 +197,35 @@ export const Layout: React.FC = () => {
                 <MenuItem onClick={() => { navigate('/profile'); handleCloseUserMenu(); }}>
                   <Typography textAlign="center">Profile</Typography>
                 </MenuItem>
+                {isAdmin && [
+                  <Divider key="preview-div" />,
+                  <ListSubheader
+                    key="preview-header"
+                    sx={{ lineHeight: '32px', bgcolor: 'transparent', display: 'flex', alignItems: 'center', gap: 0.5 }}
+                  >
+                    <VisibilityIcon fontSize="small" /> Preview as Role
+                  </ListSubheader>,
+                  ...PREVIEW_ROLES.map((r) => (
+                    <MenuItem
+                      key={r.value}
+                      onClick={() => { setPreviewRole(r.value); handleCloseUserMenu(); }}
+                      selected={previewRole === r.value}
+                      sx={{ pl: 4 }}
+                    >
+                      <Typography variant="body2">{r.label}</Typography>
+                    </MenuItem>
+                  )),
+                  previewRole && (
+                    <MenuItem
+                      key="exit-preview"
+                      onClick={() => { setPreviewRole(null); handleCloseUserMenu(); }}
+                      sx={{ pl: 4 }}
+                    >
+                      <Typography variant="body2" color="error">Exit Preview</Typography>
+                    </MenuItem>
+                  ),
+                  <Divider key="logout-div" />,
+                ]}
                 <MenuItem onClick={handleLogout}>
                   <Typography textAlign="center">Logout</Typography>
                 </MenuItem>
@@ -202,7 +256,7 @@ export const Layout: React.FC = () => {
           variant="permanent"
           sx={{
             display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, top: bannerHeight },
           }}
           open
         >
@@ -215,7 +269,7 @@ export const Layout: React.FC = () => {
           flexGrow: 1,
           p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          mt: 8,
+          mt: `${64 + bannerHeight}px`,
         }}
       >
         <Outlet />

@@ -74,7 +74,7 @@ export const WorkGroupLeadDashboard: React.FC = () => {
     <Container maxWidth="lg">
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" gutterBottom>
-          Work Group Lead Dashboard
+          Team Leader Dashboard
         </Typography>
         <Typography variant="body1" color="text.secondary">
           Welcome back, {user?.email}
