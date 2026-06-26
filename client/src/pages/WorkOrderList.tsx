@@ -94,7 +94,8 @@ export const WorkOrderList: React.FC = () => {
   const canOpenWorkOrder =
     user?.roles.includes('administrator') ||
     user?.roles.includes('fieldCoordinator') ||
-    user?.roles.includes('assessor');
+    user?.roles.includes('assessor') ||
+    user?.roles.includes('workGroupLead');
 
   return (
     <Container maxWidth="lg">

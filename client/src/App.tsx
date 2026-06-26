@@ -177,7 +177,7 @@ function App() {
               <Route
                 path="work-orders/create"
                 element={
-                  <PrivateRoute requireRoles={['assessor', 'administrator', 'fieldCoordinator']}>
+                  <PrivateRoute requireRoles={['assessor', 'administrator', 'fieldCoordinator', 'workGroupLead']}>
                     <CreateWorkOrder />
                   </PrivateRoute>
                 }

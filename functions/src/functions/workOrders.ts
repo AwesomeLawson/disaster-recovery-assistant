@@ -18,7 +18,7 @@ export const createWorkOrder = onCall({ cors: true }, async (request: any) => {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const user = await requireRole(request.auth.uid, ['administrator', 'fieldCoordinator', 'assessor']);
+  const user = await requireRole(request.auth.uid, ['administrator', 'fieldCoordinator', 'assessor', 'workGroupLead']);
 
   const {
     survivorName, survivorPhone, altContact, altContactPhone,
