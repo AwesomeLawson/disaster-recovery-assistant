@@ -21,6 +21,7 @@ import * as trainingFunctions from './functions/trainings';
 import * as volunteerHoursFunctions from './functions/volunteerHours';
 import * as toolFunctions from './functions/tools';
 import * as toolsAIFunctions from './functions/toolsAI';
+import * as helpChatFunctions from './functions/helpChat';
 
 // User Management
 export const registerUser = userFunctions.registerUser;
@@ -129,6 +130,14 @@ export const listToolLendings = toolFunctions.listToolLendings;
 
 // AI Tool Suggestion
 export const suggestToolsFromPhoto = toolsAIFunctions.suggestToolsFromPhoto;
+
+// Help Chat
+export const createHelpConversation = helpChatFunctions.createHelpConversation;
+export const listMyHelpConversations = helpChatFunctions.listMyHelpConversations;
+export const getHelpConversation = helpChatFunctions.getHelpConversation;
+export const sendHelpMessage = helpChatFunctions.sendHelpMessage;
+export const renameHelpConversation = helpChatFunctions.renameHelpConversation;
+export const deleteHelpConversation = helpChatFunctions.deleteHelpConversation;
 
 // Trigger: Send welcome email when user is approved
 // Note: Firestore triggers will be configured separately

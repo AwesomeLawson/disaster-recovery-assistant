@@ -308,6 +308,26 @@ export interface Tool {
   updatedAt: number;
 }
 
+export interface HelpConversation {
+  id: string;
+  userId: string;
+  title: string;                 // user-editable; defaults to "New conversation"
+  lastMessageAt: number;
+  lastMessagePreview: string;
+  messageCount: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface HelpMessage {
+  id: string;
+  conversationId: string;
+  userId: string;                // owner of the conversation (for rules)
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: number;
+}
+
 export interface ToolLending {
   id: string;
   toolId: string;

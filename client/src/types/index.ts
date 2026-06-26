@@ -340,6 +340,27 @@ export interface ToolLending {
   updatedAt: number;
 }
 
+// Help Chat
+export interface HelpConversation {
+  id: string;
+  userId: string;
+  title: string;                 // user-editable; defaults to "New conversation"
+  lastMessageAt: number;
+  lastMessagePreview: string;
+  messageCount: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface HelpMessage {
+  id: string;
+  conversationId: string;
+  userId: string;                // owner of the conversation (for rules)
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: number;
+}
+
 // API Response types
 export interface ApiResponse<T> {
   success: boolean;

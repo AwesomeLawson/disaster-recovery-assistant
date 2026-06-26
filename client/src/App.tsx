@@ -31,6 +31,7 @@ import { TrainingsLibrary } from './pages/TrainingsLibrary';
 import { LogHours } from './pages/LogHours';
 import { AdminImpact } from './pages/AdminImpact';
 import { ToolInventory } from './pages/ToolInventory';
+import { Help } from './pages/Help';
 
 const theme = createTheme({
   palette: {
@@ -310,6 +311,16 @@ function App() {
 
               {/* Messaging - available to all authenticated users */}
               <Route path="messages" element={<Messaging />} />
+
+              {/* Help chat - AI assistant available to all authenticated users */}
+              <Route
+                path="help"
+                element={
+                  <PrivateRoute>
+                    <Help />
+                  </PrivateRoute>
+                }
+              />
             </Route>
 
             {/* Catch all - redirect to dashboard */}

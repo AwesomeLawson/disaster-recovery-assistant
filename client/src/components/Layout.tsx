@@ -35,6 +35,7 @@ import SchoolIcon from '@mui/icons-material/School';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import InsightsIcon from '@mui/icons-material/Insights';
 import BuildIcon from '@mui/icons-material/Build';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth.service';
 import { SessionBanner, useBannerHeight } from './SessionBanner';
@@ -134,6 +135,7 @@ export const Layout: React.FC = () => {
     items.push({ text: 'Log Hours', icon: <AccessTimeIcon />, path: '/log-hours' });
     items.push({ text: 'Trainings', icon: <SchoolIcon />, path: '/trainings' });
     items.push({ text: 'Messages', icon: <MessageIcon />, path: '/messages' });
+    items.push({ text: 'Help', icon: <HelpOutlineIcon />, path: '/help' });
 
     return items;
   };

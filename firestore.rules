@@ -106,5 +106,26 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAdmin() || isBaseCampHost();
     }
+
+    // Help Chat — conversations are user-owned; admins can read all.
+    // Reads/writes by the owner go through Cloud Functions, but we still
+    // permit owner-side reads (UI may subscribe directly later); creates by
+    // the owner are allowed for forward compatibility. Mutations that matter
+    // (sending messages, deletes) happen server-side.
+    match /helpConversations/{conversationId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() &&
+        resource.data.userId == request.auth.uid;
+    }
+
+    // Help Chat messages — readable only by the owning user of the
+    // conversation; writes only via Cloud Functions.
+    match /helpMessages/{messageId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
   }
 }
