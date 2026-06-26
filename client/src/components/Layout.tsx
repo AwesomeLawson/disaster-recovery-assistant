@@ -35,6 +35,7 @@ import SchoolIcon from '@mui/icons-material/School';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import InsightsIcon from '@mui/icons-material/Insights';
 import BuildIcon from '@mui/icons-material/Build';
+import SettingsIcon from '@mui/icons-material/Settings';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth.service';
@@ -94,7 +95,8 @@ export const Layout: React.FC = () => {
         { text: 'Base Camps', icon: <LocationCityIcon />, path: '/base-camps' },
         { text: 'Users', icon: <GroupIcon />, path: '/admin/users' },
         { text: 'Organizations', icon: <BusinessIcon />, path: '/admin/organizations' },
-        { text: 'Impact', icon: <InsightsIcon />, path: '/admin/impact' }
+        { text: 'Impact', icon: <InsightsIcon />, path: '/admin/impact' },
+        { text: 'Settings', icon: <SettingsIcon />, path: '/admin/settings' }
       );
     }
 

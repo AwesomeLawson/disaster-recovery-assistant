@@ -2,6 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { defineSecret } from 'firebase-functions/params';
 import * as admin from 'firebase-admin';
 import { User } from '../types';
+import { resolveAnthropicKey, safeSecretValue } from '../lib/anthropicKey';
 
 const db = admin.firestore();
 
@@ -81,14 +82,9 @@ export const suggestToolsFromPhoto = onCall(
       throw new HttpsError('invalid-argument', 'photoUrl is required');
     }
 
-    let apiKey: string;
-    try {
-      apiKey = anthropicKey.value();
-    } catch {
-      apiKey = '';
-    }
+    const { apiKey } = await resolveAnthropicKey(safeSecretValue(() => anthropicKey.value()));
     if (!apiKey) {
-      // Secret not set — graceful degradation.
+      // No key configured — graceful degradation.
       return { available: false, items: [] };
     }
 

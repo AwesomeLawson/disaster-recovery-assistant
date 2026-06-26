@@ -127,5 +127,11 @@ service cloud.firestore {
       allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
       allow write: if false;
     }
+
+    // App config (e.g., Anthropic API key) — never readable or writable
+    // from the client. Cloud Functions use the Admin SDK to manage these.
+    match /appConfig/{configId} {
+      allow read, write: if false;
+    }
   }
 }

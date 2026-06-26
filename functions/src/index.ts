@@ -22,6 +22,7 @@ import * as volunteerHoursFunctions from './functions/volunteerHours';
 import * as toolFunctions from './functions/tools';
 import * as toolsAIFunctions from './functions/toolsAI';
 import * as helpChatFunctions from './functions/helpChat';
+import * as appConfigFunctions from './functions/appConfig';
 
 // User Management
 export const registerUser = userFunctions.registerUser;
@@ -138,6 +139,12 @@ export const getHelpConversation = helpChatFunctions.getHelpConversation;
 export const sendHelpMessage = helpChatFunctions.sendHelpMessage;
 export const renameHelpConversation = helpChatFunctions.renameHelpConversation;
 export const deleteHelpConversation = helpChatFunctions.deleteHelpConversation;
+
+// App Config (admin-only)
+export const setAnthropicApiKey = appConfigFunctions.setAnthropicApiKey;
+export const clearAnthropicApiKey = appConfigFunctions.clearAnthropicApiKey;
+export const getAnthropicApiKeyStatus = appConfigFunctions.getAnthropicApiKeyStatus;
+export const testAnthropicApiKey = appConfigFunctions.testAnthropicApiKey;
 
 // Trigger: Send welcome email when user is approved
 // Note: Firestore triggers will be configured separately

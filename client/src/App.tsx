@@ -26,6 +26,7 @@ import { AdminUsers } from './pages/AdminUsers';
 import { EscalationManagement } from './pages/EscalationManagement';
 import { UserProfile } from './pages/UserProfile';
 import { OrganizationManagement } from './pages/OrganizationManagement';
+import { AdminSettings } from './pages/AdminSettings';
 import { VolunteerCalendar } from './pages/VolunteerCalendar';
 import { TrainingsLibrary } from './pages/TrainingsLibrary';
 import { LogHours } from './pages/LogHours';
@@ -166,6 +167,14 @@ function App() {
                 element={
                   <PrivateRoute requireRoles={['administrator']}>
                     <OrganizationManagement />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="admin/settings"
+                element={
+                  <PrivateRoute requireRoles={['administrator']}>
+                    <AdminSettings />
                   </PrivateRoute>
                 }
               />

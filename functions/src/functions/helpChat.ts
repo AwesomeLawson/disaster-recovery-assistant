@@ -3,6 +3,7 @@ import { defineSecret } from 'firebase-functions/params';
 import * as admin from 'firebase-admin';
 import { HelpConversation, HelpMessage, User } from '../types';
 import { USER_GUIDE_MD } from '../data/user-guide';
+import { resolveAnthropicKey, safeSecretValue } from '../lib/anthropicKey';
 
 const db = admin.firestore();
 
@@ -233,17 +234,12 @@ export const sendHelpMessage = onCall(
       : null;
 
     // 4) Resolve API key. If missing, gracefully degrade.
-    let apiKey = '';
-    try {
-      apiKey = anthropicKey.value();
-    } catch {
-      apiKey = '';
-    }
+    const { apiKey } = await resolveAnthropicKey(safeSecretValue(() => anthropicKey.value()));
 
     let assistantText: string;
     if (!apiKey) {
       assistantText =
-        'AI assistant is not configured yet. An administrator needs to set the ANTHROPIC_API_KEY secret.';
+        'AI assistant is not configured yet. An administrator can set the API key from Admin Settings.';
     } else {
       try {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
