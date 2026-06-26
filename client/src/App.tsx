@@ -28,6 +28,8 @@ import { UserProfile } from './pages/UserProfile';
 import { OrganizationManagement } from './pages/OrganizationManagement';
 import { VolunteerCalendar } from './pages/VolunteerCalendar';
 import { TrainingsLibrary } from './pages/TrainingsLibrary';
+import { LogHours } from './pages/LogHours';
+import { AdminImpact } from './pages/AdminImpact';
 
 const theme = createTheme({
   palette: {
@@ -268,6 +270,26 @@ function App() {
                 element={
                   <PrivateRoute>
                     <TrainingsLibrary />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* Log Hours - available to all approved users */}
+              <Route
+                path="log-hours"
+                element={
+                  <PrivateRoute>
+                    <LogHours />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* Admin Impact dashboard */}
+              <Route
+                path="admin/impact"
+                element={
+                  <PrivateRoute requireRoles={['administrator']}>
+                    <AdminImpact />
                   </PrivateRoute>
                 }
               />

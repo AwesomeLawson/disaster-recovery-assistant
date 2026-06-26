@@ -32,6 +32,8 @@ import MessageIcon from '@mui/icons-material/Message';
 import EventIcon from '@mui/icons-material/Event';
 import BusinessIcon from '@mui/icons-material/Business';
 import SchoolIcon from '@mui/icons-material/School';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import InsightsIcon from '@mui/icons-material/Insights';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth.service';
 import { SessionBanner, useBannerHeight } from './SessionBanner';
@@ -89,7 +91,8 @@ export const Layout: React.FC = () => {
         { text: 'Events', icon: <EventIcon />, path: '/events' },
         { text: 'Base Camps', icon: <LocationCityIcon />, path: '/base-camps' },
         { text: 'Users', icon: <GroupIcon />, path: '/admin/users' },
-        { text: 'Organizations', icon: <BusinessIcon />, path: '/admin/organizations' }
+        { text: 'Organizations', icon: <BusinessIcon />, path: '/admin/organizations' },
+        { text: 'Impact', icon: <InsightsIcon />, path: '/admin/impact' }
       );
     }
 
@@ -119,6 +122,7 @@ export const Layout: React.FC = () => {
       items.push({ text: 'Escalations', icon: <WarningIcon />, path: '/escalations' });
     }
 
+    items.push({ text: 'Log Hours', icon: <AccessTimeIcon />, path: '/log-hours' });
     items.push({ text: 'Trainings', icon: <SchoolIcon />, path: '/trainings' });
     items.push({ text: 'Messages', icon: <MessageIcon />, path: '/messages' });
 

@@ -239,6 +239,18 @@ export interface UserEventData {
   updatedAt: number;
 }
 
+export interface VolunteerHours {
+  id: string;
+  userId: string;
+  userName: string;             // denormalized for fast list rendering
+  eventId: string;
+  date: number;                 // unix ms at midnight (local) of the day
+  hours: number;
+  notes?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface Thread {
   id: string;
   type: 'direct' | 'workgroup';
