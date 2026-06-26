@@ -13,6 +13,10 @@ import * as workgroupFunctions from './functions/workgroups';
 import * as escalationFunctions from './functions/escalations';
 import * as messageFunctions from './functions/messages';
 import * as legalReleaseFunctions from './functions/legalReleases';
+import * as organizationFunctions from './functions/organizations';
+import * as preApprovedUserFunctions from './functions/preApprovedUsers';
+import * as homeownerReleaseFunctions from './functions/homeownerReleases';
+import * as userEventDataFunctions from './functions/userEventData';
 
 // User Management
 export const registerUser = userFunctions.registerUser;
@@ -23,6 +27,9 @@ export const updateUserProfile = userFunctions.updateUserProfile;
 export const getUser = userFunctions.getUser;
 export const listUsers = userFunctions.listUsers;
 export const listOrganizations = userFunctions.listOrganizations;
+export const addContactNote = userFunctions.addContactNote;
+export const impersonateUser = userFunctions.impersonateUser;
+export const deleteUser = userFunctions.deleteUser;
 
 // Event Management
 export const createEvent = eventFunctions.createEvent;
@@ -39,10 +46,12 @@ export const updateCenter = centerFunctions.updateCenter;
 export const getCenter = centerFunctions.getCenter;
 export const listCenters = centerFunctions.listCenters;
 
-// Assessment Management
+// Assessment / Case Management
 export const createAssessment = assessmentFunctions.createAssessment;
 export const updateAssessment = assessmentFunctions.updateAssessment;
+export const completeFieldAssessment = assessmentFunctions.completeFieldAssessment;
 export const reassessment = assessmentFunctions.reassessment;
+export const assignAssessor = assessmentFunctions.assignAssessor;
 export const deleteAssessment = assessmentFunctions.deleteAssessment;
 export const getAssessment = assessmentFunctions.getAssessment;
 export const listAssessments = assessmentFunctions.listAssessments;
@@ -63,14 +72,36 @@ export const getEscalation = escalationFunctions.getEscalation;
 export const listEscalations = escalationFunctions.listEscalations;
 
 // Message Management
+export const getReachableContacts = messageFunctions.getReachableContacts;
+export const getOrCreateDirectThread = messageFunctions.getOrCreateDirectThread;
+export const getOrCreateWorkgroupThread = messageFunctions.getOrCreateWorkgroupThread;
 export const sendMessage = messageFunctions.sendMessage;
-export const sendEventMessage = messageFunctions.sendEventMessage;
-export const getMessages = messageFunctions.getMessages;
 
 // Legal Release Management
 export const createLegalRelease = legalReleaseFunctions.createLegalRelease;
 export const signLegalRelease = legalReleaseFunctions.signLegalRelease;
 export const getLegalRelease = legalReleaseFunctions.getLegalRelease;
+
+// Organization Management
+export const createOrganization = organizationFunctions.createOrganization;
+export const deleteOrganization = organizationFunctions.deleteOrganization;
+export const listManagedOrganizations = organizationFunctions.listManagedOrganizations;
+export const mergeOrganizations = organizationFunctions.mergeOrganizations;
+
+// Pre-Approved Users
+export const lookupPreApprovedUser = preApprovedUserFunctions.lookupPreApprovedUser;
+export const listPreApprovedUsers = preApprovedUserFunctions.listPreApprovedUsers;
+
+// Homeowner Releases
+export const createHomeownerRelease = homeownerReleaseFunctions.createHomeownerRelease;
+export const getHomeownerRelease = homeownerReleaseFunctions.getHomeownerRelease;
+
+// User Event Data (availability)
+export const setUserEventAvailability = userEventDataFunctions.setUserEventAvailability;
+export const listMyEventData = userEventDataFunctions.listMyEventData;
+export const listUserEventData = userEventDataFunctions.listUserEventData;
+export const listAllEventData = userEventDataFunctions.listAllEventData;
+export const confirmUserEventDates = userEventDataFunctions.confirmUserEventDates;
 
 // Trigger: Send welcome email when user is approved
 // Note: Firestore triggers will be configured separately

@@ -56,15 +56,27 @@ export const PrivateRoute: React.FC<PrivateRouteProps> = ({
           <Paper elevation={3} sx={{ p: 5, maxWidth: 520, width: '100%', textAlign: 'center' }}>
             <CheckCircleOutlineIcon sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
             <Typography variant="h4" gutterBottom fontWeight={600}>
-              You're all signed up!
+              Thank you for signing up!
             </Typography>
             <Typography variant="body1" color="text.secondary" paragraph>
-              Thank you for registering with Faith Responders. Your application has been received and
-              is currently under review by our team.
+              Your registration and legal release have been received. Here's what happens next:
             </Typography>
-            <Typography variant="body1" color="text.secondary" paragraph>
-              We'll reach out to you soon once your request has been reviewed. In the meantime, if you
-              have any questions please contact your event coordinator.
+            <Box sx={{ textAlign: 'left', mb: 2 }}>
+              {[
+                'Our team will contact you to schedule a background check.',
+                'Once the background check is complete, an administrator will review and approve your application.',
+                'You\'ll receive an email confirming your approval along with logistics details.',
+              ].map((step, i) => (
+                <Box key={i} sx={{ display: 'flex', gap: 1.5, mb: 1.5 }}>
+                  <Box sx={{ minWidth: 24, height: 24, borderRadius: '50%', bgcolor: 'primary.main', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, mt: '1px' }}>
+                    {i + 1}
+                  </Box>
+                  <Typography variant="body2" color="text.secondary">{step}</Typography>
+                </Box>
+              ))}
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              If you have any questions in the meantime, please contact your event coordinator.
             </Typography>
             <Button
               variant="outlined"

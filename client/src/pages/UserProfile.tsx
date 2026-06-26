@@ -30,7 +30,18 @@ import LockIcon from '@mui/icons-material/Lock';
 import { useAuth } from '../context/AuthContext';
 import { userService } from '../services/user.service';
 import { authService } from '../services/auth.service';
-import type { CommunicationPreference, AvailabilityRange } from '../types';
+import type { CommunicationPreference, AvailabilityRange, UserCapability, TshirtSize } from '../types';
+
+const CAPABILITY_LABELS: Record<UserCapability, string> = {
+  trainer: 'Trainer',
+  assessor: 'Assessor',
+  basicDRT: 'Basic DRT',
+  chainsaw: 'Chainsaw',
+  spiritualEmotionalCare: 'Spiritual & Emotional Care',
+  heavyEquipment: 'Heavy Equipment',
+  construction: 'Construction',
+  adminBaseCampSupport: 'Admin/Base Camp Support',
+};
 
 export const UserProfile: React.FC = () => {
   const navigate = useNavigate();
@@ -50,6 +61,7 @@ export const UserProfile: React.FC = () => {
     addressState: '',
     addressZip: '',
     organization: '',
+    tshirtSize: '' as TshirtSize | '',
   });
   const [editAvailability, setEditAvailability] = useState<{ start: string; end: string }[]>([]);
   const [organizations, setOrganizations] = useState<string[]>([]);
@@ -77,6 +89,7 @@ export const UserProfile: React.FC = () => {
         addressState: user.address?.state || '',
         addressZip: user.address?.zip || '',
         organization: user.organization || '',
+        tshirtSize: user.tshirtSize || '',
       });
       setEditAvailability(
         (user.availability || []).map((r) => ({
@@ -106,6 +119,7 @@ export const UserProfile: React.FC = () => {
           : undefined,
         organization: editForm.organization.trim() || undefined,
         availability: availabilityRanges.length ? availabilityRanges : undefined,
+        tshirtSize: editForm.tshirtSize || undefined,
       });
       await refreshUser();
       setEditDialogOpen(false);
@@ -143,18 +157,14 @@ export const UserProfile: React.FC = () => {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'administrator':
-        return 'error';
-      case 'assessor':
-        return 'primary';
-      case 'workGroupLead':
-        return 'secondary';
-      case 'volunteer':
-        return 'info';
-      case 'thirdParty':
-        return 'default';
-      default:
-        return 'default';
+      case 'administrator': return 'error';
+      case 'assessor': return 'primary';
+      case 'fieldCoordinator': return 'secondary';
+      case 'workGroupLead': return 'secondary';
+      case 'volunteer': return 'info';
+      case 'baseCampHost': return 'info';
+      case 'secChaplain': return 'success';
+      default: return 'default';
     }
   };
 
@@ -282,6 +292,17 @@ export const UserProfile: React.FC = () => {
               </>
             )}
 
+            {user.tshirtSize && (
+              <>
+                <Typography variant="subtitle2" color="text.secondary">
+                  T-Shirt Size
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                  {{ S: 'Small', M: 'Medium', L: 'Large', XL: 'Extra Large', '2XL': '2X', '3XL': '3X' }[user.tshirtSize] ?? user.tshirtSize}
+                </Typography>
+              </>
+            )}
+
             {user.availability && user.availability.length > 0 && (
               <>
                 <Typography variant="subtitle2" color="text.secondary">
@@ -364,6 +385,27 @@ export const UserProfile: React.FC = () => {
                 </Box>
               </>
             )}
+
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>
+              Capabilities
+            </Typography>
+            <Box sx={{ mb: 2 }}>
+              {!user.capabilities || user.capabilities.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  None assigned
+                </Typography>
+              ) : (
+                user.capabilities.map((cap) => (
+                  <Chip
+                    key={cap}
+                    label={CAPABILITY_LABELS[cap] ?? cap}
+                    size="small"
+                    variant="outlined"
+                    sx={{ mr: 0.5, mb: 0.5 }}
+                  />
+                ))
+              )}
+            </Box>
           </Paper>
 
           <Paper sx={{ p: 3 }}>
@@ -489,6 +531,23 @@ export const UserProfile: React.FC = () => {
                 <TextField {...params} fullWidth label="Church / Organization (optional)" sx={{ mb: 2 }} />
               )}
             />
+
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>T-Shirt Size (optional)</InputLabel>
+              <Select
+                value={editForm.tshirtSize}
+                label="T-Shirt Size (optional)"
+                onChange={(e) => setEditForm({ ...editForm, tshirtSize: e.target.value as TshirtSize | '' })}
+              >
+                <MenuItem value=""><em>Prefer not to say</em></MenuItem>
+                <MenuItem value="S">Small</MenuItem>
+                <MenuItem value="M">Medium</MenuItem>
+                <MenuItem value="L">Large</MenuItem>
+                <MenuItem value="XL">Extra Large</MenuItem>
+                <MenuItem value="2XL">2X</MenuItem>
+                <MenuItem value="3XL">3X</MenuItem>
+              </Select>
+            </FormControl>
 
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
