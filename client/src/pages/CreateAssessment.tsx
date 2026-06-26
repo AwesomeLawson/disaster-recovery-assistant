@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Container,
   Paper,
@@ -13,74 +13,71 @@ import {
   MenuItem,
   Alert,
   Grid,
+  Divider,
 } from '@mui/material';
 import { assessmentService } from '../services/assessment.service';
 import { centerService } from '../services/center.service';
 import { eventService } from '../services/event.service';
 import { AddressAutocomplete } from '../components/AddressAutocomplete';
-import type { AssessmentSeverity, Center, Event } from '../types';
+import type { Center, Event } from '../types';
 
 export const CreateAssessment: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [centers, setCenters] = useState<Center[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [formData, setFormData] = useState({
-    placeName: '',
+    survivorName: '',
+    survivorPhone: '',
+    altContact: '',
+    altContactPhone: '',
     address: '',
     latitude: undefined as number | undefined,
     longitude: undefined as number | undefined,
-    centerId: '',
-    eventId: '',
-    damages: '',
-    needs: '',
-    affectedPeople: 0,
-    severity: 'medium' as AssessmentSeverity,
+    tempAddress: '',
+    descriptionOfNeed: '',
+    source: '',
+    caseNumber: '',
+    centerId: searchParams.get('centerId') ?? '',
+    eventId: searchParams.get('eventId') ?? '',
   });
 
   useEffect(() => {
-    loadData();
+    Promise.all([centerService.listCenters(), eventService.listEvents()])
+      .then(([centersData, eventsData]) => {
+        setCenters(centersData);
+        setEvents(eventsData);
+      })
+      .catch((err) => setError(err.message || 'Failed to load data'));
   }, []);
-
-  const loadData = async () => {
-    try {
-      const [centersData, eventsData] = await Promise.all([
-        centerService.listCenters(),
-        eventService.listEvents(),
-      ]);
-      setCenters(centersData);
-      setEvents(eventsData);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load data');
-    }
-  };
-
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setPhotoFiles(Array.from(e.target.files));
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
-      // Create assessment first
-      const assessment = await assessmentService.createAssessment(formData);
+      const payload: Record<string, any> = {
+        survivorName: formData.survivorName,
+        survivorPhone: formData.survivorPhone,
+        address: formData.address,
+        descriptionOfNeed: formData.descriptionOfNeed,
+        centerId: formData.centerId,
+      };
+      if (formData.altContact) payload.altContact = formData.altContact;
+      if (formData.altContactPhone) payload.altContactPhone = formData.altContactPhone;
+      if (formData.latitude !== undefined) payload.latitude = formData.latitude;
+      if (formData.longitude !== undefined) payload.longitude = formData.longitude;
+      if (formData.tempAddress) payload.tempAddress = formData.tempAddress;
+      if (formData.source) payload.source = formData.source;
+      if (formData.caseNumber) payload.caseNumber = formData.caseNumber;
+      if (formData.eventId) payload.eventId = formData.eventId;
 
-      // Upload photos if any
-      if (photoFiles.length > 0) {
-        const photoUrls = await assessmentService.uploadPhotos(photoFiles, assessment.id);
-        await assessmentService.updateAssessment(assessment.id, { photoUrls });
-      }
-
-      navigate('/assessments');
+      const assessment = await assessmentService.createAssessment(payload as any);
+      navigate(`/assessments/${assessment.id}`);
     } catch (err: any) {
-      setError(err.message || 'Failed to create assessment');
+      setError(err.message || 'Failed to open case');
     } finally {
       setLoading(false);
     }
@@ -89,26 +86,63 @@ export const CreateAssessment: React.FC = () => {
   return (
     <Container maxWidth="md">
       <Paper sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Create New Assessment
+        <Typography variant="h4" gutterBottom>Open New Case</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Capture the survivor's contact information and initial description of need. An assessor will complete the field assessment on-site.
         </Typography>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>
-            {error}
-          </Alert>
+          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>{error}</Alert>
         )}
 
         <Box component="form" onSubmit={handleSubmit}>
           <Grid container spacing={2}>
+
+            {/* Survivor Contact */}
             <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle1" fontWeight={600}>Survivor Contact</Typography>
+              <Divider sx={{ mt: 0.5, mb: 2 }} />
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 required
                 fullWidth
-                label="Place Name"
-                value={formData.placeName}
-                onChange={(e) => setFormData({ ...formData, placeName: e.target.value })}
+                label="Survivor Name"
+                value={formData.survivorName}
+                onChange={(e) => setFormData({ ...formData, survivorName: e.target.value })}
               />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                required
+                fullWidth
+                label="Survivor Phone"
+                value={formData.survivorPhone}
+                onChange={(e) => setFormData({ ...formData, survivorPhone: e.target.value })}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth
+                label="Alt Contact Name (optional)"
+                value={formData.altContact}
+                onChange={(e) => setFormData({ ...formData, altContact: e.target.value })}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth
+                label="Alt Contact Phone (optional)"
+                value={formData.altContactPhone}
+                onChange={(e) => setFormData({ ...formData, altContactPhone: e.target.value })}
+              />
+            </Grid>
+
+            {/* Property */}
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 1 }}>Property</Typography>
+              <Divider sx={{ mt: 0.5, mb: 2 }} />
             </Grid>
 
             <Grid size={{ xs: 12 }}>
@@ -128,25 +162,56 @@ export const CreateAssessment: React.FC = () => {
                 }
               />
             </Grid>
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                fullWidth
+                label="Temporary Address (optional)"
+                value={formData.tempAddress}
+                onChange={(e) => setFormData({ ...formData, tempAddress: e.target.value })}
+                placeholder="Where survivor is staying if displaced"
+              />
+            </Grid>
 
+            {/* Request Details */}
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 1 }}>Request Details</Typography>
+              <Divider sx={{ mt: 0.5, mb: 2 }} />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                required
+                fullWidth
+                multiline
+                rows={4}
+                label="Description of Need"
+                value={formData.descriptionOfNeed}
+                onChange={(e) => setFormData({ ...formData, descriptionOfNeed: e.target.value })}
+                placeholder="Brief description of the damage and what assistance is needed"
+              />
+            </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel>Event (Optional)</InputLabel>
-                <Select
-                  value={formData.eventId}
-                  label="Event (Optional)"
-                  onChange={(e) => setFormData({ ...formData, eventId: e.target.value })}
-                >
-                  <MenuItem value="">
-                    <em>None</em>
-                  </MenuItem>
-                  {events.map((event) => (
-                    <MenuItem key={event.id} value={event.id}>
-                      {event.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <TextField
+                fullWidth
+                label="Source (optional)"
+                value={formData.source}
+                onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                placeholder="e.g. Phone, Walk-in, Referral"
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth
+                label="Case Number (optional)"
+                value={formData.caseNumber}
+                onChange={(e) => setFormData({ ...formData, caseNumber: e.target.value })}
+              />
+            </Grid>
+
+            {/* Assignment */}
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 1 }}>Assignment</Typography>
+              <Divider sx={{ mt: 0.5, mb: 2 }} />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -158,88 +223,32 @@ export const CreateAssessment: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, centerId: e.target.value })}
                 >
                   {centers.map((center) => (
-                    <MenuItem key={center.id} value={center.id}>
-                      {center.name}
-                    </MenuItem>
+                    <MenuItem key={center.id} value={center.id}>{center.name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FormControl fullWidth>
+                <InputLabel>Event (Optional)</InputLabel>
+                <Select
+                  value={formData.eventId}
+                  label="Event (Optional)"
+                  onChange={(e) => setFormData({ ...formData, eventId: e.target.value })}
+                >
+                  <MenuItem value=""><em>None</em></MenuItem>
+                  {events.map((event) => (
+                    <MenuItem key={event.id} value={event.id}>{event.name}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <TextField
-                required
-                fullWidth
-                label="Damages Description"
-                multiline
-                rows={3}
-                value={formData.damages}
-                onChange={(e) => setFormData({ ...formData, damages: e.target.value })}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                required
-                fullWidth
-                label="Needs Description"
-                multiline
-                rows={3}
-                value={formData.needs}
-                onChange={(e) => setFormData({ ...formData, needs: e.target.value })}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                required
-                fullWidth
-                type="number"
-                label="Number of Affected People"
-                value={formData.affectedPeople}
-                onChange={(e) =>
-                  setFormData({ ...formData, affectedPeople: parseInt(e.target.value) || 0 })
-                }
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth required>
-                <InputLabel>Severity</InputLabel>
-                <Select
-                  value={formData.severity}
-                  label="Severity"
-                  onChange={(e) =>
-                    setFormData({ ...formData, severity: e.target.value as AssessmentSeverity })
-                  }
-                >
-                  <MenuItem value="low">Low</MenuItem>
-                  <MenuItem value="medium">Medium</MenuItem>
-                  <MenuItem value="high">High</MenuItem>
-                  <MenuItem value="critical">Critical</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <Button variant="outlined" component="label" fullWidth>
-                Upload Photos (Optional)
-                <input type="file" hidden multiple accept="image/*" onChange={handlePhotoChange} />
-              </Button>
-              {photoFiles.length > 0 && (
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  {photoFiles.length} file(s) selected
-                </Typography>
-              )}
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
-                <Button variant="outlined" onClick={() => navigate('/assessments')}>
-                  Cancel
-                </Button>
+                <Button variant="outlined" onClick={() => navigate('/assessments')}>Cancel</Button>
                 <Button type="submit" variant="contained" disabled={loading}>
-                  {loading ? 'Creating...' : 'Create Assessment'}
+                  {loading ? 'Opening...' : 'Open Case'}
                 </Button>
               </Box>
             </Grid>

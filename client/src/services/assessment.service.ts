@@ -1,14 +1,18 @@
 import { httpsCallable } from 'firebase/functions';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { functions, storage } from '../config/firebase';
-import type { Assessment, AssessmentFormData } from '../types';
+import type { Assessment, AssessmentFormData, FieldAssessmentFormData } from '../types';
 
 export const assessmentService = {
-  // Create a new assessment
   async createAssessment(data: AssessmentFormData): Promise<Assessment> {
-    const createAssessmentFn = httpsCallable(functions, 'createAssessment');
-    const result = await createAssessmentFn(data);
+    const fn = httpsCallable(functions, 'createAssessment');
+    const result = await fn(data);
     return (result.data as any).assessment;
+  },
+
+  async completeFieldAssessment(data: FieldAssessmentFormData): Promise<void> {
+    const fn = httpsCallable(functions, 'completeFieldAssessment');
+    await fn(data);
   },
 
   // Update assessment
@@ -25,6 +29,11 @@ export const assessmentService = {
   ): Promise<void> {
     const reassessmentFn = httpsCallable(functions, 'reassessment');
     await reassessmentFn({ assessmentId, updates, flagForReview });
+  },
+
+  async assignAssessor(assessmentId: string, assessorId: string): Promise<void> {
+    const fn = httpsCallable(functions, 'assignAssessor');
+    await fn({ assessmentId, assessorId });
   },
 
   // Delete assessment (admin only)

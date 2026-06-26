@@ -1,4 +1,14 @@
-export type UserRole = 'administrator' | 'assessor' | 'workGroupLead' | 'volunteer' | 'thirdParty' | 'fieldCoordinator' | 'baseCampHost';
+export type UserRole = 'administrator' | 'assessor' | 'workGroupLead' | 'volunteer' | 'fieldCoordinator' | 'baseCampHost' | 'secChaplain';
+
+export type UserCapability =
+  | 'trainer'
+  | 'assessor'
+  | 'basicDRT'
+  | 'chainsaw'
+  | 'spiritualEmotionalCare'
+  | 'heavyEquipment'
+  | 'construction'
+  | 'adminBaseCampSupport';
 
 export interface AvailabilityRange {
   start: number;
@@ -7,7 +17,21 @@ export interface AvailabilityRange {
 
 export type CommunicationPreference = 'email' | 'sms';
 
+export type TshirtSize = 'S' | 'M' | 'L' | 'XL' | '2XL' | '3XL';
+
+export interface ContactNote {
+  text: string;
+  authorId: string;
+  authorName: string;
+  createdAt: number;
+}
+
 export type AssessmentSeverity = 'low' | 'medium' | 'high' | 'critical';
+
+export type CaseStatus = 'intake' | 'awaitingAssessment' | 'assessed' | 'assigned' | 'inProgress' | 'completed';
+
+export type HomeType = 'mobile_modular' | 'stick_built' | 'block' | 'multi_family';
+export type FEMAStatus = 'yes' | 'no' | 'na';
 
 export type EscalationType = 'assessor' | 'administrative' | 'thirdParty';
 
@@ -33,11 +57,14 @@ export interface User {
   roles: UserRole[];
   requestedRoles?: UserRole[];
   roleApprovalStatus: 'pending' | 'approved' | 'rejected';
+  capabilities?: UserCapability[];
   eventIds?: string[];
   centerIds?: string[];
   organization?: string;
   availability?: AvailabilityRange[];
+  tshirtSize?: TshirtSize;
   contacted?: boolean;
+  contactNotes?: ContactNote[];
   legalReleaseId?: string;
   legalReleaseSigned: boolean;
   lastBackgroundCheck?: number;
@@ -72,21 +99,79 @@ export interface Center {
 
 export interface Assessment {
   id: string;
-  placeName: string;
+  status: CaseStatus;
+
+  // Intake fields (captured first — survivor contact + initial description)
+  survivorName: string;
+  survivorPhone: string;
+  altContact?: string;
+  altContactPhone?: string;
   address: string;
   latitude?: number;
   longitude?: number;
-  assessorId: string;
+  county?: string;
+  tempAddress?: string;
+  descriptionOfNeed: string;
+  source?: string;
+  intakeVolunteerName?: string;
+  caseNumber?: string;
+
   centerId: string;
-  eventId?: string; // Optional - which event this assessment is for
-  damages: string;
-  needs: string;
-  affectedPeople: number;
-  severity: AssessmentSeverity;
+  eventId?: string;
+
+  // On-site assessment fields (captured by assessor — optional until field assessment is completed)
+  assessorId?: string;
+  placeName?: string;
+  damages?: string;
+  needs?: string;
+  affectedPeople?: number;
+  severity?: AssessmentSeverity;
+
+  // Occupancy & household
+  currentlyOccupied?: boolean;
+  numberOfOccupants?: number;
+  householdUnder18?: number;
+  household19to64?: number;
+  household65plus?: number;
+
+  // Property
+  isPrimaryResidence?: boolean;
+  isHabitable?: boolean;
+  survivorOwnsProperty?: boolean;
+  ownerName?: string;
+  ownerPhone?: string;
+  homeType?: HomeType;
+
+  // Insurance & FEMA
+  registeredForFEMA?: FEMAStatus;
+  hasHOInsurance?: boolean;
+  insuranceContacted?: boolean;
+
+  accessConcerns?: string;
   photoUrls: string[];
-  legalReleaseUrl?: string;
+  homeownerReleaseId?: string;
   reassessmentCount: number;
   flaggedForReview: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface HomeownerRelease {
+  id: string;
+  assessmentId: string;
+  createdBy: string;
+  homeownerName: string;
+  phoneNumber: string;
+  propertyAddress: string;
+  propertyCityStateZip: string;
+  coOwnerName?: string;
+  coOwnerPhone?: string;
+  frrRepName: string;
+  frrPhone: string;
+  homeownerSignatureUrl: string;
+  coOwnerSignatureUrl?: string;
+  frrWitnessSignatureUrl: string;
+  signedAt: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -125,16 +210,38 @@ export interface Escalation {
   resolvedAt?: number;
 }
 
+export interface UserEventData {
+  id: string;
+  userId: string;
+  eventId: string;
+  submittedAvailability: AvailabilityRange[];
+  confirmedDates: AvailabilityRange[];
+  confirmedBy?: string;
+  confirmedAt?: number;
+  notes?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface Thread {
+  id: string;
+  type: 'direct' | 'workgroup';
+  participantIds: string[];
+  participantNames: Record<string, string>;
+  workgroupId?: string;
+  title: string;
+  lastMessageAt: number;
+  lastMessagePreview: string;
+  createdAt: number;
+}
+
 export interface Message {
   id: string;
   threadId: string;
   senderId: string;
-  recipientIds: string[];
+  senderName: string;
   content: string;
-  type: 'sms' | 'email' | 'inApp';
-  eventId?: string;
-  centerId?: string;
-  workgroupId?: string;
+  participantIds: string[];
   createdAt: number;
 }
 
