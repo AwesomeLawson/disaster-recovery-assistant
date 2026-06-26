@@ -1,11 +1,9 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { defineSecret } from 'firebase-functions/params';
 import * as admin from 'firebase-admin';
 import { User } from '../types';
-import { resolveAnthropicKey, safeSecretValue } from '../lib/anthropicKey';
+import { resolveAnthropicKey } from '../lib/anthropicKey';
 
 const db = admin.firestore();
-const anthropicKey = defineSecret('ANTHROPIC_API_KEY');
 
 const CONFIG_COLLECTION = 'appConfig';
 const ANTHROPIC_DOC = 'anthropic';
@@ -51,7 +49,7 @@ export const clearAnthropicApiKey = onCall({ cors: true }, async (request: any) 
 });
 
 export const getAnthropicApiKeyStatus = onCall(
-  { cors: true, secrets: [anthropicKey] },
+  { cors: true },
   async (request: any) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'User must be authenticated');
     await requireAdmin(request.auth.uid);
@@ -59,11 +57,10 @@ export const getAnthropicApiKeyStatus = onCall(
     const snap = await db.collection(CONFIG_COLLECTION).doc(ANTHROPIC_DOC).get();
     const data = snap.exists ? snap.data() : null;
     const firestoreConfigured = !!data?.apiKey;
-    const secretConfigured = !!safeSecretValue(() => anthropicKey.value());
 
     return {
-      configured: firestoreConfigured || secretConfigured,
-      source: firestoreConfigured ? 'firestore' : secretConfigured ? 'secret' : 'none',
+      configured: firestoreConfigured,
+      source: firestoreConfigured ? 'firestore' : 'none',
       updatedAt: data?.updatedAt || null,
       updatedByName: data?.updatedByName || null,
     };
@@ -71,13 +68,12 @@ export const getAnthropicApiKeyStatus = onCall(
 );
 
 export const testAnthropicApiKey = onCall(
-  { cors: true, secrets: [anthropicKey], timeoutSeconds: 30 },
+  { cors: true, timeoutSeconds: 30 },
   async (request: any) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'User must be authenticated');
     await requireAdmin(request.auth.uid);
 
-    const secretValue = safeSecretValue(() => anthropicKey.value());
-    const resolution = await resolveAnthropicKey(secretValue);
+    const resolution = await resolveAnthropicKey(null);
     if (!resolution.apiKey) {
       return { ok: false, error: 'No API key configured', source: resolution.source };
     }

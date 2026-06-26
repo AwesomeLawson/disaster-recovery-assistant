@@ -67,7 +67,7 @@ export const AdminSettings: React.FC = () => {
     setError('');
     setSuccess('');
     setTestResult('');
-    if (!confirm('Remove the stored Anthropic API key? AI features will fall back to the Firebase secret (if set) or stop working.')) {
+    if (!confirm('Remove the stored Anthropic API key? AI features will stop working until a new key is set.')) {
       return;
     }
     try {
@@ -115,9 +115,7 @@ export const AdminSettings: React.FC = () => {
         </Box>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           Used by the AI help chat and the AI tool-photo suggestion feature.
-          Stored in Firestore (admin-only access). Falls back to the
-          <code style={{ margin: '0 4px' }}>ANTHROPIC_API_KEY</code>
-          Firebase secret if Firestore has no value.
+          Stored in Firestore (admin-only access via Cloud Functions).
         </Typography>
 
         <Divider sx={{ mb: 2 }} />
@@ -133,12 +131,7 @@ export const AdminSettings: React.FC = () => {
           ) : status?.configured ? (
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
               <Chip label="Configured" color="success" size="small" />
-              <Chip
-                label={`Source: ${status.source === 'firestore' ? 'In-app (Firestore)' : 'Firebase secret'}`}
-                size="small"
-                variant="outlined"
-              />
-              {status.source === 'firestore' && status.updatedAt && (
+              {status.updatedAt && (
                 <Typography variant="body2" color="text.secondary">
                   Last updated {new Date(status.updatedAt).toLocaleString()}
                   {status.updatedByName ? ` by ${status.updatedByName}` : ''}
@@ -169,9 +162,9 @@ export const AdminSettings: React.FC = () => {
             {testing ? 'Testing...' : 'Test connection'}
           </Button>
           <Box sx={{ flexGrow: 1 }} />
-          {status?.source === 'firestore' && (
+          {status?.configured && (
             <Button color="error" variant="outlined" onClick={handleClear} disabled={saving}>
-              Clear in-app key
+              Clear key
             </Button>
           )}
         </Stack>

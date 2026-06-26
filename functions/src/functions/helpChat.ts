@@ -1,13 +1,10 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { defineSecret } from 'firebase-functions/params';
 import * as admin from 'firebase-admin';
 import { HelpConversation, HelpMessage, User } from '../types';
 import { USER_GUIDE_MD } from '../data/user-guide';
-import { resolveAnthropicKey, safeSecretValue } from '../lib/anthropicKey';
+import { resolveAnthropicKey } from '../lib/anthropicKey';
 
 const db = admin.firestore();
-
-const anthropicKey = defineSecret('ANTHROPIC_API_KEY');
 
 const CONVERSATIONS = 'helpConversations';
 const MESSAGES = 'helpMessages';
@@ -183,7 +180,7 @@ function extractAssistantText(content: any): string {
 }
 
 export const sendHelpMessage = onCall(
-  { cors: true, secrets: [anthropicKey], timeoutSeconds: 60 },
+  { cors: true, timeoutSeconds: 60 },
   async (request: any) => {
     const uid = requireAuth(request);
     const { conversationId, content } = request.data || {};
@@ -234,7 +231,7 @@ export const sendHelpMessage = onCall(
       : null;
 
     // 4) Resolve API key. If missing, gracefully degrade.
-    const { apiKey } = await resolveAnthropicKey(safeSecretValue(() => anthropicKey.value()));
+    const { apiKey } = await resolveAnthropicKey(null);
 
     let assistantText: string;
     if (!apiKey) {

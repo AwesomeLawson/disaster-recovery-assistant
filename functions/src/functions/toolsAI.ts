@@ -1,12 +1,9 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { defineSecret } from 'firebase-functions/params';
 import * as admin from 'firebase-admin';
 import { User } from '../types';
-import { resolveAnthropicKey, safeSecretValue } from '../lib/anthropicKey';
+import { resolveAnthropicKey } from '../lib/anthropicKey';
 
 const db = admin.firestore();
-
-const anthropicKey = defineSecret('ANTHROPIC_API_KEY');
 
 const ALLOWED_WRITE_ROLES = ['baseCampHost', 'administrator'];
 
@@ -72,7 +69,7 @@ async function fetchImageAsBase64(url: string): Promise<{ data: string; mediaTyp
 }
 
 export const suggestToolsFromPhoto = onCall(
-  { cors: true, secrets: [anthropicKey], timeoutSeconds: 60 },
+  { cors: true, timeoutSeconds: 60 },
   async (request: any) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'User must be authenticated');
     await requireToolWriter(request.auth.uid);
@@ -82,7 +79,7 @@ export const suggestToolsFromPhoto = onCall(
       throw new HttpsError('invalid-argument', 'photoUrl is required');
     }
 
-    const { apiKey } = await resolveAnthropicKey(safeSecretValue(() => anthropicKey.value()));
+    const { apiKey } = await resolveAnthropicKey(null);
     if (!apiKey) {
       // No key configured — graceful degradation.
       return { available: false, items: [] };
