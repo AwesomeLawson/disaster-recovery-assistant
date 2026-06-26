@@ -2,7 +2,7 @@ const fs = require('fs');
 const https = require('https');
 
 const PROJECT_ID = 'faith-responders-prod';
-const CENTER_NAME = 'Nahunta, Georgia Base Camp';
+const BASE_CAMP_NAME = 'Nahunta, Georgia Base Camp';
 
 const config = JSON.parse(fs.readFileSync('C:/ClaudeProfiles/personal/.config/configstore/firebase-tools.json', 'utf8'));
 const token = config.tokens.access_token;
@@ -48,10 +48,10 @@ async function geocode(address) {
 }
 
 async function main() {
-  // List all centers
+  // List all base camps
   const listOptions = {
     hostname: 'firestore.googleapis.com',
-    path: `/v1/projects/${PROJECT_ID}/databases/(default)/documents/centers`,
+    path: `/v1/projects/${PROJECT_ID}/databases/(default)/documents/baseCamps`,
     method: 'GET',
     headers: { 'Authorization': `Bearer ${token}` }
   };
@@ -59,21 +59,21 @@ async function main() {
   if (list.error) { console.error('List failed:', list.error); process.exit(1); }
 
   const docs = list.documents || [];
-  const center = docs.find(d => d.fields?.name?.stringValue === CENTER_NAME);
+  const baseCamp = docs.find(d => d.fields?.name?.stringValue === BASE_CAMP_NAME);
 
-  if (!center) {
-    console.log('Centers found:');
+  if (!baseCamp) {
+    console.log('Base camps found:');
     docs.forEach(d => console.log(' -', d.fields?.name?.stringValue, '|', d.name));
-    console.error(`\nCenter "${CENTER_NAME}" not found`);
+    console.error(`\nBase camp "${BASE_CAMP_NAME}" not found`);
     process.exit(1);
   }
 
-  const docId = center.name.split('/').pop();
-  const address = center.fields?.address?.stringValue;
-  const currentLat = center.fields?.latitude?.doubleValue;
-  const currentLng = center.fields?.longitude?.doubleValue;
+  const docId = baseCamp.name.split('/').pop();
+  const address = baseCamp.fields?.address?.stringValue;
+  const currentLat = baseCamp.fields?.latitude?.doubleValue;
+  const currentLng = baseCamp.fields?.longitude?.doubleValue;
 
-  console.log('Found center:', CENTER_NAME);
+  console.log('Found base camp:', BASE_CAMP_NAME);
   console.log('  Doc ID:', docId);
   console.log('  Address:', address);
   console.log('  Current coords:', currentLat != null ? `${currentLat}, ${currentLng}` : 'none');
@@ -89,14 +89,14 @@ async function main() {
   // Patch the document
   const updateBody = JSON.stringify({
     fields: {
-      ...center.fields,
+      ...baseCamp.fields,
       latitude: { doubleValue: coords.lat },
       longitude: { doubleValue: coords.lng },
       updatedAt: { integerValue: Date.now().toString() }
     }
   });
 
-  const patchPath = `/v1/projects/${PROJECT_ID}/databases/(default)/documents/centers/${docId}` +
+  const patchPath = `/v1/projects/${PROJECT_ID}/databases/(default)/documents/baseCamps/${docId}` +
     `?updateMask.fieldPaths=latitude&updateMask.fieldPaths=longitude&updateMask.fieldPaths=updatedAt`;
 
   const result = await httpsRequest({

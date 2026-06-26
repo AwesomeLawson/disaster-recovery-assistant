@@ -35,12 +35,12 @@ import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { workgroupService } from '../services/workgroup.service';
 import { eventService } from '../services/event.service';
-import { centerService } from '../services/center.service';
+import { baseCampService } from '../services/baseCamp.service';
 import { userService } from '../services/user.service';
 import { workOrderService } from '../services/workOrder.service';
 import { escalationService } from '../services/escalation.service';
 import { useAuth } from '../context/AuthContext';
-import type { Workgroup, WorkgroupTaskStatus, Event, Center, User, WorkOrder, EscalationFormData } from '../types';
+import type { Workgroup, WorkgroupTaskStatus, Event, BaseCamp, User, WorkOrder, EscalationFormData } from '../types';
 
 export const WorkgroupDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -48,7 +48,7 @@ export const WorkgroupDetail: React.FC = () => {
   const { user } = useAuth();
   const [workgroup, setWorkgroup] = useState<Workgroup | null>(null);
   const [event, setEvent] = useState<Event | null>(null);
-  const [center, setCenter] = useState<Center | null>(null);
+  const [baseCamp, setBaseCamp] = useState<BaseCamp | null>(null);
   const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
   const [lead, setLead] = useState<User | null>(null);
   const [volunteers, setVolunteers] = useState<User[]>([]);
@@ -83,15 +83,15 @@ export const WorkgroupDetail: React.FC = () => {
       setWorkgroup(data);
       setNewStatus(data.taskStatus);
 
-      const [eventData, centerData, workOrderData, allUsersData] = await Promise.all([
+      const [eventData, baseCampData, workOrderData, allUsersData] = await Promise.all([
         data.eventId ? eventService.getEvent(data.eventId) : Promise.resolve(null),
-        centerService.getCenter(data.centerId),
+        baseCampService.getBaseCamp(data.baseCampId),
         workOrderService.getWorkOrder(data.workOrderId),
         userService.listUsers(),
       ]);
 
       setEvent(eventData);
-      setCenter(centerData);
+      setBaseCamp(baseCampData);
       setWorkOrder(workOrderData);
       setAllUsers(allUsersData);
 
@@ -162,7 +162,7 @@ export const WorkgroupDetail: React.FC = () => {
       setUpdating(true);
       const escalationData: EscalationFormData = {
         workgroupId: workgroup.id,
-        centerId: workgroup.centerId,
+        baseCampId: workgroup.baseCampId,
         eventId: workgroup.eventId,
         type: escalationType,
         reason: escalationReason,
@@ -442,14 +442,14 @@ export const WorkgroupDetail: React.FC = () => {
             )}
 
             <Typography variant="subtitle2" color="text.secondary">
-              Center
+              Base Camp
             </Typography>
             <Typography
               variant="body1"
               sx={{ mb: 2, cursor: 'pointer', color: 'primary.main' }}
-              onClick={() => navigate(`/centers/${workgroup.centerId}`)}
+              onClick={() => navigate(`/base-camps/${workgroup.baseCampId}`)}
             >
-              {center?.name || workgroup.centerId}
+              {baseCamp?.name || workgroup.baseCampId}
             </Typography>
           </Paper>
 

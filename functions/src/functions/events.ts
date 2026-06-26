@@ -20,7 +20,7 @@ export const createEvent = onCall({ cors: true }, async (request: any) => {
 
   await requireAdmin(request.auth.uid);
 
-  const { name, eventType, description, userIds, centerIds } = request.data;
+  const { name, eventType, description, userIds, baseCampIds } = request.data;
 
   if (!name || !eventType) {
     throw new HttpsError('invalid-argument', 'Missing required fields: name, eventType');
@@ -33,7 +33,7 @@ export const createEvent = onCall({ cors: true }, async (request: any) => {
     eventType,
     description: description || '',
     userIds: userIds || [],
-    centerIds: centerIds || [],
+    baseCampIds: baseCampIds || [],
     createdBy: request.auth.uid,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -168,38 +168,38 @@ export const addUserToEvent = onCall({ cors: true }, async (request: any) => {
   return { success: true };
 });
 
-export const addCenterToEvent = onCall({ cors: true }, async (request: any) => {
+export const addBaseCampToEvent = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   await requireAdmin(request.auth.uid);
 
-  const { eventId, centerId } = request.data;
+  const { eventId, baseCampId } = request.data;
 
-  if (!eventId || !centerId) {
-    throw new HttpsError('invalid-argument', 'Missing required fields: eventId, centerId');
+  if (!eventId || !baseCampId) {
+    throw new HttpsError('invalid-argument', 'Missing required fields: eventId, baseCampId');
   }
 
   const eventRef = db.collection('events').doc(eventId);
-  const centerRef = db.collection('centers').doc(centerId);
+  const baseCampRef = db.collection('baseCamps').doc(baseCampId);
 
-  const [eventDoc, centerDoc] = await Promise.all([eventRef.get(), centerRef.get()]);
+  const [eventDoc, baseCampDoc] = await Promise.all([eventRef.get(), baseCampRef.get()]);
 
   if (!eventDoc.exists) {
     throw new HttpsError('not-found', 'Event not found');
   }
 
-  if (!centerDoc.exists) {
-    throw new HttpsError('not-found', 'Center not found');
+  if (!baseCampDoc.exists) {
+    throw new HttpsError('not-found', 'Base camp not found');
   }
 
   await Promise.all([
     eventRef.update({
-      centerIds: admin.firestore.FieldValue.arrayUnion(centerId),
+      baseCampIds: admin.firestore.FieldValue.arrayUnion(baseCampId),
       updatedAt: Date.now(),
     }),
-    centerRef.update({
+    baseCampRef.update({
       eventIds: admin.firestore.FieldValue.arrayUnion(eventId),
       updatedAt: Date.now(),
     }),
@@ -208,28 +208,28 @@ export const addCenterToEvent = onCall({ cors: true }, async (request: any) => {
   return { success: true };
 });
 
-export const removeCenterFromEvent = onCall({ cors: true }, async (request: any) => {
+export const removeBaseCampFromEvent = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   await requireAdmin(request.auth.uid);
 
-  const { eventId, centerId } = request.data;
+  const { eventId, baseCampId } = request.data;
 
-  if (!eventId || !centerId) {
-    throw new HttpsError('invalid-argument', 'Missing required fields: eventId, centerId');
+  if (!eventId || !baseCampId) {
+    throw new HttpsError('invalid-argument', 'Missing required fields: eventId, baseCampId');
   }
 
   const eventRef = db.collection('events').doc(eventId);
-  const centerRef = db.collection('centers').doc(centerId);
+  const baseCampRef = db.collection('baseCamps').doc(baseCampId);
 
   await Promise.all([
     eventRef.update({
-      centerIds: admin.firestore.FieldValue.arrayRemove(centerId),
+      baseCampIds: admin.firestore.FieldValue.arrayRemove(baseCampId),
       updatedAt: Date.now(),
     }),
-    centerRef.update({
+    baseCampRef.update({
       eventIds: admin.firestore.FieldValue.arrayRemove(eventId),
       updatedAt: Date.now(),
     }),

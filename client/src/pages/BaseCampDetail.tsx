@@ -29,18 +29,18 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import EventIcon from '@mui/icons-material/Event';
 import AddIcon from '@mui/icons-material/Add';
-import { centerService } from '../services/center.service';
+import { baseCampService } from '../services/baseCamp.service';
 import { eventService } from '../services/event.service';
 import { userService } from '../services/user.service';
 import { workOrderService } from '../services/workOrder.service';
 import { workgroupService } from '../services/workgroup.service';
 import { AddressAutocomplete } from '../components/AddressAutocomplete';
-import type { Center, Event, User, WorkOrder, Workgroup } from '../types';
+import type { BaseCamp, Event, User, WorkOrder, Workgroup } from '../types';
 
-export const CenterDetail: React.FC = () => {
+export const BaseCampDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [center, setCenter] = useState<Center | null>(null);
+  const [baseCamp, setBaseCamp] = useState<BaseCamp | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [leads, setLeads] = useState<User[]>([]);
@@ -67,28 +67,28 @@ export const CenterDetail: React.FC = () => {
 
   useEffect(() => {
     if (id) {
-      loadCenter();
+      loadBaseCamp();
     }
   }, [id]);
 
-  const loadCenter = async () => {
+  const loadBaseCamp = async () => {
     try {
       setLoading(true);
-      const centerData = await centerService.getCenter(id!);
-      setCenter(centerData);
+      const baseCampData = await baseCampService.getBaseCamp(id!);
+      setBaseCamp(baseCampData);
 
       setEditForm({
-        name: centerData.name,
-        address: centerData.address,
-        latitude: centerData.latitude,
-        longitude: centerData.longitude,
+        name: baseCampData.name,
+        address: baseCampData.address,
+        latitude: baseCampData.latitude,
+        longitude: baseCampData.longitude,
       });
 
       const [allEventsData, usersData, workOrdersData, workgroupsData] = await Promise.all([
         eventService.listEvents(),
         userService.listUsers(),
-        workOrderService.listWorkOrders({ centerId: id }),
-        workgroupService.listWorkgroups({ centerId: id }),
+        workOrderService.listWorkOrders({ baseCampId: id }),
+        workgroupService.listWorkgroups({ baseCampId: id }),
       ]);
 
       setAllEvents(allEventsData);
@@ -96,57 +96,57 @@ export const CenterDetail: React.FC = () => {
       setWorkOrders(workOrdersData);
       setWorkgroups(workgroupsData);
 
-      // Get events associated with this center
-      const centerEvents = allEventsData.filter((e) =>
-        centerData.eventIds?.includes(e.id)
+      // Get events associated with this base camp
+      const baseCampEvents = allEventsData.filter((e) =>
+        baseCampData.eventIds?.includes(e.id)
       );
-      setEvents(centerEvents);
+      setEvents(baseCampEvents);
 
       const usersById: Record<string, User> = {};
       usersData.forEach((u) => {
         usersById[u.id] = u;
       });
 
-      const centerLeads = centerData.leadUserIds.map((uid) => usersById[uid]).filter(Boolean);
-      setLeads(centerLeads);
+      const baseCampLeads = baseCampData.leadUserIds.map((uid) => usersById[uid]).filter(Boolean);
+      setLeads(baseCampLeads);
     } catch (err: any) {
-      setError(err.message || 'Failed to load center');
+      setError(err.message || 'Failed to load base camp');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateCenter = async () => {
-    if (!center) return;
+  const handleUpdateBaseCamp = async () => {
+    if (!baseCamp) return;
 
     try {
       setUpdating(true);
-      await centerService.updateCenter(center.id, {
+      await baseCampService.updateBaseCamp(baseCamp.id, {
         name: editForm.name,
         address: editForm.address,
         latitude: editForm.latitude,
         longitude: editForm.longitude,
       });
       setEditDialogOpen(false);
-      await loadCenter();
+      await loadBaseCamp();
     } catch (err: any) {
-      setError(err.message || 'Failed to update center');
+      setError(err.message || 'Failed to update base camp');
     } finally {
       setUpdating(false);
     }
   };
 
   const handleAddLead = async () => {
-    if (!center || !selectedUser) return;
+    if (!baseCamp || !selectedUser) return;
 
     try {
       setUpdating(true);
-      await centerService.updateCenter(center.id, {
-        leadUserIds: [...center.leadUserIds, selectedUser.id],
+      await baseCampService.updateBaseCamp(baseCamp.id, {
+        leadUserIds: [...baseCamp.leadUserIds, selectedUser.id],
       });
       setAddLeadDialogOpen(false);
       setSelectedUser(null);
-      await loadCenter();
+      await loadBaseCamp();
     } catch (err: any) {
       setError(err.message || 'Failed to add lead');
     } finally {
@@ -155,14 +155,14 @@ export const CenterDetail: React.FC = () => {
   };
 
   const handleAddEvent = async () => {
-    if (!center || !selectedEvent) return;
+    if (!baseCamp || !selectedEvent) return;
 
     try {
       setUpdating(true);
-      await eventService.addCenterToEvent(selectedEvent.id, center.id);
+      await eventService.addBaseCampToEvent(selectedEvent.id, baseCamp.id);
       setAddEventDialogOpen(false);
       setSelectedEvent(null);
-      await loadCenter();
+      await loadBaseCamp();
     } catch (err: any) {
       setError(err.message || 'Failed to add event');
     } finally {
@@ -202,27 +202,27 @@ export const CenterDetail: React.FC = () => {
     (u) =>
       (u.roles.includes('workGroupLead') || u.roles.includes('administrator')) &&
       u.roleApprovalStatus === 'approved' &&
-      !center?.leadUserIds.includes(u.id)
+      !baseCamp?.leadUserIds.includes(u.id)
   );
 
   const availableEvents = allEvents.filter(
-    (e) => !center?.eventIds?.includes(e.id)
+    (e) => !baseCamp?.eventIds?.includes(e.id)
   );
 
   if (loading) {
     return (
       <Container maxWidth="lg">
-        <Typography>Loading center...</Typography>
+        <Typography>Loading base camp...</Typography>
       </Container>
     );
   }
 
-  if (!center) {
+  if (!baseCamp) {
     return (
       <Container maxWidth="lg">
-        <Alert severity="error">Center not found</Alert>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/centers')} sx={{ mt: 2 }}>
-          Back to Centers
+        <Alert severity="error">Base camp not found</Alert>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/base-camps')} sx={{ mt: 2 }}>
+          Back to Base Camps
         </Button>
       </Container>
     );
@@ -231,11 +231,11 @@ export const CenterDetail: React.FC = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
-        <IconButton onClick={() => navigate('/centers')}>
+        <IconButton onClick={() => navigate('/base-camps')}>
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h4" sx={{ flexGrow: 1 }}>
-          {center.name}
+          {baseCamp.name}
         </Typography>
         <Button variant="contained" startIcon={<EditIcon />} onClick={() => setEditDialogOpen(true)}>
           Edit
@@ -252,7 +252,7 @@ export const CenterDetail: React.FC = () => {
         <Grid size={{ xs: 12, md: 8 }}>
           <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Center Details
+              Base Camp Details
             </Typography>
             <Divider sx={{ mb: 2 }} />
 
@@ -263,7 +263,7 @@ export const CenterDetail: React.FC = () => {
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
                   <LocationOnIcon color="action" sx={{ mr: 1, mt: 0.25 }} />
-                  <Typography variant="body1">{center.address}</Typography>
+                  <Typography variant="body1">{baseCamp.address}</Typography>
                 </Box>
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -271,8 +271,8 @@ export const CenterDetail: React.FC = () => {
                   Coordinates
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 2 }}>
-                  {center.latitude && center.longitude
-                    ? `${center.latitude.toFixed(6)}, ${center.longitude.toFixed(6)}`
+                  {baseCamp.latitude && baseCamp.longitude
+                    ? `${baseCamp.latitude.toFixed(6)}, ${baseCamp.longitude.toFixed(6)}`
                     : 'Not specified'}
                 </Typography>
               </Grid>
@@ -282,7 +282,7 @@ export const CenterDetail: React.FC = () => {
               Created
             </Typography>
             <Typography variant="body1">
-              {new Date(center.createdAt).toLocaleString()}
+              {new Date(baseCamp.createdAt).toLocaleString()}
             </Typography>
           </Paper>
 
@@ -298,7 +298,7 @@ export const CenterDetail: React.FC = () => {
 
             {events.length === 0 ? (
               <Typography color="text.secondary">
-                No events associated with this center. Add events to track disaster response activities.
+                No events associated with this base camp. Add events to track disaster response activities.
               </Typography>
             ) : (
               <List>
@@ -351,7 +351,7 @@ export const CenterDetail: React.FC = () => {
                 size="small"
                 startIcon={<AddIcon />}
                 onClick={() => {
-                  const params = new URLSearchParams({ centerId: center.id });
+                  const params = new URLSearchParams({ baseCampId: baseCamp.id });
                   if (events[0]) params.set('eventId', events[0].id);
                   navigate(`/work-orders/create?${params.toString()}`);
                 }}
@@ -362,7 +362,7 @@ export const CenterDetail: React.FC = () => {
             <Divider sx={{ mb: 2 }} />
 
             {workOrders.length === 0 ? (
-              <Typography color="text.secondary">No work orders at this center</Typography>
+              <Typography color="text.secondary">No work orders at this base camp</Typography>
             ) : (
               <List>
                 {workOrders.map((workOrder) => (
@@ -409,7 +409,7 @@ export const CenterDetail: React.FC = () => {
             <Divider sx={{ mb: 2 }} />
 
             {workgroups.length === 0 ? (
-              <Typography color="text.secondary">No workgroups at this center</Typography>
+              <Typography color="text.secondary">No workgroups at this base camp</Typography>
             ) : (
               <List>
                 {workgroups.map((workgroup) => (
@@ -476,9 +476,9 @@ export const CenterDetail: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Edit Center Dialog */}
+      {/* Edit Base Camp Dialog */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Center</DialogTitle>
+        <DialogTitle>Edit Base Camp</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
             <TextField
@@ -513,7 +513,7 @@ export const CenterDetail: React.FC = () => {
           </Button>
           <Button
             variant="contained"
-            onClick={handleUpdateCenter}
+            onClick={handleUpdateBaseCamp}
             disabled={updating || !editForm.name.trim() || !editForm.address.trim()}
           >
             {updating ? 'Saving...' : 'Save'}
@@ -523,7 +523,7 @@ export const CenterDetail: React.FC = () => {
 
       {/* Add Lead Dialog */}
       <Dialog open={addLeadDialogOpen} onClose={() => setAddLeadDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add Lead to Center</DialogTitle>
+        <DialogTitle>Add Lead to Base Camp</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
             <Autocomplete
@@ -551,7 +551,7 @@ export const CenterDetail: React.FC = () => {
 
       {/* Add Event Dialog */}
       <Dialog open={addEventDialogOpen} onClose={() => setAddEventDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Associate Event with Center</DialogTitle>
+        <DialogTitle>Associate Event with Base Camp</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
             {availableEvents.length === 0 ? (

@@ -37,7 +37,7 @@ export const workgroupService = {
 
   // List workgroups with filters
   async listWorkgroups(filters?: {
-    centerId?: string;
+    baseCampId?: string;
     groupId?: string;
     workOrderId?: string;
     limit?: number;

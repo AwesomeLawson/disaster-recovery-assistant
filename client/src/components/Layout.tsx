@@ -86,7 +86,7 @@ export const Layout: React.FC = () => {
     if (user.roles.includes('administrator')) {
       items.push(
         { text: 'Events', icon: <EventIcon />, path: '/events' },
-        { text: 'Centers', icon: <LocationCityIcon />, path: '/centers' },
+        { text: 'Base Camps', icon: <LocationCityIcon />, path: '/base-camps' },
         { text: 'Users', icon: <GroupIcon />, path: '/admin/users' },
         { text: 'Organizations', icon: <BusinessIcon />, path: '/admin/organizations' }
       );

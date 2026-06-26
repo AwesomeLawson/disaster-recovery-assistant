@@ -10,8 +10,8 @@ import { SignLegalRelease } from './pages/SignLegalRelease';
 import { Dashboard } from './pages/Dashboard';
 import { EventManagement } from './pages/EventManagement';
 import { EventDetail } from './pages/EventDetail';
-import { CenterManagement } from './pages/CenterManagement';
-import { CenterDetail } from './pages/CenterDetail';
+import { BaseCampManagement } from './pages/BaseCampManagement';
+import { BaseCampDetail } from './pages/BaseCampDetail';
 import { WorkOrderList } from './pages/WorkOrderList';
 import { WorkOrderDetail } from './pages/WorkOrderDetail';
 import { CreateWorkOrder } from './pages/CreateWorkOrder';
@@ -133,18 +133,18 @@ function App() {
                 }
               />
               <Route
-                path="centers"
+                path="base-camps"
                 element={
                   <PrivateRoute requireRoles={['administrator']}>
-                    <CenterManagement />
+                    <BaseCampManagement />
                   </PrivateRoute>
                 }
               />
               <Route
-                path="centers/:id"
+                path="base-camps/:id"
                 element={
                   <PrivateRoute requireRoles={['administrator', 'assessor', 'fieldCoordinator']}>
-                    <CenterDetail />
+                    <BaseCampDetail />
                   </PrivateRoute>
                 }
               />

@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
-import { Center, User } from '../types';
+import { BaseCamp, User } from '../types';
 
 const db = admin.firestore();
 
@@ -13,7 +13,7 @@ const requireAdmin = async (uid: string): Promise<void> => {
   }
 };
 
-export const createCenter = onCall({ cors: true }, async (request: any) => {
+export const createBaseCamp = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -26,9 +26,9 @@ export const createCenter = onCall({ cors: true }, async (request: any) => {
     throw new HttpsError('invalid-argument', 'Missing required fields: name, address');
   }
 
-  const centerRef = db.collection('centers').doc();
-  const center: Center = {
-    id: centerRef.id,
+  const baseCampRef = db.collection('baseCamps').doc();
+  const baseCamp: BaseCamp = {
+    id: baseCampRef.id,
     name,
     address,
     eventIds: eventIds || [],
@@ -40,68 +40,68 @@ export const createCenter = onCall({ cors: true }, async (request: any) => {
 
   // Only set optional fields if provided
   if (latitude !== undefined) {
-    center.latitude = latitude;
+    baseCamp.latitude = latitude;
   }
   if (longitude !== undefined) {
-    center.longitude = longitude;
+    baseCamp.longitude = longitude;
   }
 
-  await centerRef.set(center);
+  await baseCampRef.set(baseCamp);
 
-  // Update events to include this center
+  // Update events to include this base camp
   if (eventIds && eventIds.length > 0) {
     const batch = db.batch();
     eventIds.forEach((eventId: string) => {
       const eventRef = db.collection('events').doc(eventId);
       batch.update(eventRef, {
-        centerIds: admin.firestore.FieldValue.arrayUnion(centerRef.id),
+        baseCampIds: admin.firestore.FieldValue.arrayUnion(baseCampRef.id),
         updatedAt: Date.now(),
       });
     });
     await batch.commit();
   }
 
-  // Update lead users to include this center
+  // Update lead users to include this base camp
   if (leadUserIds && leadUserIds.length > 0) {
     const batch = db.batch();
     leadUserIds.forEach((userId: string) => {
       const userRef = db.collection('users').doc(userId);
       batch.update(userRef, {
-        centerIds: admin.firestore.FieldValue.arrayUnion(centerRef.id),
+        baseCampIds: admin.firestore.FieldValue.arrayUnion(baseCampRef.id),
         updatedAt: Date.now(),
       });
     });
     await batch.commit();
   }
 
-  return { success: true, centerId: centerRef.id, center };
+  return { success: true, baseCampId: baseCampRef.id, baseCamp };
 });
 
-export const updateCenter = onCall({ cors: true }, async (request: any) => {
+export const updateBaseCamp = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   await requireAdmin(request.auth.uid);
 
-  const { centerId, updates } = request.data;
+  const { baseCampId, updates } = request.data;
 
-  if (!centerId || !updates) {
-    throw new HttpsError('invalid-argument', 'Missing required fields: centerId, updates');
+  if (!baseCampId || !updates) {
+    throw new HttpsError('invalid-argument', 'Missing required fields: baseCampId, updates');
   }
 
-  const centerRef = db.collection('centers').doc(centerId);
-  const centerDoc = await centerRef.get();
+  const baseCampRef = db.collection('baseCamps').doc(baseCampId);
+  const baseCampDoc = await baseCampRef.get();
 
-  if (!centerDoc.exists) {
-    throw new HttpsError('not-found', 'Center not found');
+  if (!baseCampDoc.exists) {
+    throw new HttpsError('not-found', 'Base camp not found');
   }
 
   delete updates.id;
   delete updates.createdAt;
   delete updates.createdBy;
 
-  await centerRef.update({
+  await baseCampRef.update({
     ...updates,
     updatedAt: Date.now(),
   });
@@ -109,29 +109,29 @@ export const updateCenter = onCall({ cors: true }, async (request: any) => {
   return { success: true };
 });
 
-export const getCenter = onCall({ cors: true }, async (request: any) => {
+export const getBaseCamp = onCall({ cors: true }, async (request: any) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { centerId } = request.data;
+  const { baseCampId } = request.data;
 
-  if (!centerId) {
-    throw new HttpsError('invalid-argument', 'Missing required field: centerId');
+  if (!baseCampId) {
+    throw new HttpsError('invalid-argument', 'Missing required field: baseCampId');
   }
 
-  const centerDoc = await db.collection('centers').doc(centerId).get();
+  const baseCampDoc = await db.collection('baseCamps').doc(baseCampId).get();
 
-  if (!centerDoc.exists) {
-    throw new HttpsError('not-found', 'Center not found');
+  if (!baseCampDoc.exists) {
+    throw new HttpsError('not-found', 'Base camp not found');
   }
 
-  return { center: centerDoc.data() };
+  return { baseCamp: baseCampDoc.data() };
 });
 
-export const listCenters = onCall({ cors: true }, async (request: any) => {
+export const listBaseCamps = onCall({ cors: true }, async (request: any) => {
   try {
-    console.log('listCenters called');
+    console.log('listBaseCamps called');
     console.log('Auth:', request.auth ? `uid=${request.auth.uid}` : 'null');
     console.log('Data type:', typeof request.data);
     console.log('Data:', JSON.stringify(request.data));
@@ -150,20 +150,20 @@ export const listCenters = onCall({ cors: true }, async (request: any) => {
     const limit = typeof data.limit === 'number' ? data.limit : 100;
     console.log('Using eventId:', eventId, 'limit:', limit);
 
-    let query: admin.firestore.Query = db.collection('centers');
+    let query: admin.firestore.Query = db.collection('baseCamps');
 
     if (eventId) {
       query = query.where('eventIds', 'array-contains', eventId);
     }
 
     const snapshot = await query.limit(limit).get();
-    console.log('Found', snapshot.docs.length, 'centers');
+    console.log('Found', snapshot.docs.length, 'base camps');
 
-    const centers = snapshot.docs.map((doc) => doc.data());
+    const baseCamps = snapshot.docs.map((doc) => doc.data());
 
-    return { centers };
+    return { baseCamps };
   } catch (error: any) {
-    console.error('listCenters error:', error);
+    console.error('listBaseCamps error:', error);
     console.error('Error stack:', error?.stack);
     throw error;
   }

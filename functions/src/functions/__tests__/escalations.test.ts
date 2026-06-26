@@ -53,7 +53,7 @@ describe('Escalation Management Functions', () => {
 
       const data = {
         workgroupId: 'workgroup123',
-        centerId: 'center123',
+        baseCampId: 'baseCamp123',
         groupId: 'group123',
         type: 'reassessment',
         reason: 'Damage worse than initially assessed',
@@ -110,7 +110,7 @@ describe('Escalation Management Functions', () => {
 
       const data = {
         workgroupId: 'workgroup123',
-        centerId: 'center123',
+        baseCampId: 'baseCamp123',
         groupId: 'group123',
         type: 'thirdParty',
         reason: 'Requires specialized contractor',
@@ -138,7 +138,7 @@ describe('Escalation Management Functions', () => {
 
       const data = {
         workgroupId: 'workgroup123',
-        centerId: 'center123',
+        baseCampId: 'baseCamp123',
         groupId: 'group123',
         type: 'reassessment',
         reason: 'Test reason',
@@ -156,7 +156,7 @@ describe('Escalation Management Functions', () => {
 
       const data = {
         workgroupId: 'workgroup123',
-        centerId: 'center123',
+        baseCampId: 'baseCamp123',
         groupId: 'group123',
         type: 'reassessment',
         reason: 'Test reason',
@@ -484,8 +484,8 @@ describe('Escalation Management Functions', () => {
   describe('listEscalations', () => {
     it('should list escalations with filters', async () => {
       const escalations = [
-        { id: 'escalation1', type: 'reassessment', centerId: 'center123' },
-        { id: 'escalation2', type: 'thirdParty', centerId: 'center123' },
+        { id: 'escalation1', type: 'reassessment', baseCampId: 'baseCamp123' },
+        { id: 'escalation2', type: 'thirdParty', baseCampId: 'baseCamp123' },
       ];
 
       const mockGet = jest.fn().mockResolvedValue({
@@ -499,7 +499,7 @@ describe('Escalation Management Functions', () => {
 
       wrapped = testEnv.wrap(functions.listEscalations);
 
-      const data = { centerId: 'center123', status: 'pending', limit: 100 };
+      const data = { baseCampId: 'baseCamp123', status: 'pending', limit: 100 };
       const context = { auth: { uid: 'user123', token: {} } };
 
       const result = await wrapped(data, context);

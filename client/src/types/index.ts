@@ -62,7 +62,7 @@ export interface User {
   roleApprovalStatus: 'pending' | 'approved' | 'rejected';
   capabilities?: UserCapability[];
   eventIds?: string[];
-  centerIds?: string[];
+  baseCampIds?: string[];
   organization?: string;
   availability?: AvailabilityRange[];
   tshirtSize?: TshirtSize;
@@ -81,19 +81,19 @@ export interface Event {
   eventType: string; // e.g., "storm", "flood", "tornado", "earthquake"
   description?: string;
   userIds: string[];
-  centerIds: string[];
+  baseCampIds: string[];
   createdBy: string;
   createdAt: number;
   updatedAt: number;
 }
 
-export interface Center {
+export interface BaseCamp {
   id: string;
   name: string;
   address: string;
   latitude?: number;
   longitude?: number;
-  eventIds: string[]; // Centers can be associated with multiple events
+  eventIds: string[]; // Base camps can be associated with multiple events
   leadUserIds: string[];
   createdBy: string;
   createdAt: number;
@@ -122,7 +122,7 @@ export interface WorkOrder {
   intakeVolunteerName?: string;
   workOrderNumber?: string;
 
-  centerId: string;
+  baseCampId: string;
   eventId?: string;
 
   // On-site assessment fields (optional until field assessment completed)
@@ -192,7 +192,7 @@ export interface ProgressNote {
 export interface Workgroup {
   id: string;
   name: string;
-  centerId: string;
+  baseCampId: string;
   eventId?: string;
   leadUserId: string;
   volunteerUserIds: string[];
@@ -210,7 +210,7 @@ export interface Escalation {
   id: string;
   workOrderId?: string;
   workgroupId: string;
-  centerId: string;
+  baseCampId: string;
   eventId?: string;
   type: EscalationType;
   status: EscalationStatus;
@@ -306,7 +306,7 @@ export interface WorkOrderFormData {
   descriptionOfNeed: string;
   source?: string;
   workOrderNumber?: string;
-  centerId: string;
+  baseCampId: string;
   eventId?: string;
 }
 
@@ -338,7 +338,7 @@ export interface FieldAssessmentFormData {
 
 export interface WorkgroupFormData {
   name: string;
-  centerId: string;
+  baseCampId: string;
   eventId?: string;
   leadUserId: string;
   volunteerUserIds?: string[];
@@ -348,7 +348,7 @@ export interface WorkgroupFormData {
 
 export interface EscalationFormData {
   workgroupId: string;
-  centerId: string;
+  baseCampId: string;
   eventId?: string;
   type: EscalationType;
   reason: string;

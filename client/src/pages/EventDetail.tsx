@@ -29,17 +29,17 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
 import AddIcon from '@mui/icons-material/Add';
 import { eventService } from '../services/event.service';
-import { centerService } from '../services/center.service';
+import { baseCampService } from '../services/baseCamp.service';
 import { userService } from '../services/user.service';
 import { workOrderService } from '../services/workOrder.service';
 import { WorkOrderMap } from '../components/WorkOrderMap';
-import type { Event, Center, User, WorkOrder } from '../types';
+import type { Event, BaseCamp, User, WorkOrder } from '../types';
 
 export const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
-  const [centers, setCenters] = useState<Center[]>([]);
+  const [baseCamps, setBaseCamps] = useState<BaseCamp[]>([]);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [, setUsers] = useState<User[]>([]);
   const [members, setMembers] = useState<User[]>([]);
@@ -67,14 +67,14 @@ export const EventDetail: React.FC = () => {
   const loadEvent = async () => {
     try {
       setLoading(true);
-      const [eventData, centersData, usersData] = await Promise.all([
+      const [eventData, baseCampsData, usersData] = await Promise.all([
         eventService.getEvent(id!),
-        centerService.listCenters(id),
+        baseCampService.listBaseCamps(id),
         userService.listUsers(),
       ]);
 
       setEvent(eventData);
-      setCenters(centersData);
+      setBaseCamps(baseCampsData);
       setAllUsers(usersData);
 
       setEditForm({
@@ -235,24 +235,24 @@ export const EventDetail: React.FC = () => {
 
           <Paper sx={{ p: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">Centers ({centers.length})</Typography>
+              <Typography variant="h6">Base Camps ({baseCamps.length})</Typography>
               <Button
                 size="small"
                 startIcon={<LocationCityIcon />}
-                onClick={() => navigate('/centers')}
+                onClick={() => navigate('/base-camps')}
               >
-                Manage Centers
+                Manage Base Camps
               </Button>
             </Box>
             <Divider sx={{ mb: 2 }} />
 
-            {centers.length === 0 ? (
-              <Typography color="text.secondary">No centers associated with this event</Typography>
+            {baseCamps.length === 0 ? (
+              <Typography color="text.secondary">No base camps associated with this event</Typography>
             ) : (
               <List>
-                {centers.map((center) => (
+                {baseCamps.map((baseCamp) => (
                   <ListItem
-                    key={center.id}
+                    key={baseCamp.id}
                     sx={{
                       border: '1px solid',
                       borderColor: 'grey.300',
@@ -263,7 +263,7 @@ export const EventDetail: React.FC = () => {
                         bgcolor: 'grey.50',
                       },
                     }}
-                    onClick={() => navigate(`/centers/${center.id}`)}
+                    onClick={() => navigate(`/base-camps/${baseCamp.id}`)}
                   >
                     <ListItemAvatar>
                       <Avatar>
@@ -271,10 +271,10 @@ export const EventDetail: React.FC = () => {
                       </Avatar>
                     </ListItemAvatar>
                     <ListItemText
-                      primary={center.name}
-                      secondary={center.address}
+                      primary={baseCamp.name}
+                      secondary={baseCamp.address}
                     />
-                    <Chip label={`${center.leadUserIds.length} leads`} size="small" variant="outlined" />
+                    <Chip label={`${baseCamp.leadUserIds.length} leads`} size="small" variant="outlined" />
                   </ListItem>
                 ))}
               </List>
@@ -329,7 +329,7 @@ export const EventDetail: React.FC = () => {
               </Button>
             </Box>
             <Divider sx={{ mb: 2 }} />
-            <WorkOrderMap workOrders={workOrders} centers={centers} />
+            <WorkOrderMap workOrders={workOrders} baseCamps={baseCamps} />
           </Paper>
         </Grid>
       </Grid>

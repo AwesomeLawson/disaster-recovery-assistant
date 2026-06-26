@@ -52,7 +52,7 @@ function val(field) {
     console.log(`  Needs:         ${val(f.needs)}`);
     console.log(`  Affected:      ${val(f.affectedPeople)} people`);
     console.log(`  Assessor ID:   ${val(f.assessorId)}`);
-    console.log(`  Center ID:     ${val(f.centerId)}`);
+    console.log(`  Base Camp ID:  ${val(f.baseCampId)}`);
     console.log(`  Event ID:      ${val(f.eventId) || '(none)'}`);
     console.log(`  Flagged:       ${val(f.flaggedForReview)}`);
     console.log(`  Reassessments: ${val(f.reassessmentCount)}`);

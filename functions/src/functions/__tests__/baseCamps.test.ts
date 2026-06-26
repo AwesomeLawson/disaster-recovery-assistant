@@ -14,9 +14,9 @@ jest.mock('firebase-admin', () => ({
   initializeApp: jest.fn(),
 }));
 
-import * as functions from '../centers';
+import * as functions from '../baseCamps';
 
-describe('Center Management Functions', () => {
+describe('Base Camp Management Functions', () => {
   let wrapped: any;
 
   beforeEach(() => {
@@ -27,14 +27,14 @@ describe('Center Management Functions', () => {
     testEnv.cleanup();
   });
 
-  describe('createCenter', () => {
-    it('should create a new center when called by administrator', async () => {
+  describe('createBaseCamp', () => {
+    it('should create a new base camp when called by administrator', async () => {
       const mockSet = jest.fn().mockResolvedValue(undefined);
       const mockUpdate = jest.fn().mockResolvedValue(undefined);
       const mockDoc = jest.fn(() => ({
         set: mockSet,
         update: mockUpdate,
-        id: 'center123',
+        id: 'baseCamp123',
       }));
       const mockBatchCommit = jest.fn().mockResolvedValue(undefined);
       const mockBatchUpdate = jest.fn();
@@ -62,14 +62,14 @@ describe('Center Management Functions', () => {
         arrayUnion: jest.fn((value: any) => value),
       };
 
-      wrapped = testEnv.wrap(functions.createCenter);
+      wrapped = testEnv.wrap(functions.createBaseCamp);
 
       const data = {
         name: 'First Baptist Church',
         address: '123 Main St, City, State',
         latitude: 35.0,
         longitude: -80.0,
-        groupId: 'group123',
+        eventIds: ['event123'],
         leadUserIds: ['user1', 'user2'],
       };
 
@@ -80,17 +80,16 @@ describe('Center Management Functions', () => {
       const result = await wrapped(data, context);
 
       expect(result.success).toBe(true);
-      expect(result.centerId).toBe('center123');
+      expect(result.baseCampId).toBe('baseCamp123');
       expect(mockSet).toHaveBeenCalled();
     });
 
     it('should reject creation without authentication', async () => {
-      wrapped = testEnv.wrap(functions.createCenter);
+      wrapped = testEnv.wrap(functions.createBaseCamp);
 
       const data = {
-        name: 'Test Center',
+        name: 'Test Base Camp',
         address: '123 Test St',
-        groupId: 'group123',
       };
 
       await expect(wrapped(data, {})).rejects.toThrow('User must be authenticated');
@@ -105,12 +104,11 @@ describe('Center Management Functions', () => {
       const mockDoc = jest.fn(() => ({ get: mockGet }));
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.createCenter);
+      wrapped = testEnv.wrap(functions.createBaseCamp);
 
       const data = {
-        name: 'Test Center',
+        name: 'Test Base Camp',
         address: '123 Test St',
-        groupId: 'group123',
       };
 
       const context = {
@@ -129,23 +127,23 @@ describe('Center Management Functions', () => {
       const mockDoc = jest.fn(() => ({ get: mockGet }));
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.createCenter);
+      wrapped = testEnv.wrap(functions.createBaseCamp);
 
       const data = {
-        name: 'Test Center',
-        // missing address and groupId
+        name: 'Test Base Camp',
+        // missing address
       };
 
       const context = {
         auth: { uid: 'admin123', token: {} },
       };
 
-      await expect(wrapped(data, context)).rejects.toThrow('Missing required fields: name, address, groupId');
+      await expect(wrapped(data, context)).rejects.toThrow('Missing required fields: name, address');
     });
   });
 
-  describe('updateCenter', () => {
-    it('should update a center when called by administrator', async () => {
+  describe('updateBaseCamp', () => {
+    it('should update a base camp when called by administrator', async () => {
       const mockUpdate = jest.fn().mockResolvedValue(undefined);
       const mockGet = jest.fn()
         .mockResolvedValueOnce({
@@ -154,16 +152,16 @@ describe('Center Management Functions', () => {
         })
         .mockResolvedValueOnce({
           exists: true,
-          data: () => ({ id: 'center123', name: 'Old Name' }),
+          data: () => ({ id: 'baseCamp123', name: 'Old Name' }),
         });
 
       const mockDoc = jest.fn(() => ({ get: mockGet, update: mockUpdate }));
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.updateCenter);
+      wrapped = testEnv.wrap(functions.updateBaseCamp);
 
       const data = {
-        centerId: 'center123',
+        baseCampId: 'baseCamp123',
         updates: { name: 'New Name' },
       };
 
@@ -186,10 +184,10 @@ describe('Center Management Functions', () => {
       const mockDoc = jest.fn(() => ({ get: mockGet }));
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.updateCenter);
+      wrapped = testEnv.wrap(functions.updateBaseCamp);
 
       const data = {
-        centerId: 'center123',
+        baseCampId: 'baseCamp123',
         updates: { name: 'New Name' },
       };
 
@@ -200,7 +198,7 @@ describe('Center Management Functions', () => {
       await expect(wrapped(data, context)).rejects.toThrow('Only administrators can perform this action');
     });
 
-    it('should throw error when center not found', async () => {
+    it('should throw error when base camp not found', async () => {
       const mockGet = jest.fn()
         .mockResolvedValueOnce({
           exists: true,
@@ -213,10 +211,10 @@ describe('Center Management Functions', () => {
       const mockDoc = jest.fn(() => ({ get: mockGet }));
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.updateCenter);
+      wrapped = testEnv.wrap(functions.updateBaseCamp);
 
       const data = {
-        centerId: 'nonexistent',
+        baseCampId: 'nonexistent',
         updates: { name: 'New Name' },
       };
 
@@ -224,14 +222,14 @@ describe('Center Management Functions', () => {
         auth: { uid: 'admin123', token: {} },
       };
 
-      await expect(wrapped(data, context)).rejects.toThrow('Center not found');
+      await expect(wrapped(data, context)).rejects.toThrow('Base camp not found');
     });
 
     it('should reject without authentication', async () => {
-      wrapped = testEnv.wrap(functions.updateCenter);
+      wrapped = testEnv.wrap(functions.updateBaseCamp);
 
       const data = {
-        centerId: 'center123',
+        baseCampId: 'baseCamp123',
         updates: { name: 'New Name' },
       };
 
@@ -239,33 +237,33 @@ describe('Center Management Functions', () => {
     });
   });
 
-  describe('getCenter', () => {
-    it('should retrieve center data', async () => {
-      const centerData = {
-        id: 'center123',
-        name: 'Test Center',
+  describe('getBaseCamp', () => {
+    it('should retrieve base camp data', async () => {
+      const baseCampData = {
+        id: 'baseCamp123',
+        name: 'Test Base Camp',
         address: '123 Main St',
       };
 
       const mockGet = jest.fn().mockResolvedValue({
         exists: true,
-        data: () => centerData,
+        data: () => baseCampData,
       });
 
       const mockDoc = jest.fn(() => ({ get: mockGet }));
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.getCenter);
+      wrapped = testEnv.wrap(functions.getBaseCamp);
 
-      const data = { centerId: 'center123' };
+      const data = { baseCampId: 'baseCamp123' };
       const context = { auth: { uid: 'user123', token: {} } };
 
       const result = await wrapped(data, context);
 
-      expect(result.center).toEqual(centerData);
+      expect(result.baseCamp).toEqual(baseCampData);
     });
 
-    it('should throw error when center not found', async () => {
+    it('should throw error when base camp not found', async () => {
       const mockGet = jest.fn().mockResolvedValue({
         exists: false,
       });
@@ -273,84 +271,84 @@ describe('Center Management Functions', () => {
       const mockDoc = jest.fn(() => ({ get: mockGet }));
       mockFirestore.collection = jest.fn(() => ({ doc: mockDoc }));
 
-      wrapped = testEnv.wrap(functions.getCenter);
+      wrapped = testEnv.wrap(functions.getBaseCamp);
 
-      const data = { centerId: 'nonexistent' };
+      const data = { baseCampId: 'nonexistent' };
       const context = { auth: { uid: 'user123', token: {} } };
 
-      await expect(wrapped(data, context)).rejects.toThrow('Center not found');
+      await expect(wrapped(data, context)).rejects.toThrow('Base camp not found');
     });
 
     it('should reject without authentication', async () => {
-      wrapped = testEnv.wrap(functions.getCenter);
+      wrapped = testEnv.wrap(functions.getBaseCamp);
 
-      const data = { centerId: 'center123' };
+      const data = { baseCampId: 'baseCamp123' };
 
       await expect(wrapped(data, {})).rejects.toThrow('User must be authenticated');
     });
 
-    it('should reject with missing centerId', async () => {
-      wrapped = testEnv.wrap(functions.getCenter);
+    it('should reject with missing baseCampId', async () => {
+      wrapped = testEnv.wrap(functions.getBaseCamp);
 
       const data = {};
       const context = { auth: { uid: 'user123', token: {} } };
 
-      await expect(wrapped(data, context)).rejects.toThrow('Missing required field: centerId');
+      await expect(wrapped(data, context)).rejects.toThrow('Missing required field: baseCampId');
     });
   });
 
-  describe('listCenters', () => {
-    it('should list all centers', async () => {
-      const centers = [
-        { id: 'center1', name: 'Center 1' },
-        { id: 'center2', name: 'Center 2' },
+  describe('listBaseCamps', () => {
+    it('should list all base camps', async () => {
+      const baseCamps = [
+        { id: 'baseCamp1', name: 'Base Camp 1' },
+        { id: 'baseCamp2', name: 'Base Camp 2' },
       ];
 
       const mockGet = jest.fn().mockResolvedValue({
-        docs: centers.map(center => ({ data: () => center })),
+        docs: baseCamps.map(baseCamp => ({ data: () => baseCamp })),
       });
 
       const mockLimit = jest.fn(() => ({ get: mockGet }));
       const mockWhere: any = jest.fn(() => ({ limit: mockLimit }));
       mockFirestore.collection = jest.fn(() => ({ where: mockWhere, limit: mockLimit }));
 
-      wrapped = testEnv.wrap(functions.listCenters);
+      wrapped = testEnv.wrap(functions.listBaseCamps);
 
       const data = { limit: 100 };
       const context = { auth: { uid: 'user123', token: {} } };
 
       const result = await wrapped(data, context);
 
-      expect(result.centers).toBeDefined();
-      expect(Array.isArray(result.centers)).toBe(true);
+      expect(result.baseCamps).toBeDefined();
+      expect(Array.isArray(result.baseCamps)).toBe(true);
     });
 
-    it('should filter centers by groupId', async () => {
-      const centers = [
-        { id: 'center1', name: 'Center 1', groupId: 'group123' },
+    it('should filter base camps by eventId', async () => {
+      const baseCamps = [
+        { id: 'baseCamp1', name: 'Base Camp 1', eventIds: ['event123'] },
       ];
 
       const mockGet = jest.fn().mockResolvedValue({
-        docs: centers.map(center => ({ data: () => center })),
+        docs: baseCamps.map(baseCamp => ({ data: () => baseCamp })),
       });
 
       const mockLimit = jest.fn(() => ({ get: mockGet }));
       const mockWhere: any = jest.fn(() => ({ limit: mockLimit }));
       mockFirestore.collection = jest.fn(() => ({ where: mockWhere, limit: mockLimit }));
 
-      wrapped = testEnv.wrap(functions.listCenters);
+      wrapped = testEnv.wrap(functions.listBaseCamps);
 
-      const data = { groupId: 'group123', limit: 100 };
+      const data = { eventId: 'event123', limit: 100 };
       const context = { auth: { uid: 'user123', token: {} } };
 
       const result = await wrapped(data, context);
 
-      expect(result.centers).toBeDefined();
-      expect(mockWhere).toHaveBeenCalledWith('groupId', '==', 'group123');
+      expect(result.baseCamps).toBeDefined();
+      expect(mockWhere).toHaveBeenCalledWith('eventIds', 'array-contains', 'event123');
     });
 
     it('should reject without authentication', async () => {
-      wrapped = testEnv.wrap(functions.listCenters);
+      wrapped = testEnv.wrap(functions.listBaseCamps);
 
       await expect(wrapped({}, {})).rejects.toThrow('User must be authenticated');
     });

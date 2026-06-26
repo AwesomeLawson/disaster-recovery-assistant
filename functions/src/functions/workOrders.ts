@@ -24,13 +24,13 @@ export const createWorkOrder = onCall({ cors: true }, async (request: any) => {
     survivorName, survivorPhone, altContact, altContactPhone,
     address, latitude, longitude, tempAddress,
     descriptionOfNeed, source, workOrderNumber,
-    centerId, eventId,
+    baseCampId, eventId,
   } = request.data;
 
-  if (!survivorName || !survivorPhone || !address || !descriptionOfNeed || !centerId) {
+  if (!survivorName || !survivorPhone || !address || !descriptionOfNeed || !baseCampId) {
     throw new HttpsError(
       'invalid-argument',
-      'Missing required fields: survivorName, survivorPhone, address, descriptionOfNeed, centerId'
+      'Missing required fields: survivorName, survivorPhone, address, descriptionOfNeed, baseCampId'
     );
   }
 
@@ -43,7 +43,7 @@ export const createWorkOrder = onCall({ cors: true }, async (request: any) => {
     survivorPhone,
     address,
     descriptionOfNeed,
-    centerId,
+    baseCampId,
     intakeVolunteerName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || undefined,
     photoUrls: [],
     reassessmentCount: 0,
@@ -264,12 +264,12 @@ export const listWorkOrders = onCall({ cors: true }, async (request: any) => {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { centerId, eventId, flaggedForReview, limit = 100 } = request.data || {};
+  const { baseCampId, eventId, flaggedForReview, limit = 100 } = request.data || {};
 
   let query: admin.firestore.Query = db.collection('workOrders');
 
-  if (centerId) {
-    query = query.where('centerId', '==', centerId);
+  if (baseCampId) {
+    query = query.where('baseCampId', '==', baseCampId);
   }
 
   if (eventId) {

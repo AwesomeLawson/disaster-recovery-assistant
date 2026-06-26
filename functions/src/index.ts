@@ -7,7 +7,7 @@ if (!admin.apps.length) {
 
 import * as userFunctions from './functions/users';
 import * as eventFunctions from './functions/events';
-import * as centerFunctions from './functions/centers';
+import * as baseCampFunctions from './functions/baseCamps';
 import * as workOrderFunctions from './functions/workOrders';
 import * as workgroupFunctions from './functions/workgroups';
 import * as escalationFunctions from './functions/escalations';
@@ -37,14 +37,14 @@ export const updateEvent = eventFunctions.updateEvent;
 export const getEvent = eventFunctions.getEvent;
 export const listEvents = eventFunctions.listEvents;
 export const addUserToEvent = eventFunctions.addUserToEvent;
-export const addCenterToEvent = eventFunctions.addCenterToEvent;
-export const removeCenterFromEvent = eventFunctions.removeCenterFromEvent;
+export const addBaseCampToEvent = eventFunctions.addBaseCampToEvent;
+export const removeBaseCampFromEvent = eventFunctions.removeBaseCampFromEvent;
 
-// Center Management
-export const createCenter = centerFunctions.createCenter;
-export const updateCenter = centerFunctions.updateCenter;
-export const getCenter = centerFunctions.getCenter;
-export const listCenters = centerFunctions.listCenters;
+// Base Camp Management
+export const createBaseCamp = baseCampFunctions.createBaseCamp;
+export const updateBaseCamp = baseCampFunctions.updateBaseCamp;
+export const getBaseCamp = baseCampFunctions.getBaseCamp;
+export const listBaseCamps = baseCampFunctions.listBaseCamps;
 
 // Work Order Management
 export const createWorkOrder = workOrderFunctions.createWorkOrder;

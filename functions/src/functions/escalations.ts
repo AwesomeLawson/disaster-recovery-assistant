@@ -9,12 +9,12 @@ export const createEscalation = onCall({ cors: true }, async (request: any) => {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { workgroupId, centerId, eventId, type, reason, workOrderId } = request.data;
+  const { workgroupId, baseCampId, eventId, type, reason, workOrderId } = request.data;
 
-  if (!workgroupId || !centerId || !type || !reason) {
+  if (!workgroupId || !baseCampId || !type || !reason) {
     throw new HttpsError(
       'invalid-argument',
-      'Missing required fields: workgroupId, centerId, type, reason'
+      'Missing required fields: workgroupId, baseCampId, type, reason'
     );
   }
 
@@ -30,7 +30,7 @@ export const createEscalation = onCall({ cors: true }, async (request: any) => {
   const escalation: Escalation = {
     id: escalationRef.id,
     workgroupId,
-    centerId,
+    baseCampId,
     type,
     status: 'pending',
     reason,
@@ -154,12 +154,12 @@ export const listEscalations = onCall({ cors: true }, async (request: any) => {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { centerId, eventId, workgroupId, status, limit = 100 } = request.data || {};
+  const { baseCampId, eventId, workgroupId, status, limit = 100 } = request.data || {};
 
   let query: admin.firestore.Query = db.collection('escalations');
 
-  if (centerId) {
-    query = query.where('centerId', '==', centerId);
+  if (baseCampId) {
+    query = query.where('baseCampId', '==', baseCampId);
   }
 
   if (eventId) {

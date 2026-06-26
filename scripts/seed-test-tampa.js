@@ -101,18 +101,18 @@ async function main() {
     eventType: 'hurricane',
     description: 'Test event for Tampa Bay area hurricane response',
     userIds: [userId],
-    centerIds: [],
+    baseCampIds: [],
     createdBy: userId,
     createdAt: now,
     updatedAt: now,
-  }, ['id', 'name', 'eventType', 'description', 'userIds', 'centerIds', 'createdBy', 'createdAt', 'updatedAt']);
+  }, ['id', 'name', 'eventType', 'description', 'userIds', 'baseCampIds', 'createdBy', 'createdAt', 'updatedAt']);
   console.log('  Event ID:', eventId);
 
-  // 2. Create Lake Magdalene Church center
-  console.log('\nCreating Lake Magdalene Church center...');
-  const centerId = await createDoc('centers', {});
-  await patchDoc('centers', centerId, {
-    id: centerId,
+  // 2. Create Lake Magdalene Church base camp
+  console.log('\nCreating Lake Magdalene Church base camp...');
+  const baseCampId = await createDoc('baseCamps', {});
+  await patchDoc('baseCamps', baseCampId, {
+    id: baseCampId,
     name: 'Lake Magdalene United Methodist Church',
     address: '2902 W Fletcher Ave, Tampa, FL 33618',
     latitude: 28.066075,
@@ -123,11 +123,11 @@ async function main() {
     createdAt: now,
     updatedAt: now,
   }, ['id', 'name', 'address', 'latitude', 'longitude', 'eventIds', 'leadUserIds', 'createdBy', 'createdAt', 'updatedAt']);
-  console.log('  Center ID:', centerId);
+  console.log('  Base Camp ID:', baseCampId);
 
-  // Link center to event
-  await patchDoc('events', eventId, { centerIds: [centerId], updatedAt: now }, ['centerIds', 'updatedAt']);
-  console.log('  Linked center to event');
+  // Link base camp to event
+  await patchDoc('events', eventId, { baseCampIds: [baseCampId], updatedAt: now }, ['baseCampIds', 'updatedAt']);
+  console.log('  Linked base camp to event');
 
   // Add event to user record
   await patchDoc('users', userId, { eventIds: [eventId], updatedAt: now }, ['eventIds', 'updatedAt']);
@@ -146,7 +146,7 @@ async function main() {
     longitude: -82.502045,
     descriptionOfNeed: 'Test case — roof damage and debris removal needed after storm',
     source: 'walk-in',
-    centerId,
+    baseCampId,
     eventId,
     assessorId: userId,
     intakeVolunteerName: 'Matt Lawson',
@@ -156,13 +156,13 @@ async function main() {
     createdAt: now,
     updatedAt: now,
   }, ['id', 'status', 'survivorName', 'survivorPhone', 'address', 'latitude', 'longitude',
-      'descriptionOfNeed', 'source', 'centerId', 'eventId', 'assessorId', 'intakeVolunteerName',
+      'descriptionOfNeed', 'source', 'baseCampId', 'eventId', 'assessorId', 'intakeVolunteerName',
       'photoUrls', 'reassessmentCount', 'flaggedForReview', 'createdAt', 'updatedAt']);
   console.log('  Assessment ID:', assessmentId);
 
   console.log('\nAll test data created successfully!');
   console.log('  Event:', eventId);
-  console.log('  Center:', centerId);
+  console.log('  Base Camp:', baseCampId);
   console.log('  Assessment:', assessmentId);
   console.log('  Assignee:', userId, '(mattlawson80@gmail.com)');
 }

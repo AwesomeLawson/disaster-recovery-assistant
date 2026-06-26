@@ -18,14 +18,14 @@ import {
   Chip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { centerService } from '../services/center.service';
+import { baseCampService } from '../services/baseCamp.service';
 import { eventService } from '../services/event.service';
 import { AddressAutocomplete } from '../components/AddressAutocomplete';
-import type { Center, Event } from '../types';
+import type { BaseCamp, Event } from '../types';
 
-export const CenterManagement: React.FC = () => {
+export const BaseCampManagement: React.FC = () => {
   const navigate = useNavigate();
-  const [centers, setCenters] = useState<Center[]>([]);
+  const [baseCamps, setBaseCamps] = useState<BaseCamp[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -44,11 +44,11 @@ export const CenterManagement: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [centersData, eventsData] = await Promise.all([
-        centerService.listCenters(),
+      const [baseCampsData, eventsData] = await Promise.all([
+        baseCampService.listBaseCamps(),
         eventService.listEvents(),
       ]);
-      setCenters(centersData);
+      setBaseCamps(baseCampsData);
       setEvents(eventsData);
     } catch (err: any) {
       setError(err.message || 'Failed to load data');
@@ -57,9 +57,9 @@ export const CenterManagement: React.FC = () => {
     }
   };
 
-  const handleCreateCenter = async () => {
+  const handleCreateBaseCamp = async () => {
     try {
-      await centerService.createCenter({
+      await baseCampService.createBaseCamp({
         name: formData.name,
         address: formData.address,
         latitude: formData.latitude,
@@ -69,7 +69,7 @@ export const CenterManagement: React.FC = () => {
       setFormData({ name: '', address: '', latitude: undefined, longitude: undefined });
       await loadData();
     } catch (err: any) {
-      setError(err.message || 'Failed to create center');
+      setError(err.message || 'Failed to create base camp');
     }
   };
 
@@ -81,13 +81,13 @@ export const CenterManagement: React.FC = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" sx={{ mb: 2 }}>Center Management</Typography>
+        <Typography variant="h4" sx={{ mb: 2 }}>Base Camp Management</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setOpenDialog(true)}
         >
-          Create Center
+          Create Base Camp
         </Button>
       </Box>
 
@@ -98,13 +98,13 @@ export const CenterManagement: React.FC = () => {
       )}
 
       <Paper sx={{ p: 3 }}>
-        {centers.length === 0 ? (
-          <Typography color="text.secondary">No centers found. Create your first center!</Typography>
+        {baseCamps.length === 0 ? (
+          <Typography color="text.secondary">No base camps found. Create your first base camp!</Typography>
         ) : (
           <List>
-            {centers.map((center) => (
+            {baseCamps.map((baseCamp) => (
               <ListItem
-                key={center.id}
+                key={baseCamp.id}
                 sx={{
                   border: '1px solid',
                   borderColor: 'grey.300',
@@ -115,18 +115,18 @@ export const CenterManagement: React.FC = () => {
                     bgcolor: 'grey.50',
                   },
                 }}
-                onClick={() => navigate(`/centers/${center.id}`)}
+                onClick={() => navigate(`/base-camps/${baseCamp.id}`)}
               >
                 <ListItemText
-                  primary={center.name}
+                  primary={baseCamp.name}
                   secondary={
                     <Box sx={{ mt: 1 }}>
                       <Typography variant="body2" component="span">
-                        {center.address}
+                        {baseCamp.address}
                       </Typography>
                       <Box sx={{ mt: 0.5 }}>
-                        {center.eventIds && center.eventIds.length > 0 ? (
-                          center.eventIds.map((eventId) => (
+                        {baseCamp.eventIds && baseCamp.eventIds.length > 0 ? (
+                          baseCamp.eventIds.map((eventId) => (
                             <Chip
                               key={eventId}
                               label={getEventName(eventId)}
@@ -144,7 +144,7 @@ export const CenterManagement: React.FC = () => {
                           />
                         )}
                         <Chip
-                          label={`${center.leadUserIds.length} leads`}
+                          label={`${baseCamp.leadUserIds.length} leads`}
                           size="small"
                           variant="outlined"
                         />
@@ -159,12 +159,12 @@ export const CenterManagement: React.FC = () => {
       </Paper>
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Create New Center</DialogTitle>
+        <DialogTitle>Create New Base Camp</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            label="Center Name"
+            label="Base Camp Name"
             type="text"
             fullWidth
             variant="outlined"
@@ -190,13 +190,13 @@ export const CenterManagement: React.FC = () => {
             />
           </Box>
           <Typography variant="caption" color="text.secondary">
-            You can associate this center with events after creation from the center details page.
+            You can associate this base camp with events after creation from the base camp details page.
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
           <Button
-            onClick={handleCreateCenter}
+            onClick={handleCreateBaseCamp}
             variant="contained"
             disabled={!formData.name || !formData.address}
           >

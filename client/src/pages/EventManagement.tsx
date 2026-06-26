@@ -115,7 +115,7 @@ export const EventManagement: React.FC = () => {
                           sx={{ mr: 1 }}
                         />
                         <Chip
-                          label={`${event.centerIds.length} centers`}
+                          label={`${event.baseCampIds.length} base camps`}
                           size="small"
                           variant="outlined"
                         />

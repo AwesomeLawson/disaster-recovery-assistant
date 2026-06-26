@@ -20,11 +20,11 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { workgroupService } from '../services/workgroup.service';
 import { eventService } from '../services/event.service';
-import { centerService } from '../services/center.service';
+import { baseCampService } from '../services/baseCamp.service';
 import { userService } from '../services/user.service';
 import { workOrderService } from '../services/workOrder.service';
 import { useAuth } from '../context/AuthContext';
-import type { Event, Center, User, WorkOrder, WorkgroupFormData } from '../types';
+import type { Event, BaseCamp, User, WorkOrder, WorkgroupFormData } from '../types';
 
 export const WorkgroupCreate: React.FC = () => {
   const navigate = useNavigate();
@@ -33,8 +33,8 @@ export const WorkgroupCreate: React.FC = () => {
   const preselectedWorkOrderId = searchParams.get('workOrderId');
 
   const [events, setEvents] = useState<Event[]>([]);
-  const [centers, setCenters] = useState<Center[]>([]);
-  const [filteredCenters, setFilteredCenters] = useState<Center[]>([]);
+  const [baseCamps, setBaseCamps] = useState<BaseCamp[]>([]);
+  const [filteredBaseCamps, setFilteredBaseCamps] = useState<BaseCamp[]>([]);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [filteredWorkOrders, setFilteredWorkOrders] = useState<WorkOrder[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -46,7 +46,7 @@ export const WorkgroupCreate: React.FC = () => {
 
   const [formData, setFormData] = useState<WorkgroupFormData>({
     name: '',
-    centerId: '',
+    baseCampId: '',
     eventId: '',
     leadUserId: '',
     volunteerUserIds: [],
@@ -62,24 +62,24 @@ export const WorkgroupCreate: React.FC = () => {
 
   useEffect(() => {
     if (formData.eventId) {
-      const eventCenters = centers.filter((c) => formData.eventId && c.eventIds.includes(formData.eventId));
-      setFilteredCenters(eventCenters);
+      const eventBaseCamps = baseCamps.filter((c) => formData.eventId && c.eventIds.includes(formData.eventId));
+      setFilteredBaseCamps(eventBaseCamps);
 
-      if (!eventCenters.find((c) => c.id === formData.centerId)) {
-        setFormData((prev) => ({ ...prev, centerId: '', workOrderId: '' }));
+      if (!eventBaseCamps.find((c) => c.id === formData.baseCampId)) {
+        setFormData((prev) => ({ ...prev, baseCampId: '', workOrderId: '' }));
       }
     } else {
-      // Show all centers when no event is selected
-      setFilteredCenters(centers);
+      // Show all base camps when no event is selected
+      setFilteredBaseCamps(baseCamps);
     }
-  }, [formData.eventId, centers]);
+  }, [formData.eventId, baseCamps]);
 
   useEffect(() => {
-    if (formData.centerId) {
-      const centerWorkOrders = workOrders.filter((a) => a.centerId === formData.centerId);
-      setFilteredWorkOrders(centerWorkOrders);
+    if (formData.baseCampId) {
+      const baseCampWorkOrders = workOrders.filter((a) => a.baseCampId === formData.baseCampId);
+      setFilteredWorkOrders(baseCampWorkOrders);
 
-      if (!centerWorkOrders.find((a) => a.id === formData.workOrderId)) {
+      if (!baseCampWorkOrders.find((a) => a.id === formData.workOrderId)) {
         setFormData((prev) => ({ ...prev, workOrderId: '' }));
       }
     } else if (formData.eventId) {
@@ -88,7 +88,7 @@ export const WorkgroupCreate: React.FC = () => {
     } else {
       setFilteredWorkOrders(workOrders);
     }
-  }, [formData.centerId, formData.eventId, workOrders]);
+  }, [formData.baseCampId, formData.eventId, workOrders]);
 
   useEffect(() => {
     const workers = users.filter(
@@ -102,15 +102,15 @@ export const WorkgroupCreate: React.FC = () => {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const [eventsData, centersData, workOrdersData, usersData] = await Promise.all([
+      const [eventsData, baseCampsData, workOrdersData, usersData] = await Promise.all([
         eventService.listEvents(),
-        centerService.listCenters(),
+        baseCampService.listBaseCamps(),
         workOrderService.listWorkOrders(),
         userService.listUsers(),
       ]);
 
       setEvents(eventsData);
-      setCenters(centersData);
+      setBaseCamps(baseCampsData);
       setWorkOrders(workOrdersData);
       setUsers(usersData);
 
@@ -127,7 +127,7 @@ export const WorkgroupCreate: React.FC = () => {
             ...prev,
             workOrderId: workOrder.id,
             eventId: workOrder.eventId || '',
-            centerId: workOrder.centerId,
+            baseCampId: workOrder.baseCampId,
             name: `Workgroup for ${workOrder.survivorName}`,
           }));
         }
@@ -146,8 +146,8 @@ export const WorkgroupCreate: React.FC = () => {
       setError('Name is required');
       return;
     }
-    if (!formData.centerId) {
-      setError('Center is required');
+    if (!formData.baseCampId) {
+      setError('Base camp is required');
       return;
     }
     if (!formData.workOrderId) {
@@ -241,15 +241,15 @@ export const WorkgroupCreate: React.FC = () => {
 
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth required>
-                <InputLabel>Center</InputLabel>
+                <InputLabel>Base Camp</InputLabel>
                 <Select
-                  value={formData.centerId}
-                  label="Center"
-                  onChange={(e) => setFormData({ ...formData, centerId: e.target.value })}
+                  value={formData.baseCampId}
+                  label="Base Camp"
+                  onChange={(e) => setFormData({ ...formData, baseCampId: e.target.value })}
                 >
-                  {filteredCenters.map((center) => (
-                    <MenuItem key={center.id} value={center.id}>
-                      {center.name}
+                  {filteredBaseCamps.map((baseCamp) => (
+                    <MenuItem key={baseCamp.id} value={baseCamp.id}>
+                      {baseCamp.name}
                     </MenuItem>
                   ))}
                 </Select>

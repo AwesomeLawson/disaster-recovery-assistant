@@ -26,7 +26,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { useAuth } from '../context/AuthContext';
 import { userService } from '../services/user.service';
 import { eventService } from '../services/event.service';
-import { centerService } from '../services/center.service';
+import { baseCampService } from '../services/baseCamp.service';
 import { workOrderService } from '../services/workOrder.service';
 import type { User } from '../types';
 
@@ -36,7 +36,7 @@ export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [pendingUsers, setPendingUsers] = useState<User[]>([]);
-  const [stats, setStats] = useState({ events: 0, centers: 0, workOrders: 0 });
+  const [stats, setStats] = useState({ events: 0, baseCamps: 0, workOrders: 0 });
   const [error, setError] = useState('');
   const [approving, setApproving] = useState<string | null>(null);
   const [bgCheckDates, setBgCheckDates] = useState<Record<string, string>>({});
@@ -52,12 +52,12 @@ export const AdminDashboard: React.FC = () => {
       const pending = users.filter((u) => u.roleApprovalStatus === 'pending');
       setPendingUsers(pending);
 
-      const [events, centers, workOrders] = await Promise.all([
+      const [events, baseCamps, workOrders] = await Promise.all([
         eventService.listEvents(),
-        centerService.listCenters(),
+        baseCampService.listBaseCamps(),
         workOrderService.listWorkOrders(),
       ]);
-      setStats({ events: events.length, centers: centers.length, workOrders: workOrders.length });
+      setStats({ events: events.length, baseCamps: baseCamps.length, workOrders: workOrders.length });
     } catch (err: any) {
       setError(err.message || 'Failed to load dashboard data');
     }
@@ -127,12 +127,12 @@ export const AdminDashboard: React.FC = () => {
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <LocationCityIcon color="primary" sx={{ mr: 1 }} />
-                <Typography variant="h6">Centers</Typography>
+                <Typography variant="h6">Base Camps</Typography>
               </Box>
-              <Typography variant="h3">{stats.centers}</Typography>
+              <Typography variant="h3">{stats.baseCamps}</Typography>
             </CardContent>
             <CardActions>
-              <Button size="small" onClick={() => navigate('/centers')}>Manage</Button>
+              <Button size="small" onClick={() => navigate('/base-camps')}>Manage</Button>
             </CardActions>
           </Card>
         </Grid>
@@ -313,8 +313,8 @@ export const AdminDashboard: React.FC = () => {
               <Button variant="contained" startIcon={<EventIcon />} onClick={() => navigate('/events')}>
                 Manage Events
               </Button>
-              <Button variant="contained" startIcon={<LocationCityIcon />} onClick={() => navigate('/centers')}>
-                Manage Centers
+              <Button variant="contained" startIcon={<LocationCityIcon />} onClick={() => navigate('/base-camps')}>
+                Manage Base Camps
               </Button>
               <Button variant="contained" startIcon={<PeopleIcon />} onClick={() => navigate('/admin/users')}>
                 Manage Users

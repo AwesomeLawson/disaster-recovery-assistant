@@ -49,7 +49,7 @@ describe('Workgroup Management Functions', () => {
 
       const data = {
         name: 'Repair Team Alpha',
-        centerId: 'center123',
+        baseCampId: 'baseCamp123',
         groupId: 'group123',
         leadUserId: 'lead123',
         volunteerUserIds: ['worker1', 'worker2'],
@@ -98,7 +98,7 @@ describe('Workgroup Management Functions', () => {
 
       const data = {
         name: 'Repair Team Alpha',
-        centerId: 'center123',
+        baseCampId: 'baseCamp123',
         groupId: 'group123',
         leadUserId: 'lead123',
         assessmentId: 'assessment123',
@@ -127,7 +127,7 @@ describe('Workgroup Management Functions', () => {
 
       const data = {
         name: 'Test Workgroup',
-        centerId: 'center123',
+        baseCampId: 'baseCamp123',
         groupId: 'group123',
         leadUserId: 'lead123',
         assessmentId: 'assessment123',
@@ -525,8 +525,8 @@ describe('Workgroup Management Functions', () => {
   describe('listWorkgroups', () => {
     it('should list workgroups with filters', async () => {
       const workgroups = [
-        { id: 'workgroup1', name: 'Team 1', centerId: 'center123' },
-        { id: 'workgroup2', name: 'Team 2', centerId: 'center123' },
+        { id: 'workgroup1', name: 'Team 1', baseCampId: 'baseCamp123' },
+        { id: 'workgroup2', name: 'Team 2', baseCampId: 'baseCamp123' },
       ];
 
       const mockGet = jest.fn().mockResolvedValue({
@@ -540,7 +540,7 @@ describe('Workgroup Management Functions', () => {
 
       wrapped = testEnv.wrap(functions.listWorkgroups);
 
-      const data = { centerId: 'center123', limit: 100 };
+      const data = { baseCampId: 'baseCamp123', limit: 100 };
       const context = { auth: { uid: 'user123', token: {} } };
 
       const result = await wrapped(data, context);

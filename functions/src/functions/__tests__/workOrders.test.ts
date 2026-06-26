@@ -51,7 +51,7 @@ describe('Assessment Management Functions', () => {
         address: '456 Oak St, City, State',
         latitude: 35.5,
         longitude: -80.5,
-        centerId: 'center123',
+        baseCampId: 'baseCamp123',
         groupId: 'group123',
         damages: 'Roof damage, flooding',
         needs: 'Roof repair, cleanup',
@@ -86,7 +86,7 @@ describe('Assessment Management Functions', () => {
       const data = {
         placeName: 'Test Place',
         address: '123 Test St',
-        centerId: 'center123',
+        baseCampId: 'baseCamp123',
         groupId: 'group123',
         damages: 'Test damage',
         needs: 'Test needs',
@@ -111,7 +111,7 @@ describe('Assessment Management Functions', () => {
       const data = {
         placeName: 'Test Place',
         address: '123 Test St',
-        centerId: 'center123',
+        baseCampId: 'baseCamp123',
         groupId: 'group123',
         damages: 'Test damage',
         needs: 'Test needs',
@@ -409,8 +409,8 @@ describe('Assessment Management Functions', () => {
   describe('listAssessments', () => {
     it('should list all assessments with filters', async () => {
       const assessments = [
-        { id: 'assessment1', placeName: 'Place 1', centerId: 'center123' },
-        { id: 'assessment2', placeName: 'Place 2', centerId: 'center123' },
+        { id: 'assessment1', placeName: 'Place 1', baseCampId: 'baseCamp123' },
+        { id: 'assessment2', placeName: 'Place 2', baseCampId: 'baseCamp123' },
       ];
 
       const mockGet = jest.fn().mockResolvedValue({
@@ -424,7 +424,7 @@ describe('Assessment Management Functions', () => {
 
       wrapped = testEnv.wrap(functions.listWorkOrders);
 
-      const data = { centerId: 'center123', limit: 100 };
+      const data = { baseCampId: 'baseCamp123', limit: 100 };
       const context = { auth: { uid: 'user123', token: {} } };
 
       const result = await wrapped(data, context);

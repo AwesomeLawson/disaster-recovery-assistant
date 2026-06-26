@@ -18,9 +18,9 @@ import AddIcon from '@mui/icons-material/Add';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import { useAuth } from '../context/AuthContext';
 import { workOrderService } from '../services/workOrder.service';
-import { centerService } from '../services/center.service';
+import { baseCampService } from '../services/baseCamp.service';
 import { WorkOrderMap } from '../components/WorkOrderMap';
-import type { WorkOrder, Center, WorkOrderStatus } from '../types';
+import type { WorkOrder, BaseCamp, WorkOrderStatus } from '../types';
 
 const STATUS_LABELS: Record<WorkOrderStatus, string> = {
   intake: 'Intake',
@@ -45,7 +45,7 @@ export const AssessorDashboard: React.FC = () => {
   const { user } = useAuth();
   const [myWorkOrders, setMyWorkOrders] = useState<WorkOrder[]>([]);
   const [eventWorkOrders, setEventWorkOrders] = useState<WorkOrder[]>([]);
-  const [eventCenters, setEventCenters] = useState<Center[]>([]);
+  const [eventBaseCamps, setEventBaseCamps] = useState<BaseCamp[]>([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -60,9 +60,9 @@ export const AssessorDashboard: React.FC = () => {
 
       const eventIds: string[] = user?.eventIds ?? [];
       if (eventIds.length > 0) {
-        const [workOrdersByEvent, centersByEvent] = await Promise.all([
+        const [workOrdersByEvent, baseCampsByEvent] = await Promise.all([
           Promise.all(eventIds.map((eid) => workOrderService.listWorkOrders({ eventId: eid }))),
-          Promise.all(eventIds.map((eid) => centerService.listCenters(eid))),
+          Promise.all(eventIds.map((eid) => baseCampService.listBaseCamps(eid))),
         ]);
 
         const seen = new Set<string>();
@@ -74,14 +74,14 @@ export const AssessorDashboard: React.FC = () => {
         }
         setEventWorkOrders(combined);
 
-        const seenCenters = new Set<string>();
-        const combinedCenters: Center[] = [];
-        for (const batch of centersByEvent) {
+        const seenBaseCamps = new Set<string>();
+        const combinedBaseCamps: BaseCamp[] = [];
+        for (const batch of baseCampsByEvent) {
           for (const c of batch) {
-            if (!seenCenters.has(c.id)) { seenCenters.add(c.id); combinedCenters.push(c); }
+            if (!seenBaseCamps.has(c.id)) { seenBaseCamps.add(c.id); combinedBaseCamps.push(c); }
           }
         }
-        setEventCenters(combinedCenters);
+        setEventBaseCamps(combinedBaseCamps);
       }
     } catch (err: any) {
       setError(err.message || 'Failed to load data');
@@ -208,14 +208,14 @@ export const AssessorDashboard: React.FC = () => {
           </Paper>
         </Grid>
 
-        {/* Centers */}
-        {eventCenters.length > 0 && (
+        {/* Base Camps */}
+        {eventBaseCamps.length > 0 && (
           <Grid size={{ xs: 12 }}>
             <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>Centers</Typography>
+              <Typography variant="h6" gutterBottom>Base Camps</Typography>
               <Divider sx={{ mb: 2 }} />
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                {eventCenters.map((c) => (
+                {eventBaseCamps.map((c) => (
                   <Box
                     key={c.id}
                     sx={{
@@ -233,7 +233,7 @@ export const AssessorDashboard: React.FC = () => {
                       <Typography variant="subtitle2">{c.name}</Typography>
                       <Typography variant="body2" color="text.secondary">{c.address}</Typography>
                     </Box>
-                    <Button size="small" variant="outlined" onClick={() => navigate(`/centers/${c.id}`)}>
+                    <Button size="small" variant="outlined" onClick={() => navigate(`/base-camps/${c.id}`)}>
                       View
                     </Button>
                   </Box>
@@ -249,7 +249,7 @@ export const AssessorDashboard: React.FC = () => {
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>My Event Map</Typography>
               <Divider sx={{ mb: 2 }} />
-              <WorkOrderMap workOrders={eventWorkOrders} centers={eventCenters} />
+              <WorkOrderMap workOrders={eventWorkOrders} baseCamps={eventBaseCamps} />
             </Paper>
           </Grid>
         )}

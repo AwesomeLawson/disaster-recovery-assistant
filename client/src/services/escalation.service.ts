@@ -35,7 +35,7 @@ export const escalationService = {
 
   // List escalations with filters
   async listEscalations(filters?: {
-    centerId?: string;
+    baseCampId?: string;
     groupId?: string;
     workgroupId?: string;
     status?: EscalationStatus;

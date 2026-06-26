@@ -9,7 +9,7 @@ export const eventService = {
     eventType: string;
     description?: string;
     userIds?: string[];
-    centerIds?: string[];
+    baseCampIds?: string[];
   }): Promise<Event> {
     const createEventFn = httpsCallable(functions, 'createEvent');
     const result = await createEventFn(data);
@@ -42,15 +42,15 @@ export const eventService = {
     await addUserToEventFn({ eventId, userId });
   },
 
-  // Add center to event
-  async addCenterToEvent(eventId: string, centerId: string): Promise<void> {
-    const addCenterToEventFn = httpsCallable(functions, 'addCenterToEvent');
-    await addCenterToEventFn({ eventId, centerId });
+  // Add base camp to event
+  async addBaseCampToEvent(eventId: string, baseCampId: string): Promise<void> {
+    const addBaseCampToEventFn = httpsCallable(functions, 'addBaseCampToEvent');
+    await addBaseCampToEventFn({ eventId, baseCampId });
   },
 
-  // Remove center from event
-  async removeCenterFromEvent(eventId: string, centerId: string): Promise<void> {
-    const removeCenterFromEventFn = httpsCallable(functions, 'removeCenterFromEvent');
-    await removeCenterFromEventFn({ eventId, centerId });
+  // Remove base camp from event
+  async removeBaseCampFromEvent(eventId: string, baseCampId: string): Promise<void> {
+    const removeBaseCampFromEventFn = httpsCallable(functions, 'removeBaseCampFromEvent');
+    await removeBaseCampFromEventFn({ eventId, baseCampId });
   },
 };

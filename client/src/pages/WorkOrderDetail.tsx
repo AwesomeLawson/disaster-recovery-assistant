@@ -32,11 +32,11 @@ import GavelIcon from '@mui/icons-material/Gavel';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import { workOrderService } from '../services/workOrder.service';
 import { eventService } from '../services/event.service';
-import { centerService } from '../services/center.service';
+import { baseCampService } from '../services/baseCamp.service';
 import { userService } from '../services/user.service';
 import { homeownerReleaseService } from '../services/homeownerRelease.service';
 import { useAuth } from '../context/AuthContext';
-import type { WorkOrder, WorkOrderStatus, Event, Center, User, HomeownerRelease } from '../types';
+import type { WorkOrder, WorkOrderStatus, Event, BaseCamp, User, HomeownerRelease } from '../types';
 
 const STATUS_LABELS: Record<WorkOrderStatus, string> = {
   intake: 'Intake',
@@ -78,7 +78,7 @@ export const WorkOrderDetail: React.FC = () => {
   const { user } = useAuth();
   const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
   const [event, setEvent] = useState<Event | null>(null);
-  const [center, setCenter] = useState<Center | null>(null);
+  const [baseCamp, setBaseCamp] = useState<BaseCamp | null>(null);
   const [assessor, setAssessor] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -103,12 +103,12 @@ export const WorkOrderDetail: React.FC = () => {
       const data = await workOrderService.getWorkOrder(id!);
       setWorkOrder(data);
 
-      const [eventData, centerData] = await Promise.all([
+      const [eventData, baseCampData] = await Promise.all([
         data.eventId ? eventService.getEvent(data.eventId) : Promise.resolve(null),
-        centerService.getCenter(data.centerId),
+        baseCampService.getBaseCamp(data.baseCampId),
       ]);
       setEvent(eventData);
-      setCenter(centerData);
+      setBaseCamp(baseCampData);
 
       if (data.assessorId) {
         userService.getUser(data.assessorId).then(setAssessor).catch(() => {});
@@ -550,7 +550,7 @@ ${sigImg(release.frrWitnessSignatureUrl, 'Signature of FRR Witness')}
             <Typography variant="h6" gutterBottom>Assignment</Typography>
             <Divider sx={{ mb: 2 }} />
             <InfoField label="Event" value={event?.name ?? (workOrder.eventId ? workOrder.eventId : 'No event assigned')} />
-            <InfoField label="Center" value={center?.name ?? workOrder.centerId} />
+            <InfoField label="Base Camp" value={baseCamp?.name ?? workOrder.baseCampId} />
             <Box sx={{ mb: 1.5 }}>
               <Typography variant="caption" color="text.secondary" display="block">Assessor</Typography>
               <Typography variant="body2">

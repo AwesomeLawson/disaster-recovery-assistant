@@ -16,15 +16,15 @@ import {
   Divider,
 } from '@mui/material';
 import { workOrderService } from '../services/workOrder.service';
-import { centerService } from '../services/center.service';
+import { baseCampService } from '../services/baseCamp.service';
 import { eventService } from '../services/event.service';
 import { AddressAutocomplete } from '../components/AddressAutocomplete';
-import type { Center, Event } from '../types';
+import type { BaseCamp, Event } from '../types';
 
 export const CreateWorkOrder: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [centers, setCenters] = useState<Center[]>([]);
+  const [baseCamps, setBaseCamps] = useState<BaseCamp[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -40,14 +40,14 @@ export const CreateWorkOrder: React.FC = () => {
     descriptionOfNeed: '',
     source: '',
     workOrderNumber: '',
-    centerId: searchParams.get('centerId') ?? '',
+    baseCampId: searchParams.get('baseCampId') ?? '',
     eventId: searchParams.get('eventId') ?? '',
   });
 
   useEffect(() => {
-    Promise.all([centerService.listCenters(), eventService.listEvents()])
-      .then(([centersData, eventsData]) => {
-        setCenters(centersData);
+    Promise.all([baseCampService.listBaseCamps(), eventService.listEvents()])
+      .then(([baseCampsData, eventsData]) => {
+        setBaseCamps(baseCampsData);
         setEvents(eventsData);
       })
       .catch((err) => setError(err.message || 'Failed to load data'));
@@ -63,7 +63,7 @@ export const CreateWorkOrder: React.FC = () => {
         survivorPhone: formData.survivorPhone,
         address: formData.address,
         descriptionOfNeed: formData.descriptionOfNeed,
-        centerId: formData.centerId,
+        baseCampId: formData.baseCampId,
       };
       if (formData.altContact) payload.altContact = formData.altContact;
       if (formData.altContactPhone) payload.altContactPhone = formData.altContactPhone;
@@ -216,14 +216,14 @@ export const CreateWorkOrder: React.FC = () => {
 
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth required>
-                <InputLabel>Center</InputLabel>
+                <InputLabel>Base Camp</InputLabel>
                 <Select
-                  value={formData.centerId}
-                  label="Center"
-                  onChange={(e) => setFormData({ ...formData, centerId: e.target.value })}
+                  value={formData.baseCampId}
+                  label="Base Camp"
+                  onChange={(e) => setFormData({ ...formData, baseCampId: e.target.value })}
                 >
-                  {centers.map((center) => (
-                    <MenuItem key={center.id} value={center.id}>{center.name}</MenuItem>
+                  {baseCamps.map((baseCamp) => (
+                    <MenuItem key={baseCamp.id} value={baseCamp.id}>{baseCamp.name}</MenuItem>
                   ))}
                 </Select>
               </FormControl>

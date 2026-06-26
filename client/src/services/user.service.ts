@@ -27,7 +27,7 @@ export const userService = {
   async listUsers(filters?: {
     role?: UserRole;
     groupId?: string;
-    centerId?: string;
+    baseCampId?: string;
     limit?: number;
   }): Promise<User[]> {
     const listUsersFn = httpsCallable(functions, 'listUsers');

@@ -20,12 +20,12 @@ export const createWorkgroup = onCall({ cors: true }, async (request: any) => {
 
   await requireWorkGroupLeadOrAdmin(request.auth.uid);
 
-  const { name, centerId, eventId, leadUserId, volunteerUserIds, workOrderId, taskDescription } = request.data;
+  const { name, baseCampId, eventId, leadUserId, volunteerUserIds, workOrderId, taskDescription } = request.data;
 
-  if (!name || !centerId || !leadUserId || !workOrderId || !taskDescription) {
+  if (!name || !baseCampId || !leadUserId || !workOrderId || !taskDescription) {
     throw new HttpsError(
       'invalid-argument',
-      'Missing required fields: name, centerId, leadUserId, workOrderId, taskDescription'
+      'Missing required fields: name, baseCampId, leadUserId, workOrderId, taskDescription'
     );
   }
 
@@ -33,7 +33,7 @@ export const createWorkgroup = onCall({ cors: true }, async (request: any) => {
   const workgroup: Workgroup = {
     id: workgroupRef.id,
     name,
-    centerId,
+    baseCampId,
     leadUserId,
     volunteerUserIds: volunteerUserIds || [],
     workOrderId,
@@ -217,12 +217,12 @@ export const listWorkgroups = onCall({ cors: true }, async (request: any) => {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { centerId, eventId, workOrderId, limit = 100 } = request.data || {};
+  const { baseCampId, eventId, workOrderId, limit = 100 } = request.data || {};
 
   let query: admin.firestore.Query = db.collection('workgroups');
 
-  if (centerId) {
-    query = query.where('centerId', '==', centerId);
+  if (baseCampId) {
+    query = query.where('baseCampId', '==', baseCampId);
   }
 
   if (eventId) {

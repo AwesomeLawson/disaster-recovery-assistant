@@ -128,7 +128,7 @@ async function notifyUserOfApproval(user: User, approvedRoles: string[]): Promis
   };
   const roleList = approvedRoles.map((r) => roleLabels[r] || r).join(', ');
 
-  // Fetch event and center logistics to include in the email
+  // Fetch event and base camp logistics to include in the email
   let logisticsRows = '';
   let logisticsText = '';
   if (user.eventIds && user.eventIds.length > 0) {
@@ -137,20 +137,20 @@ async function notifyUserOfApproval(user: User, approvedRoles: string[]): Promis
         const eventDoc = await db.collection('events').doc(eventId).get();
         if (!eventDoc.exists) continue;
         const ev = eventDoc.data()!;
-        let centerItems = '';
-        let centerText = '';
-        for (const centerId of (ev.centerIds || []).slice(0, 3)) {
-          const cDoc = await db.collection('centers').doc(centerId).get();
+        let baseCampItems = '';
+        let baseCampText = '';
+        for (const baseCampId of (ev.baseCampIds || []).slice(0, 3)) {
+          const cDoc = await db.collection('baseCamps').doc(baseCampId).get();
           if (!cDoc.exists) continue;
           const c = cDoc.data()!;
-          centerItems += `<li style="margin: 2px 0;">${c.name} — ${c.address}</li>`;
-          centerText += `\n    • ${c.name} — ${c.address}`;
+          baseCampItems += `<li style="margin: 2px 0;">${c.name} — ${c.address}</li>`;
+          baseCampText += `\n    • ${c.name} — ${c.address}`;
         }
         logisticsRows += `<tr><td style="padding: 8px; color: #666; vertical-align: top;">Event</td><td style="padding: 8px; font-weight: bold;">${ev.name}</td></tr>`;
-        if (centerItems) {
-          logisticsRows += `<tr style="background: #f5f5f5;"><td style="padding: 8px; color: #666; vertical-align: top;">Base Camp</td><td style="padding: 8px;"><ul style="margin: 0; padding-left: 18px;">${centerItems}</ul></td></tr>`;
+        if (baseCampItems) {
+          logisticsRows += `<tr style="background: #f5f5f5;"><td style="padding: 8px; color: #666; vertical-align: top;">Base Camp</td><td style="padding: 8px;"><ul style="margin: 0; padding-left: 18px;">${baseCampItems}</ul></td></tr>`;
         }
-        logisticsText += `\nEvent: ${ev.name}${centerText ? `\nBase Camp:${centerText}` : ''}`;
+        logisticsText += `\nEvent: ${ev.name}${baseCampText ? `\nBase Camp:${baseCampText}` : ''}`;
       }
     } catch (err) {
       console.error('Error fetching logistics for approval email:', err);
@@ -366,7 +366,7 @@ export const listUsers = onCall(callOptions, async (request: any) => {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { role, eventId, centerId, limit = 100 } = request.data || {};
+  const { role, eventId, baseCampId, limit = 100 } = request.data || {};
 
   let query: admin.firestore.Query = db.collection('users');
 
@@ -378,8 +378,8 @@ export const listUsers = onCall(callOptions, async (request: any) => {
     query = query.where('eventIds', 'array-contains', eventId);
   }
 
-  if (centerId) {
-    query = query.where('centerIds', 'array-contains', centerId);
+  if (baseCampId) {
+    query = query.where('baseCampIds', 'array-contains', baseCampId);
   }
 
   const snapshot = await query.limit(limit).get();

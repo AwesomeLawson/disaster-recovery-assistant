@@ -51,7 +51,7 @@ export const workOrderService = {
 
   // List work orders with filters
   async listWorkOrders(filters?: {
-    centerId?: string;
+    baseCampId?: string;
     eventId?: string;
     flaggedForReview?: boolean;
     limit?: number;
